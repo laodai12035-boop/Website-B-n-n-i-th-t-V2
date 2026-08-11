@@ -17,7 +17,31 @@ logger = logging.getLogger(__name__)
 
 
 class ProductService:
-    """Service xử lý nghiệp vụ liên quan tới Sản phẩm."""
+    """Service xử lý toàn bộ logic liên quan đến sản phẩm."""
+
+    @staticmethod
+    def get_product_by_id(product_id: int) -> Dict[str, Any]:
+        """
+        Lấy thông tin chi tiết một sản phẩm theo ID.
+
+        Args:
+            product_id: ID sản phẩm cần tra cứu
+
+        Returns:
+            Dict thông tin chi tiết sản phẩm.
+
+        Raises:
+            ValueError("PRODUCT_NOT_FOUND"): Nếu sản phẩm không tồn tại hoặc đã ngừng kinh doanh.
+        """
+        product = (
+            db.session.query(Product)
+            .filter(Product.id == product_id, Product.is_active == True)
+            .first()
+        )
+        if not product:
+            raise ValueError("PRODUCT_NOT_FOUND")
+
+        return product.to_dict()
 
     @staticmethod
     def search_products(
