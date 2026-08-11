@@ -161,7 +161,9 @@ const LoginPage = () => {
                 <input type="checkbox" className="rounded border-gray-300 text-primary-600 focus:ring-primary-400" />
                 <span>Ghi nhớ đăng nhập</span>
               </label>
-              <a href="#" className="hover:text-primary-600 transition-colors">Quên mật khẩu?</a>
+              <Link to="/forgot-password" className="hover:text-primary-600 transition-colors">
+                Quên mật khẩu?
+              </Link>
             </div>
 
             {/* Submit */}

@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import InputField from '@/components/ui/InputField'
 import Button from '@/components/ui/Button'
 import FormAlert from '@/components/ui/FormAlert'
+import api from '@/services/api'
 
 // Icon toggle password
 const EyeIcon = ({ open }) =>
@@ -74,12 +75,20 @@ const ResetPasswordPage = () => {
     }
 
     setLoading(true)
-    // Logic kết nối API sẽ được nối ở CV-03
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      await api.post('/auth/reset-password', {
+        token,
+        new_password: fields.password,
+      })
+
       setSuccessMsg('Đặt lại mật khẩu thành công! Đang chuyển hướng đến trang đăng nhập...')
       setTimeout(() => navigate('/login'), 1500)
-    }, 500)
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Đã xảy ra lỗi, vui lòng thử lại'
+      setApiError(msg)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

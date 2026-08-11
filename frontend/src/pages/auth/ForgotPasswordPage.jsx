@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import InputField from '@/components/ui/InputField'
 import Button from '@/components/ui/Button'
 import FormAlert from '@/components/ui/FormAlert'
+import api from '@/services/api'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -27,11 +28,16 @@ const ForgotPasswordPage = () => {
     }
 
     setLoading(true)
-    // Logic kết nối API sẽ được nối ở CV-03
-    setTimeout(() => {
+    try {
+      const response = await api.post('/auth/forgot-password', { email })
+      const message = response.data.message || 'Liên kết đặt lại mật khẩu đã được gửi đến email của bạn.'
+      setSuccessMsg(message)
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Đã xảy ra lỗi, vui lòng thử lại'
+      setApiError(msg)
+    } finally {
       setLoading(false)
-      setSuccessMsg('Liên kết đặt lại mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.')
-    }, 500)
+    }
   }
 
   return (
