@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import InputField from '@/components/ui/InputField'
 import Button from '@/components/ui/Button'
 import FormAlert from '@/components/ui/FormAlert'
+import { useAuth } from '@/contexts/AuthContext'
 
 // =============================================
 // Validation helpers (client-side)
@@ -65,6 +66,9 @@ const EyeIcon = ({ open }) =>
 // RegisterPage — UI only (logic nối API ở CV-03)
 // =============================================
 const RegisterPage = () => {
+  const navigate = useNavigate()
+  const { register } = useAuth()
+
   const [fields, setFields] = useState({
     full_name: '',
     email: '',
@@ -77,6 +81,7 @@ const RegisterPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [apiError, setApiError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [successMsg, setSuccessMsg] = useState(null)
 
   // ---- Handlers ----
   const handleChange = (e) => {
@@ -100,8 +105,29 @@ const RegisterPage = () => {
     }
 
     setLoading(true)
-    // TODO: Gọi API ở CV-03
-    setLoading(false)
+    try {
+      // Loại bỏ confirm_password trước khi gửi lên API
+      const { confirm_password, ...payload } = fields
+      await register(payload)
+
+      setSuccessMsg('Tạo tài khoản thành công! Đang chuyển hướng đến trang đăng nhập...')
+      // Redirect sang /login sau 1.5 giây
+      setTimeout(() => navigate('/login'), 1500)
+    } catch (err) {
+      // Lỗi field-level từ server (validate server-side)
+      if (err.fieldErrors) {
+        const serverErrors = {}
+        Object.entries(err.fieldErrors).forEach(([field, msgs]) => {
+          serverErrors[field] = Array.isArray(msgs) ? msgs[0] : msgs
+        })
+        setErrors(serverErrors)
+      } else {
+        // Lỗi tổng thể (email trùng, server error, ...)
+        setApiError(err.message)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -133,6 +159,9 @@ const RegisterPage = () => {
               </Link>
             </p>
           </div>
+
+          {/* Success message */}
+          {successMsg && <div className="mb-4"><FormAlert type="success" message={successMsg} /></div>}
 
           {/* API Error */}
           {apiError && <div className="mb-4"><FormAlert type="error" message={apiError} /></div>}
