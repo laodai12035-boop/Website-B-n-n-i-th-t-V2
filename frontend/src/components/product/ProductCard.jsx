@@ -1,9 +1,23 @@
 import { Link } from 'react-router-dom'
+import { useCompare } from '@/contexts/CompareContext'
 
 /**
  * ProductCard — Thẻ hiển thị sản phẩm nội thất.
  */
 const ProductCard = ({ product }) => {
+  const { isComparing, addToCompare, removeFromCompare } = useCompare()
+  const inCompare = isComparing(product.id)
+
+  const handleToggleCompare = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (inCompare) {
+      removeFromCompare(product.id)
+    } else {
+      addToCompare(product)
+    }
+  }
+
   const formatCurrency = (val) => {
     if (!val) return '0đ'
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
@@ -32,6 +46,22 @@ const ProductCard = ({ product }) => {
             -{discountPercent}%
           </span>
         )}
+
+        {/* Compare Toggle Button */}
+        <button
+          type="button"
+          onClick={handleToggleCompare}
+          className={`absolute top-3 right-3 p-1.5 rounded-full backdrop-blur-md transition-all shadow-sm flex items-center justify-center ${
+            inCompare
+              ? 'bg-amber-500 text-white font-bold'
+              : 'bg-white/80 text-gray-700 hover:bg-white hover:text-amber-600'
+          }`}
+          title={inCompare ? 'Bỏ so sánh' : 'Thêm vào so sánh'}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </button>
 
         {/* Stock status badge */}
         {product.stock <= 0 && (
