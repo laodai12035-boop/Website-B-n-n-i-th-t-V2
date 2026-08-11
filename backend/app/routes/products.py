@@ -83,3 +83,60 @@ def get_categories():
         status=200,
     )
 
+
+# ============================================================
+# POST /api/v1/products/compare — So sánh 2-3 sản phẩm
+# ============================================================
+@products_bp.route("/compare", methods=["POST"])
+def compare_products():
+    """
+    So sánh thông số 2 đến 3 sản phẩm.
+
+    Request Body (JSON):
+        product_ids (list): Danh sách ID các sản phẩm cần so sánh (vd: [1, 2, 3])
+
+    Responses:
+        200: Trả về danh sách thông số các sản phẩm
+        400: Thiếu product_ids / Ít hơn 2 sản phẩm / Nhiều hơn 3 sản phẩm (COMPARE_LIMIT_EXCEEDED)
+    """
+    json_data = request.get_json(silent=True) or {}
+    product_ids = json_data.get("product_ids", [])
+
+    if not isinstance(product_ids, list):
+        return jsonify(
+            {
+                "status": "error",
+                "message": "product_ids phải là dạng danh sách array",
+                "code": "INVALID_INPUT",
+            }
+        ), 400
+
+    try:
+        products = ProductService.compare_products(product_ids)
+    except ValueError as exc:
+        err_code = str(exc)
+        if err_code == "COMPARE_LIMIT_EXCEEDED":
+            return jsonify(
+                {
+                    "status": "error",
+                    "message": "Đã đạt giới hạn so sánh tối đa (chỉ được so sánh tối đa 3 sản phẩm)",
+                    "code": "COMPARE_LIMIT_EXCEEDED",
+                }
+            ), 400
+        elif err_code == "INVALID_COMPARE_COUNT":
+            return jsonify(
+                {
+                    "status": "error",
+                    "message": "Vui lòng chọn ít nhất 2 sản phẩm để so sánh",
+                    "code": "INVALID_COMPARE_COUNT",
+                }
+            ), 400
+        return jsonify({"status": "error", "message": err_code, "code": "BAD_REQUEST"}), 400
+
+    return _success(
+        data={"products": products},
+        message="Lấy thông tin so sánh sản phẩm thành công",
+        status=200,
+    )
+
+
