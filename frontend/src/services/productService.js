@@ -5,9 +5,9 @@ import api from './api'
  */
 const productService = {
   /**
-   * Lấy danh sách & Tìm kiếm sản phẩm.
+   * Lấy danh sách & Tìm kiếm, Lọc khoảng giá & Sắp xếp sản phẩm.
    *
-   * @param {Object} params - { search, category, page, limit }
+   * @param {Object} params - { search, category, min_price, max_price, sort, page, limit }
    * @returns {Promise<Object>} { items, pagination }
    */
   async getProducts(params = {}) {
