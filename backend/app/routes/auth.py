@@ -210,3 +210,30 @@ def get_me():
         status=200,
     )
 
+
+# ============================================================
+# POST /api/v1/auth/logout — Đăng xuất khỏi hệ thống
+# ============================================================
+@auth_bp.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    """
+    Đăng xuất khỏi hệ thống.
+
+    Header:
+        Authorization: Bearer <token>
+
+    Responses:
+        200: Đăng xuất thành công
+        401: Token không hợp lệ hoặc đã hết hạn
+    """
+    current_user_id = get_jwt_identity()
+    logger.info("User logged out: user_id=%s", current_user_id)
+
+    return _success(
+        data=None,
+        message="Đăng xuất thành công",
+        status=200,
+    )
+
+

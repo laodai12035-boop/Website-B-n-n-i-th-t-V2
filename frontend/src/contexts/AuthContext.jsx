@@ -96,9 +96,16 @@ export const AuthProvider = ({ children }) => {
   /**
    * logout — Xóa token và reset user state.
    */
-  const logout = useCallback(() => {
-    localStorage.removeItem('token')
-    setUser(null)
+  const logout = useCallback(async () => {
+    try {
+      // Gọi API logout trên backend (nếu token còn hiệu lực)
+      await api.post('/auth/logout')
+    } catch (err) {
+      // Dù API lỗi hay token đã hết hạn thì vẫn tiến hành dọn dẹp ở frontend
+    } finally {
+      localStorage.removeItem('token')
+      setUser(null)
+    }
   }, [])
 
   const value = {
