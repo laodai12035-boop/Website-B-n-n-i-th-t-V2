@@ -32,7 +32,7 @@ const ProductCard = ({ product }) => {
     <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full">
 
       {/* Image Container */}
-      <div className="relative aspect-4/3 overflow-hidden bg-gray-100">
+      <Link to={`/products/${product.id}`} className="relative aspect-4/3 overflow-hidden bg-gray-100 block">
         <img
           src={product.image_url || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'}
           alt={product.name}
@@ -71,7 +71,7 @@ const ProductCard = ({ product }) => {
             </span>
           </div>
         )}
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="p-4 flex-1 flex flex-col justify-between">
@@ -95,7 +95,7 @@ const ProductCard = ({ product }) => {
           </div>
 
           <h3 className="text-base font-display font-semibold text-gray-900 line-clamp-2 group-hover:text-primary-600 transition-colors">
-            {product.name}
+            <Link to={`/products/${product.id}`}>{product.name}</Link>
           </h3>
           <p className="text-xs text-gray-500 mt-1 line-clamp-2">
             {product.description}
