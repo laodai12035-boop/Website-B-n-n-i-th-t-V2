@@ -11,6 +11,8 @@ from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
 
+from flask_jwt_extended import create_access_token
+
 from app.extensions import db, bcrypt
 from app.models.user import User
 
@@ -83,6 +85,45 @@ class AuthService:
 
         logger.info("New user registered: id=%s email=%s", user.id, user.email)
         return user
+
+    @staticmethod
+    def login(email: str, password: str) -> tuple[str, User]:
+        """
+        Xác thực đăng nhập người dùng và tạo JWT token.
+
+        Args:
+            email:    Email đăng nhập (đã normalize)
+            password: Mật khẩu nhập vào
+
+        Returns:
+            Tuple (access_token, user_instance)
+
+        Raises:
+            ValueError("INVALID_CREDENTIALS"): Khi email không tìm thấy hoặc mật khẩu không khớp.
+            ValueError("ACCOUNT_LOCKED"):     Khi tài khoản bị khóa (is_active=False).
+        """
+        email = email.lower().strip()
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            logger.warning("Login failed: email %s not found", email)
+            raise ValueError("INVALID_CREDENTIALS")
+
+        # Verify password
+        if not bcrypt.check_password_hash(user.password_hash, password):
+            logger.warning("Login failed: invalid password for email %s", email)
+            raise ValueError("INVALID_CREDENTIALS")
+
+        # Check account status
+        if not user.is_active:
+            logger.warning("Login failed: account %s is locked (is_active=False)", email)
+            raise ValueError("ACCOUNT_LOCKED")
+
+        # Tạo JWT access token — identity stringify id để đảm bảo tương thích
+        access_token = create_access_token(identity=str(user.id))
+
+        logger.info("User logged in successfully: id=%s email=%s", user.id, user.email)
+        return access_token, user
 
     @staticmethod
     def _send_welcome_email_mock(user: User) -> None:

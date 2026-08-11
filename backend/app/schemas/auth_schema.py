@@ -72,3 +72,33 @@ class RegisterSchema(Schema):
 
 # Singleton instance — dùng chung, schema là stateless
 register_schema = RegisterSchema()
+
+
+class LoginSchema(Schema):
+    """
+    Schema validate request đăng nhập hệ thống.
+    POST /api/v1/auth/login
+    """
+
+    email = fields.Email(
+        required=True,
+        error_messages={
+            "required": "Email là bắt buộc",
+            "invalid": "Email không hợp lệ",
+        },
+    )
+
+    password = fields.String(
+        required=True,
+        error_messages={"required": "Mật khẩu là bắt buộc"},
+        load_only=True,
+    )
+
+    @validates("email")
+    def normalize_email(self, value: str) -> str:
+        """Normalize email về lowercase."""
+        return value.lower().strip()
+
+
+login_schema = LoginSchema()
+
