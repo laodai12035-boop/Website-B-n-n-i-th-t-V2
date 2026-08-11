@@ -16,6 +16,16 @@ const productService = {
   },
 
   /**
+   * Lấy danh sách các danh mục sản phẩm kèm số lượng sản phẩm.
+   *
+   * @returns {Promise<Array>} Array of { id, name, count }
+   */
+  async getCategories() {
+    const response = await api.get('/products/categories')
+    return response.data.data.categories
+  },
+
+  /**
    * Lấy chi tiết 1 sản phẩm theo ID.
    *
    * @param {number|string} id
