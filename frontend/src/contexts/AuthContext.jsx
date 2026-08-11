@@ -94,6 +94,34 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   /**
+   * updateProfile — Cập nhật thông tin cá nhân.
+   *
+   * @param {Object} data - { full_name, phone, avatar_url }
+   * @returns {Object} user mới
+   */
+  const updateProfile = useCallback(async (data) => {
+    setLoading(true)
+    try {
+      const response = await api.put('/auth/profile', data)
+      const updatedUser = response.data.data.user
+      setUser(updatedUser)
+      return updatedUser
+    } catch (error) {
+      const apiMessage =
+        error.response?.data?.message || 'Đã xảy ra lỗi, vui lòng thử lại'
+      const apiCode = error.response?.data?.code || 'UNKNOWN_ERROR'
+      const apiErrors = error.response?.data?.errors || null
+
+      const err = new Error(apiMessage)
+      err.code = apiCode
+      err.fieldErrors = apiErrors
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  /**
    * logout — Xóa token và reset user state.
    */
   const logout = useCallback(async () => {
@@ -113,6 +141,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     register,
     login,
+    updateProfile,
     logout,
     isAuthenticated: !!user,
   }

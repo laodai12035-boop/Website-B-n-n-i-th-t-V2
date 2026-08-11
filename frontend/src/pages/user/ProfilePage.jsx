@@ -16,7 +16,7 @@ const PHONE_REGEX = /^0[0-9]{9}$/
  * - Client-side validation: Họ tên (2-100 chars), SĐT (10 chữ số VN)
  */
 const ProfilePage = () => {
-  const { user, logout } = useAuth()
+  const { user, logout, updateProfile } = useAuth()
 
   const [isEditing, setIsEditing] = useState(false)
   const [fields, setFields] = useState({
@@ -95,12 +95,23 @@ const ProfilePage = () => {
     }
 
     setLoading(true)
-    // Nối với AuthContext.updateProfile() ở CV-03
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      await updateProfile(fields)
       setIsEditing(false)
       setSuccessMsg('Cập nhật thông tin cá nhân thành công!')
-    }, 500)
+    } catch (err) {
+      if (err.fieldErrors) {
+        const serverErrors = {}
+        Object.entries(err.fieldErrors).forEach(([field, msgs]) => {
+          serverErrors[field] = Array.isArray(msgs) ? msgs[0] : msgs
+        })
+        setErrors(serverErrors)
+      } else {
+        setApiError(err.message)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
