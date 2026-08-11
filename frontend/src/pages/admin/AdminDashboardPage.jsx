@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import Navbar from '@/components/layout/Navbar'
 import FormAlert from '@/components/ui/FormAlert'
+import api from '@/services/api'
 
 /**
  * AdminDashboardPage — Trang Tổng quan Quản trị (Admin Only).
@@ -16,17 +17,20 @@ const AdminDashboardPage = () => {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    // Sẽ nối API GET /api/v1/admin/dashboard ở CV-03
-    setTimeout(() => {
-      setStats({
-        total_users: 12,
-        total_orders: 45,
-        total_products: 120,
-        revenue: '150,000,000đ',
-        system_status: 'Hoạt động bình thường',
-      })
-      setLoading(false)
-    }, 400)
+    const fetchDashboardStats = async () => {
+      setLoading(true)
+      try {
+        const response = await api.get('/admin/dashboard')
+        setStats(response.data.data.stats)
+      } catch (err) {
+        const msg = err.response?.data?.message || 'Đã xảy ra lỗi khi nạp dữ liệu quản trị'
+        setError(msg)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardStats()
   }, [])
 
   return (
