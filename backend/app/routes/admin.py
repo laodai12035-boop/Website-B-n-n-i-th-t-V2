@@ -10,6 +10,7 @@ from flask import Blueprint, jsonify
 
 from app.extensions import db
 from app.models.user import User
+from app.services.admin_service import AdminService
 from app.utils.decorators import admin_required
 
 logger = logging.getLogger(__name__)
@@ -57,3 +58,36 @@ def get_dashboard():
         message="Lấy thông tin dashboard quản trị thành công",
         status=200,
     )
+
+
+# ============================================================
+# GET /api/v1/admin/quick-search — Tìm kiếm nhanh cho Admin
+# ============================================================
+@admin_bp.route("/quick-search", methods=["GET"])
+@admin_required()
+def quick_search():
+    """
+    Tìm kiếm nhanh sản phẩm, đơn hàng, khách hàng cho Admin.
+
+    Query Parameters:
+        q (str): Từ khóa tra cứu
+
+    Header:
+        Authorization: Bearer <admin_token>
+
+    Responses:
+        200: Trả về kết quả phân nhóm products, orders, customers
+        401: Chưa đăng nhập
+        403: Không có quyền Admin (code: FORBIDDEN)
+    """
+    from flask import request
+
+    query_str = request.args.get("q", default="", type=str)
+    search_results = AdminService.quick_search(query_str)
+
+    return _success(
+        data=search_results,
+        message="Tra cứu tìm kiếm nhanh Admin thành công",
+        status=200,
+    )
+
