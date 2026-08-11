@@ -140,3 +140,41 @@ def compare_products():
     )
 
 
+# ============================================================
+# GET /api/v1/products/<int:product_id> — Xem chi tiết 1 sản phẩm
+# ============================================================
+@products_bp.route("/<int:product_id>", methods=["GET"])
+def get_product_detail(product_id: int):
+    """
+    Lấy thông tin chi tiết của một sản phẩm theo ID.
+
+    Path Parameter:
+        product_id (int): ID của sản phẩm
+
+    Responses:
+        200: Trả về chi tiết sản phẩm
+        404: Sản phẩm không tồn tại hoặc đã bị ngưng bán (code: PRODUCT_NOT_FOUND)
+    """
+    ProductService.seed_initial_products()
+
+    try:
+        product_detail = ProductService.get_product_by_id(product_id)
+    except ValueError as exc:
+        if str(exc) == "PRODUCT_NOT_FOUND":
+            return jsonify(
+                {
+                    "status": "error",
+                    "message": "Sản phẩm không còn tồn tại hoặc đã bị ngừng kinh doanh",
+                    "code": "PRODUCT_NOT_FOUND",
+                }
+            ), 404
+        return jsonify({"status": "error", "message": str(exc), "code": "NOT_FOUND"}), 404
+
+    return _success(
+        data={"product": product_detail},
+        message="Lấy thông tin chi tiết sản phẩm thành công",
+        status=200,
+    )
+
+
+
