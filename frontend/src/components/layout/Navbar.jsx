@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import SearchBar from '@/components/product/SearchBar'
+import CategoryNav from '@/components/product/CategoryNav'
 
 /**
  * Navbar — Thanh điều hướng chính của website Nội Thất Đẹp.
@@ -32,7 +33,7 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
+        <div className="flex items-center justify-between h-16 gap-3 sm:gap-4">
 
           {/* Logo Brand */}
           <Link to="/" className="flex items-center gap-2.5 group shrink-0">
@@ -46,6 +47,9 @@ const Navbar = () => {
               <span className="text-[10px] text-gray-400 font-sans tracking-wide uppercase leading-none block">Furniture Store</span>
             </div>
           </Link>
+
+          {/* Category Dropdown */}
+          <CategoryNav className="shrink-0" />
 
           {/* Search Bar (Mobile & Desktop) */}
           <div className="flex-1 max-w-xs sm:max-w-sm md:max-w-md">
