@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import ProductCard from '@/components/product/ProductCard'
 import SearchBar from '@/components/product/SearchBar'
+import productService from '@/services/productService'
 
 const CATEGORIES = [
   { id: '', name: 'Tất cả' },
@@ -25,15 +26,27 @@ const ProductListPage = () => {
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [pagination, setPagination] = useState({ page: 1, total_items: 0 })
+  const [pagination, setPagination] = useState({ page: 1, total_items: 0, total_pages: 1 })
 
   useEffect(() => {
-    // Sẽ nối API thật từ productService ở CV-03
-    setLoading(true)
-    setTimeout(() => {
-      setProducts([])
-      setLoading(false)
-    }, 300)
+    const fetchProducts = async () => {
+      setLoading(true)
+      try {
+        const data = await productService.getProducts({
+          search: currentSearch,
+          category: currentCategory,
+        })
+        setProducts(data.items || [])
+        setPagination(data.pagination || { page: 1, total_items: 0, total_pages: 1 })
+      } catch (err) {
+        console.error('Error fetching products:', err)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
   }, [currentSearch, currentCategory])
 
   const handleCategorySelect = (catId) => {
