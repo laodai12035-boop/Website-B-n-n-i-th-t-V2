@@ -140,6 +140,39 @@ class ProductService:
         return result
 
     @staticmethod
+    def compare_products(product_ids: list) -> list:
+        """
+        Lấy danh sách thông số các sản phẩm để so sánh (tối đa 3 sản phẩm).
+
+        Args:
+            product_ids: List các ID sản phẩm (2 đến 3 IDs)
+
+        Returns:
+            List các product dictionary.
+
+        Raises:
+            ValueError("INVALID_COMPARE_COUNT"): Nếu ít hơn 2 IDs.
+            ValueError("COMPARE_LIMIT_EXCEEDED"): Nếu nhiều hơn 3 IDs.
+        """
+        if not product_ids or len(product_ids) < 2:
+            raise ValueError("INVALID_COMPARE_COUNT")
+
+        if len(product_ids) > 3:
+            raise ValueError("COMPARE_LIMIT_EXCEEDED")
+
+        products = (
+            db.session.query(Product)
+            .filter(Product.id.in_(product_ids), Product.is_active == True)
+            .all()
+        )
+
+        # Giữ nguyên thứ tự ID người dùng đã truyền vào
+        prod_map = {p.id: p for p in products}
+        ordered_products = [prod_map[pid] for pid in product_ids if pid in prod_map]
+
+        return [p.to_dict() for p in ordered_products]
+
+    @staticmethod
     def seed_initial_products() -> None:
         """Helper tự động seed dữ liệu 8+ sản phẩm mẫu nếu DB rỗng."""
         if db.session.query(Product).count() > 0:

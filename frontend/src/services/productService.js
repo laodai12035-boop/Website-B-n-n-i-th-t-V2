@@ -35,6 +35,17 @@ const productService = {
     const response = await api.get(`/products/${id}`)
     return response.data.data.product
   },
+
+  /**
+   * So sánh thông số các sản phẩm (2 đến 3 sản phẩm).
+   *
+   * @param {Array<number>} productIds
+   * @returns {Promise<Array>} List of product specs
+   */
+  async compareProducts(productIds = []) {
+    const response = await api.post('/products/compare', { product_ids: productIds })
+    return response.data.data.products
+  },
 }
 
 export default productService

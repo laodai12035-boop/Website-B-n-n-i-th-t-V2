@@ -27,6 +27,8 @@ class Product(db.Model):
     category = db.Column(db.String(50), nullable=False, index=True, comment="Danh mục: ban, ghe, ke, tu, trang-tri")
     stock = db.Column(db.Integer, nullable=False, default=0, comment="Số lượng tồn kho")
     image_url = db.Column(db.String(500), nullable=True, comment="URL ảnh đại diện sản phẩm")
+    material = db.Column(db.String(100), nullable=True, comment="Chất liệu sản phẩm")
+    dimensions = db.Column(db.String(100), nullable=True, comment="Kích thước (Dài x Rộng x Cao)")
     rating = db.Column(db.Float, nullable=False, default=5.0, comment="Đánh giá trung bình (1-5 sao)")
     rating_count = db.Column(db.Integer, nullable=False, default=0, comment="Tổng số lượt đánh giá")
     is_active = db.Column(db.Boolean, nullable=False, default=True, comment="True = hiển thị")
@@ -50,6 +52,8 @@ class Product(db.Model):
             "category": self.category,
             "stock": self.stock,
             "image_url": self.image_url,
+            "material": self.material or "Gỗ tự nhiên cao cấp",
+            "dimensions": self.dimensions or "Đang cập nhật",
             "rating": float(self.rating) if self.rating is not None else 5.0,
             "rating_count": self.rating_count or 0,
             "is_active": self.is_active,

@@ -7,43 +7,52 @@ import ProfilePage from '@/pages/user/ProfilePage'
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage'
 import ForbiddenPage from '@/pages/error/ForbiddenPage'
 import ProductListPage from '@/pages/product/ProductListPage'
+import ProductComparePage from '@/pages/product/ProductComparePage'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AdminRoute from '@/components/auth/AdminRoute'
+import { CompareProvider } from '@/contexts/CompareContext'
+import CompareDrawer from '@/components/product/CompareDrawer'
 
 function App() {
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/403" element={<ForbiddenPage />} />
-      <Route path="/products" element={<ProductListPage />} />
+    <CompareProvider>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/403" element={<ForbiddenPage />} />
+        <Route path="/products" element={<ProductListPage />} />
+        <Route path="/compare" element={<ProductComparePage />} />
 
-      {/* Protected User routes */}
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
+        {/* Protected User routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Protected Admin routes (QTN-09) */}
-      <Route
-        path="/admin"
-        element={
-          <AdminRoute>
-            <AdminDashboardPage />
-          </AdminRoute>
-        }
-      />
+        {/* Protected Admin routes (QTN-09) */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboardPage />
+            </AdminRoute>
+          }
+        />
 
-      {/* Default redirect về /login */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-    </Routes>
+        {/* Default redirect về /login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+      </Routes>
+
+      {/* Floating Compare Bar */}
+      <CompareDrawer />
+    </CompareProvider>
   )
 }
 
