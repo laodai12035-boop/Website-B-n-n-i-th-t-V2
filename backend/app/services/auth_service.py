@@ -43,6 +43,9 @@ class AuthService:
             ValueError("EMAIL_EXISTS"): Khi email đã tồn tại trong DB.
             RuntimeError:               Khi có lỗi DB không mong đợi.
         """
+        # Normalize email: lowercase + strip (defense in depth, schema đã làm nhưng đảm bảo)
+        email = email.lower().strip()
+
         # Tuyến phòng thủ: kiểm tra email trùng trước (tránh race condition nhẹ)
         existing = User.query.filter_by(email=email).first()
         if existing:

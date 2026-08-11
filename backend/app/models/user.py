@@ -33,9 +33,10 @@ class User(db.Model):
         db.String(255), nullable=False, comment="Mật khẩu hash bcrypt — KHÔNG LƯU PLAINTEXT"
     )
 
-    # Phân quyền
+    # Phân quyền — dùng String thay vì Enum để tương thích SQLite (testing)
+    # Các giá trị hợp lệ: 'user', 'admin' — được validate ở service layer
     role = db.Column(
-        db.Enum("user", "admin", name="user_role"),
+        db.String(20),
         nullable=False,
         default="user",
         comment="Vai trò: user hoặc admin",
