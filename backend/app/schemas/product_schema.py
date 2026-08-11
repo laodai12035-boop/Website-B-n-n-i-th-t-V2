@@ -19,6 +19,8 @@ class ProductSchema(Schema):
     category = fields.Str(required=True, validate=validate.OneOf(VALID_CATEGORIES))
     stock = fields.Int(missing=0, validate=validate.Range(min=0))
     image_url = fields.Str(allow_none=True)
+    rating = fields.Float(missing=5.0)
+    rating_count = fields.Int(missing=0)
     is_active = fields.Bool(missing=True)
     created_at = fields.Str(dump_only=True)
 

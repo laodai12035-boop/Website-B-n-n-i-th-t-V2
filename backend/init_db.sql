@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS products (
     category       VARCHAR(50)   NOT NULL COMMENT 'Danh mục (ban, ghe, ke, tu, trang-tri)',
     stock          INT           NOT NULL DEFAULT 0 COMMENT 'Tồn kho',
     image_url      VARCHAR(500)  COMMENT 'URL ảnh đại diện',
+    rating         FLOAT         NOT NULL DEFAULT 5.0 COMMENT 'Đánh giá trung bình',
+    rating_count   INT           NOT NULL DEFAULT 0 COMMENT 'Số lượt đánh giá',
     is_active      BOOLEAN       NOT NULL DEFAULT TRUE COMMENT 'Hiển thị',
     created_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
