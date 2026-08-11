@@ -1,0 +1,137 @@
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
+import Navbar from '@/components/layout/Navbar'
+import FormAlert from '@/components/ui/FormAlert'
+
+/**
+ * AdminDashboardPage — Trang Tổng quan Quản trị (Admin Only).
+ * Chỉ xem được khi đăng nhập bằng tài khoản có role === 'admin'.
+ */
+const AdminDashboardPage = () => {
+  const { user } = useAuth()
+
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    // Sẽ nối API GET /api/v1/admin/dashboard ở CV-03
+    setTimeout(() => {
+      setStats({
+        total_users: 12,
+        total_orders: 45,
+        total_products: 120,
+        revenue: '150,000,000đ',
+        system_status: 'Hoạt động bình thường',
+      })
+      setLoading(false)
+    }, 400)
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Navbar />
+
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
+
+        {/* Admin Banner */}
+        <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-yellow-800 text-white rounded-3xl p-6 sm:p-8 mb-8 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider mb-2">
+              Khu vực Quản trị viên (Admin Area)
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold">Chào mừng, {user?.full_name}!</h1>
+            <p className="text-amber-100 text-sm mt-1">Quản lý toàn bộ dữ liệu vận hành và tài khoản hệ thống (QTN-09)</p>
+          </div>
+          <Link
+            to="/profile"
+            className="px-4 py-2 bg-white text-amber-900 rounded-xl font-medium text-sm hover:bg-amber-50 transition-colors shadow-sm"
+          >
+            Về Trang cá nhân
+          </Link>
+        </div>
+
+        {error && <div className="mb-6"><FormAlert type="error" message={error} /></div>}
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+          {/* Stat Item 1 */}
+          <div className="card border-l-4 border-l-amber-500">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng Người Dùng</span>
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.total_users}</p>
+            <span className="text-xs text-emerald-600 font-medium mt-1 inline-block">↑ Tăng trưởng ổn định</span>
+          </div>
+
+          {/* Stat Item 2 */}
+          <div className="card border-l-4 border-l-blue-500">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng Đơn Hàng</span>
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.total_orders}</p>
+            <span className="text-xs text-blue-600 font-medium mt-1 inline-block">Sẵn sàng xử lý</span>
+          </div>
+
+          {/* Stat Item 3 */}
+          <div className="card border-l-4 border-l-emerald-500">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng Sản Phẩm</span>
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.total_products}</p>
+            <span className="text-xs text-emerald-600 font-medium mt-1 inline-block">Mặt hàng kinh doanh</span>
+          </div>
+
+          {/* Stat Item 4 */}
+          <div className="card border-l-4 border-l-purple-500">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Doanh Thu Tạm Tính</span>
+              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.revenue}</p>
+            <span className="text-xs text-purple-600 font-medium mt-1 inline-block">Cập nhật realtime</span>
+          </div>
+
+        </div>
+
+        {/* Security & Access Logs Card */}
+        <div className="card">
+          <h2 className="text-lg font-display font-bold text-gray-900 mb-4">Trạng thái bảo vệ phân quyền (QTN-09)</h2>
+          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
+            <svg className="w-6 h-6 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-emerald-900">Hệ thống đang được bảo vệ an toàn</p>
+              <p className="text-xs text-emerald-700">Tất cả truy cập vào khu vực `/admin` đều được kiểm tra vai trò Quản trị viên (Admin) chặt chẽ từ Server.</p>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  )
+}
+
+export default AdminDashboardPage
