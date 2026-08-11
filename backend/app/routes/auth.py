@@ -15,6 +15,7 @@ from marshmallow import ValidationError
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+from app.extensions import db
 from app.schemas.auth_schema import register_schema, login_schema
 from app.services.auth_service import AuthService
 from app.models.user import User
@@ -194,7 +195,7 @@ def get_me():
         404: Không tìm thấy user
     """
     current_user_id = get_jwt_identity()
-    user = User.query.get(int(current_user_id))
+    user = db.session.get(User, int(current_user_id))
 
     if not user or not user.is_active:
         return _error(
