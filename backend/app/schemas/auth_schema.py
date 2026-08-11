@@ -102,3 +102,46 @@ class LoginSchema(Schema):
 
 login_schema = LoginSchema()
 
+
+class ForgotPasswordSchema(Schema):
+    """
+    Schema validate request quên mật khẩu.
+    POST /api/v1/auth/forgot-password
+    """
+
+    email = fields.Email(
+        required=True,
+        error_messages={
+            "required": "Email là bắt buộc",
+            "invalid": "Email không hợp lệ",
+        },
+    )
+
+    @validates("email")
+    def normalize_email(self, value: str) -> str:
+        return value.lower().strip()
+
+
+class ResetPasswordSchema(Schema):
+    """
+    Schema validate request đặt lại mật khẩu.
+    POST /api/v1/auth/reset-password
+    """
+
+    token = fields.String(
+        required=True,
+        error_messages={"required": "Mã xác thực (Token) là bắt buộc"},
+    )
+
+    new_password = fields.String(
+        required=True,
+        validate=validate.Length(min=8, error="Mật khẩu mới phải có ít nhất 8 ký tự"),
+        error_messages={"required": "Mật khẩu mới là bắt buộc"},
+        load_only=True,
+    )
+
+
+forgot_password_schema = ForgotPasswordSchema()
+reset_password_schema = ResetPasswordSchema()
+
+

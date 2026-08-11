@@ -7,11 +7,11 @@ Route layer KHÔNG được chứa business logic — chỉ gọi service.
 """
 
 import logging
+from datetime import timedelta
 from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
-
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, decode_token
 
 from app.extensions import db, bcrypt
 from app.models.user import User
@@ -126,6 +126,88 @@ class AuthService:
         return access_token, user
 
     @staticmethod
+    def request_password_reset(email: str) -> tuple[str, str]:
+        """
+        Yêu cầu đặt lại mật khẩu cho email.
+
+        Args:
+            email: Email tài khoản cần đặt lại mật khẩu
+
+        Returns:
+            Tuple (reset_token, reset_link)
+
+        Raises:
+            ValueError("USER_NOT_FOUND"): Khi email không tồn tại trong DB.
+        """
+        email = email.lower().strip()
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            logger.warning("Password reset requested for non-existing email: %s", email)
+            raise ValueError("USER_NOT_FOUND")
+
+        # Sinh JWT reset token với thời hạn 15 phút
+        reset_token = create_access_token(
+            identity=str(user.id),
+            expires_delta=timedelta(minutes=15),
+            additional_claims={"type": "reset_password"},
+        )
+
+        reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
+
+        # Log mock email reset
+        logger.info(
+            "[MOCK EMAIL] Gửi liên kết đặt lại mật khẩu đến %s | Link: %s (Hạn 15 phút)",
+            user.email,
+            reset_link,
+        )
+
+        return reset_token, reset_link
+
+    @staticmethod
+    def reset_password(token: str, new_password: str) -> User:
+        """
+        Đặt lại mật khẩu mới bằng Reset Token.
+
+        Args:
+            token:        Reset JWT Token nhận từ email/link
+            new_password: Mật khẩu mới
+
+        Returns:
+            User instance đã được cập nhật mật khẩu.
+
+        Raises:
+            ValueError("INVALID_TOKEN"): Token không hợp lệ hoặc đã hết hạn.
+        """
+        try:
+            decoded = decode_token(token)
+            if decoded.get("type") != "reset_password":
+                raise ValueError("INVALID_TOKEN")
+
+            user_id = int(decoded.get("sub"))
+        except Exception as exc:
+            logger.warning("Invalid or expired reset token: %s", exc)
+            raise ValueError("INVALID_TOKEN") from exc
+
+        user = db.session.get(User, user_id)
+        if not user or not user.is_active:
+            raise ValueError("INVALID_TOKEN")
+
+        # Hash new password
+        password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
+        user.password_hash = password_hash
+
+        try:
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            logger.error("DB error updating password: %s", exc)
+            raise RuntimeError("DB_ERROR") from exc
+
+        logger.info("Password updated successfully for user_id=%s", user.id)
+        return user
+
+    @staticmethod
     def _send_welcome_email_mock(user: User) -> None:
         """
         Mock email xác nhận tài khoản.
@@ -136,3 +218,4 @@ class AuthService:
             "[MOCK EMAIL] Gửi email chào mừng đến %s | Chủ đề: Chào mừng bạn đến với Nội Thất Đẹp!",
             user.email,
         )
+

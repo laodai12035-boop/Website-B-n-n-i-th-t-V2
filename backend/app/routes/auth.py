@@ -16,7 +16,12 @@ from marshmallow import ValidationError
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.extensions import db
-from app.schemas.auth_schema import register_schema, login_schema
+from app.schemas.auth_schema import (
+    register_schema,
+    login_schema,
+    forgot_password_schema,
+    reset_password_schema,
+)
 from app.services.auth_service import AuthService
 from app.models.user import User
 
@@ -235,5 +240,116 @@ def logout():
         message="Đăng xuất thành công",
         status=200,
     )
+
+
+# ============================================================
+# POST /api/v1/auth/forgot-password — Yêu cầu đặt lại mật khẩu
+# ============================================================
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    """
+    Yêu cầu đặt lại mật khẩu.
+
+    Request body (JSON):
+        email (str): Email tài khoản
+
+    Responses:
+        200: Gửi yêu cầu thành công, trả về reset_token & reset_link (dev mode)
+        400: Dữ liệu không hợp lệ (VALIDATION_ERROR)
+        404: Email không tồn tại (USER_NOT_FOUND)
+    """
+    json_data = request.get_json(silent=True)
+    if not json_data:
+        return _error(
+            message="Request body phải là JSON hợp lệ",
+            code="INVALID_JSON",
+            status=400,
+        )
+
+    try:
+        data = forgot_password_schema.load(json_data)
+    except ValidationError as exc:
+        return _error(
+            message="Dữ liệu không hợp lệ",
+            code="VALIDATION_ERROR",
+            status=400,
+            errors=exc.messages,
+        )
+
+    try:
+        token, link = AuthService.request_password_reset(data["email"])
+    except ValueError as exc:
+        if str(exc) == "USER_NOT_FOUND":
+            return _error(
+                message="Không tìm thấy tài khoản với email này",
+                code="USER_NOT_FOUND",
+                status=404,
+            )
+        return _error(message=str(exc), code="BUSINESS_ERROR", status=400)
+
+    return _success(
+        data={
+            "reset_token": token,
+            "reset_link": link,
+        },
+        message="Liên kết đặt lại mật khẩu đã được gửi đến email của bạn",
+        status=200,
+    )
+
+
+# ============================================================
+# POST /api/v1/auth/reset-password — Đặt lại mật khẩu mới
+# ============================================================
+@auth_bp.route("/reset-password", methods=["POST"])
+def reset_password():
+    """
+    Đặt lại mật khẩu mới.
+
+    Request body (JSON):
+        token (str):        Reset JWT Token
+        new_password (str): Mật khẩu mới
+
+    Responses:
+        200: Đặt lại mật khẩu thành công
+        400: Dữ liệu không hợp lệ hoặc Token không hợp lệ/hết hạn
+    """
+    json_data = request.get_json(silent=True)
+    if not json_data:
+        return _error(
+            message="Request body phải là JSON hợp lệ",
+            code="INVALID_JSON",
+            status=400,
+        )
+
+    try:
+        data = reset_password_schema.load(json_data)
+    except ValidationError as exc:
+        return _error(
+            message="Dữ liệu không hợp lệ",
+            code="VALIDATION_ERROR",
+            status=400,
+            errors=exc.messages,
+        )
+
+    try:
+        AuthService.reset_password(
+            token=data["token"],
+            new_password=data["new_password"],
+        )
+    except ValueError as exc:
+        if str(exc) == "INVALID_TOKEN":
+            return _error(
+                message="Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn",
+                code="INVALID_TOKEN",
+                status=400,
+            )
+        return _error(message=str(exc), code="BUSINESS_ERROR", status=400)
+
+    return _success(
+        data=None,
+        message="Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.",
+        status=200,
+    )
+
 
 
