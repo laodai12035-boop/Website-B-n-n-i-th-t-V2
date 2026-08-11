@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name     VARCHAR(100)  NOT NULL COMMENT 'Họ tên đầy đủ',
     email         VARCHAR(100)  NOT NULL UNIQUE COMMENT 'Email đăng nhập',
     phone         VARCHAR(15)   COMMENT 'Số điện thoại Việt Nam',
+    avatar_url    VARCHAR(255)  COMMENT 'URL ảnh đại diện',
     password_hash VARCHAR(255)  NOT NULL COMMENT 'Mật khẩu đã hash bằng bcrypt',
     role          ENUM('user', 'admin') NOT NULL DEFAULT 'user' COMMENT 'Vai trò',
     is_active     BOOLEAN       NOT NULL DEFAULT TRUE COMMENT 'Trạng thái tài khoản',

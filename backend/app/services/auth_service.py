@@ -208,6 +208,48 @@ class AuthService:
         return user
 
     @staticmethod
+    def update_profile(
+        user_id: int,
+        full_name: str,
+        phone: str,
+        avatar_url: Optional[str] = None,
+    ) -> User:
+        """
+        Cập nhật thông tin cá nhân của người dùng.
+
+        Args:
+            user_id:    ID người dùng
+            full_name:  Họ tên mới (đã validate)
+            phone:      Số điện thoại mới (đã validate)
+            avatar_url: URL ảnh đại diện mới (tùy chọn)
+
+        Returns:
+            User instance sau khi cập nhật.
+
+        Raises:
+            ValueError("USER_NOT_FOUND"): Khi không tìm thấy user hoặc tài khoản bị khóa.
+            RuntimeError:               Khi có lỗi DB không mong đợi.
+        """
+        user = db.session.get(User, user_id)
+        if not user or not user.is_active:
+            raise ValueError("USER_NOT_FOUND")
+
+        user.full_name = full_name.strip()
+        user.phone = phone.strip()
+        if avatar_url is not None:
+            user.avatar_url = avatar_url.strip() if avatar_url else None
+
+        try:
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            logger.error("Error updating profile for user_id=%s: %s", user_id, exc)
+            raise RuntimeError("DB_ERROR") from exc
+
+        logger.info("Profile updated for user_id=%s", user_id)
+        return user
+
+    @staticmethod
     def _send_welcome_email_mock(user: User) -> None:
         """
         Mock email xác nhận tài khoản.

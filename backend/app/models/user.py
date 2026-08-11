@@ -27,6 +27,7 @@ class User(db.Model):
         comment="Email đăng nhập — unique, lowercase",
     )
     phone = db.Column(db.String(15), nullable=True, comment="Số điện thoại Việt Nam")
+    avatar_url = db.Column(db.String(255), nullable=True, comment="URL ảnh đại diện")
 
     # Authentication
     password_hash = db.Column(
@@ -77,6 +78,7 @@ class User(db.Model):
             "full_name": self.full_name,
             "email": self.email,
             "phone": self.phone,
+            "avatar_url": self.avatar_url,
             "role": self.role,
             "is_active": self.is_active,
             "created_at": self.created_at.isoformat() if self.created_at else None,
