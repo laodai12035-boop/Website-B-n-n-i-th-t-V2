@@ -11,50 +11,45 @@
 
 > Là Khách hàng, tôi muốn đăng xuất khỏi tài khoản, để bảo vệ thông tin cá nhân khi dùng thiết bị chung.
 
-**Điều kiện bắt đầu:** Người dùng đang đăng nhập vào hệ thống (đã có Token trong localStorage & state).  
-**Kết quả sau hoàn thành:** Phiên đăng nhập kết thúc, token bị xóa, người dùng được chuyển hướng về trang đăng nhập hoặc trang chủ và cần đăng nhập lại để truy cập thông tin cá nhân.
+**Điều kiện bắt đầu:** Người dùng đang đăng nhập (có JWT token trong `localStorage` và `user` state trong `AuthContext`).  
+**Kết quả sau hoàn thành:** Phiên đăng nhập kết thúc, token bị xóa, thông tin user được reset về `null`, hệ thống yêu cầu đăng nhập lại nếu muốn truy cập các trang bảo vệ.
 
 ---
 
-## 2. Luồng nghiệp vụ đăng xuất (Happy Path - TC-01)
+## 2. Luồng nghiệp vụ chính (Happy Path - TC-01)
 
 ```
-[Khách hàng] → Nhấp Avatar / User Menu trên Header
+[Khách hàng] → Đang ở trang bất kỳ (ví dụ: Trang chủ / Trang cá nhân / Giỏ hàng)
       ↓
-[Khách hàng] → Chọn "Đăng xuất"
+[Thao tác] → Bấm nút "Đăng xuất" trên Navbar / Account Menu
       ↓
-[Frontend] → Gọi useAuth().logout()
+[Frontend] → Gọi API POST /api/v1/auth/logout (kèm Header Authorization: Bearer <token>)
       ↓
-[POST /api/v1/auth/logout] → Header Authorization: Bearer <token>
-      ↓
-[Backend] → Ghi nhận log đăng xuất (200 OK)
+[Backend] → Xác nhận token hợp lệ, trả về status 200 OK
       ↓
 [Frontend] → Xóa 'token' khỏi localStorage
       ↓
-[Frontend] → Cập nhật user state = null trong AuthContext
+[Frontend] → Reset `user` state về `null` trong AuthContext
       ↓
-[Frontend] → Chuyển hướng sang /login (hoặc /)
+[Frontend] → Chuyển hướng người dùng về trang /login (hoặc Trang chủ /)
 ```
 
 ---
 
-## 3. Bảo vệ Route & Kiểm tra bảo mật (TC-02)
+## 3. Bảo mật & Kiểm soát truy cập trang (Protected Routes - TC-02)
 
-### Kịch bản TC-02:
-Sau khi đăng xuất (hoặc khi chưa đăng nhập):
-1. Người dùng cố gắng nhập trực tiếp URL trang cá nhân (ví dụ: `/profile`).
-2. Component `ProtectedRoute` kiểm tra:
-   - `loading === true`: Hiển thị Spinner chờ kiểm tra phiên.
-   - `isAuthenticated === false` (user = null): Tự động chuyển hướng về `/login` kèm query parameter `redirect` để hỗ trợ quay lại trang cũ sau khi đăng nhập.
-3. Nếu gọi API cá nhân (`GET /api/v1/auth/me` hoặc các API riêng tư khác) không kèm Header `Authorization` hoặc kèm Token rác/đã hết hạn -> Backend trả về `401 Unauthorized`.
+| Mã AC | Tình huống | Hành vi mong đợi |
+|---|---|---|
+| TC-01 | Đang đăng nhập -> Bấm Đăng xuất | Hủy phiên thành công, chuyển hướng về `/login` hoặc `/` |
+| TC-02 | Đã đăng xuất -> Cố nhập URL trang cá nhân (`/profile`) | `ProtectedRoute` chặn truy cập, tự động đẩy về `/login` |
 
 ---
 
 ## 4. API Specification
 
 ### Endpoint: `POST /api/v1/auth/logout`
-- **Auth Required:** `Bearer <token>`
-- **Request Body:** Không có (empty)
+- **Auth:** Required (Header `Authorization: Bearer <token>`)
+- **Request Body:** None
 - **Response Success (200 OK):**
 ```json
 {
@@ -63,11 +58,31 @@ Sau khi đăng xuất (hoặc khi chưa đăng nhập):
   "message": "Đăng xuất thành công"
 }
 ```
-- **Response Unauthorized (401):**
+- **Response Error (401 Unauthorized):**
 ```json
 {
   "status": "error",
-  "message": "Token không hợp lệ hoặc đã hết hạn",
+  "message": "Phiên đăng nhập không hợp lệ hoặc đã hết hạn",
   "code": "UNAUTHORIZED"
 }
+```
+
+---
+
+## 5. Kiến trúc Frontend: Component `<ProtectedRoute>`
+
+Để đáp ứng **TC-02**, xây dựng component bọc Route:
+
+```jsx
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return <LoadingSpinner />;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
 ```
