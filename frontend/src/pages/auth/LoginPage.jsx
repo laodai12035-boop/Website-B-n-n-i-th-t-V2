@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import InputField from '@/components/ui/InputField'
 import Button from '@/components/ui/Button'
 import FormAlert from '@/components/ui/FormAlert'
+import { useAuth } from '@/contexts/AuthContext'
 
 // =============================================
 // Validation helper (client-side)
@@ -43,6 +44,7 @@ const EyeIcon = ({ open }) =>
 // =============================================
 const LoginPage = () => {
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const [fields, setFields] = useState({
     email: '',
@@ -72,10 +74,14 @@ const LoginPage = () => {
     }
 
     setLoading(true)
-    // Placeholder - sẽ nối AuthContext.login() ở CV-03
-    setTimeout(() => {
+    try {
+      await login(fields.email, fields.password)
+      navigate('/')
+    } catch (err) {
+      setApiError(err.message)
+    } finally {
       setLoading(false)
-    }, 500)
+    }
   }
 
   return (

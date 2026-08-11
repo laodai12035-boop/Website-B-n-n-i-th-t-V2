@@ -5,7 +5,7 @@
  * Cung cấp: user state, register(), login(), logout(), loading flag.
  */
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import api from '@/services/api'
 
 const AuthContext = createContext(null)
@@ -15,23 +15,41 @@ const AuthContext = createContext(null)
 // =============================================
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true) // Initial check loading
+
+  // ---- Tự động khôi phục phiên đăng nhập khi app load ----
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        const response = await api.get('/auth/me')
+        setUser(response.data.data.user)
+      } catch (err) {
+        // Token không hợp lệ hoặc đã hết hạn
+        localStorage.removeItem('token')
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCurrentUser()
+  }, [])
 
   /**
    * register — Đăng ký tài khoản mới.
-   *
-   * @param {Object} payload - { full_name, email, phone, password }
-   * @returns {Object} user data từ API
-   * @throws {Error} với message từ API khi đăng ký thất bại
    */
   const register = useCallback(async (payload) => {
     setLoading(true)
     try {
       const response = await api.post('/auth/register', payload)
-      // Đăng ký thành công — không auto-login, chuyển sang trang login
       return response.data.data
     } catch (error) {
-      // Propagate lỗi lên component để hiển thị
       const apiMessage =
         error.response?.data?.message || 'Đã xảy ra lỗi, vui lòng thử lại'
       const apiCode = error.response?.data?.code || 'UNKNOWN_ERROR'
@@ -40,6 +58,35 @@ export const AuthProvider = ({ children }) => {
       const err = new Error(apiMessage)
       err.code = apiCode
       err.fieldErrors = apiErrors
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  /**
+   * login — Đăng nhập hệ thống.
+   *
+   * @param {string} email
+   * @param {string} password
+   * @returns {Object} user object
+   */
+  const login = useCallback(async (email, password) => {
+    setLoading(true)
+    try {
+      const response = await api.post('/auth/login', { email, password })
+      const { token, user: loggedUser } = response.data.data
+
+      localStorage.setItem('token', token)
+      setUser(loggedUser)
+      return loggedUser
+    } catch (error) {
+      const apiMessage =
+        error.response?.data?.message || 'Đã xảy ra lỗi, vui lòng thử lại'
+      const apiCode = error.response?.data?.code || 'UNKNOWN_ERROR'
+
+      const err = new Error(apiMessage)
+      err.code = apiCode
       throw err
     } finally {
       setLoading(false)
@@ -58,6 +105,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     register,
+    login,
     logout,
     isAuthenticated: !!user,
   }
