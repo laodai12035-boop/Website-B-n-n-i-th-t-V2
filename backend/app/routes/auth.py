@@ -21,6 +21,7 @@ from app.schemas.auth_schema import (
     login_schema,
     forgot_password_schema,
     reset_password_schema,
+    update_profile_schema,
 )
 from app.services.auth_service import AuthService
 from app.models.user import User
@@ -350,6 +351,78 @@ def reset_password():
         message="Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.",
         status=200,
     )
+
+
+# ============================================================
+# PUT /api/v1/auth/profile — Cập nhật thông tin cá nhân
+# ============================================================
+@auth_bp.route("/profile", methods=["PUT"])
+@jwt_required()
+def update_profile():
+    """
+    Cập nhật thông tin cá nhân (họ tên, số điện thoại, avatar).
+
+    Header:
+        Authorization: Bearer <token>
+
+    Request body (JSON):
+        full_name (str):  Họ tên mới
+        phone (str):      Số điện thoại mới (10 chữ số VN)
+        avatar_url (str): URL ảnh đại diện (tùy chọn)
+
+    Responses:
+        200: Cập nhật thành công, trả về user dict mới
+        400: Dữ liệu không hợp lệ (VALIDATION_ERROR)
+        401: Token không hợp lệ hoặc đã hết hạn
+    """
+    current_user_id = get_jwt_identity()
+
+    json_data = request.get_json(silent=True)
+    if not json_data:
+        return _error(
+            message="Request body phải là JSON hợp lệ",
+            code="INVALID_JSON",
+            status=400,
+        )
+
+    try:
+        data = update_profile_schema.load(json_data)
+    except ValidationError as exc:
+        return _error(
+            message="Dữ liệu không hợp lệ",
+            code="VALIDATION_ERROR",
+            status=400,
+            errors=exc.messages,
+        )
+
+    try:
+        user = AuthService.update_profile(
+            user_id=int(current_user_id),
+            full_name=data["full_name"],
+            phone=data["phone"],
+            avatar_url=data.get("avatar_url"),
+        )
+    except ValueError as exc:
+        if str(exc) == "USER_NOT_FOUND":
+            return _error(
+                message="Tài khoản không tồn tại hoặc đã bị khóa",
+                code="UNAUTHORIZED",
+                status=401,
+            )
+        return _error(message=str(exc), code="BUSINESS_ERROR", status=400)
+    except RuntimeError:
+        return _error(
+            message="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau",
+            code="SERVER_ERROR",
+            status=500,
+        )
+
+    return _success(
+        data={"user": user.to_dict()},
+        message="Cập nhật thông tin cá nhân thành công",
+        status=200,
+    )
+
 
 
 

@@ -145,3 +145,48 @@ forgot_password_schema = ForgotPasswordSchema()
 reset_password_schema = ResetPasswordSchema()
 
 
+class UpdateProfileSchema(Schema):
+    """
+    Schema validate request cập nhật thông tin cá nhân.
+    PUT /api/v1/auth/profile
+    """
+
+    full_name = fields.String(
+        required=True,
+        validate=[
+            validate.Length(min=2, max=100, error="Họ tên phải từ 2 đến 100 ký tự"),
+        ],
+        error_messages={"required": "Họ tên là bắt buộc"},
+    )
+
+    phone = fields.String(
+        required=True,
+        error_messages={"required": "Số điện thoại là bắt buộc"},
+    )
+
+    avatar_url = fields.String(
+        required=False,
+        allow_none=True,
+        validate=validate.Length(max=255, error="URL ảnh đại diện quá dài (tối đa 255 ký tự)"),
+    )
+
+    @validates("phone")
+    def validate_phone(self, value: str) -> str:
+        if not PHONE_REGEX.match(value):
+            raise ValidationError(
+                "Số điện thoại không hợp lệ (phải bắt đầu bằng 0 và có 10 chữ số)"
+            )
+        return value
+
+    @validates("full_name")
+    def validate_full_name(self, value: str) -> str:
+        stripped = value.strip()
+        if len(stripped) < 2:
+            raise ValidationError("Họ tên phải có ít nhất 2 ký tự")
+        return stripped
+
+
+update_profile_schema = UpdateProfileSchema()
+
+
+
