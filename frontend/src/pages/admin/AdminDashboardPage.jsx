@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import Navbar from '@/components/layout/Navbar'
 import FormAlert from '@/components/ui/FormAlert'
+import AdminQuickSearch from '@/components/admin/AdminQuickSearch'
 import api from '@/services/api'
 
 /**
@@ -39,21 +40,19 @@ const AdminDashboardPage = () => {
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
 
-        {/* Admin Banner */}
-        <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-yellow-800 text-white rounded-3xl p-6 sm:p-8 mb-8 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* Admin Header & Quick Search Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider mb-2">
+            <span className="inline-block px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-xs font-semibold uppercase tracking-wider mb-1">
               Khu vực Quản trị viên (Admin Area)
             </span>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold">Chào mừng, {user?.full_name}!</h1>
-            <p className="text-amber-100 text-sm mt-1">Quản lý toàn bộ dữ liệu vận hành và tài khoản hệ thống (QTN-09)</p>
+            <h1 className="text-2xl font-display font-bold text-gray-900">
+              Chào mừng, {user?.full_name}!
+            </h1>
           </div>
-          <Link
-            to="/profile"
-            className="px-4 py-2 bg-white text-amber-900 rounded-xl font-medium text-sm hover:bg-amber-50 transition-colors shadow-sm"
-          >
-            Về Trang cá nhân
-          </Link>
+
+          {/* Quick Search */}
+          <AdminQuickSearch />
         </div>
 
         {error && <div className="mb-6"><FormAlert type="error" message={error} /></div>}
