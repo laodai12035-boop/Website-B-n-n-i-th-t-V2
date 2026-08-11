@@ -1,15 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import SearchBar from '@/components/product/SearchBar'
 
 /**
  * Navbar — Thanh điều hướng chính của website Nội Thất Đẹp.
- *
- * Tính năng:
- * - Logo thương hiệu & Link điều hướng
- * - Khu vực tài khoản:
- *   - Nếu CHƯA ĐĂNG NHẬP: Nút "Đăng nhập" / "Đăng ký"
- *   - Nếu ĐÃ ĐĂNG NHẬP: Hiển thị tên user + Menu xổ xuống chứa nút "Đăng xuất"
  */
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
@@ -37,10 +32,10 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-4">
 
           {/* Logo Brand */}
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
             <div className="w-10 h-10 rounded-xl bg-primary-500 flex items-center justify-center text-white shadow-md group-hover:bg-primary-600 transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -52,12 +47,15 @@ const Navbar = () => {
             </div>
           </Link>
 
+          {/* Search Bar (Mobile & Desktop) */}
+          <div className="flex-1 max-w-xs sm:max-w-sm md:max-w-md">
+            <SearchBar />
+          </div>
+
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-600 shrink-0">
             <Link to="/" className="hover:text-primary-600 transition-colors">Trang chủ</Link>
             <Link to="/products" className="hover:text-primary-600 transition-colors">Sản phẩm</Link>
-            <Link to="/about" className="hover:text-primary-600 transition-colors">Giới thiệu</Link>
-            <Link to="/contact" className="hover:text-primary-600 transition-colors">Liên hệ</Link>
           </nav>
 
           {/* Right Section: User Account & Actions */}
