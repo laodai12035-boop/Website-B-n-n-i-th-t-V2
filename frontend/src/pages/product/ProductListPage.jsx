@@ -5,13 +5,14 @@ import ProductCard from '@/components/product/ProductCard'
 import SearchBar from '@/components/product/SearchBar'
 import productService from '@/services/productService'
 
-const CATEGORIES = [
-  { id: '', name: 'Tất cả' },
+const DEFAULT_CATEGORIES = [
+  { id: '', name: 'Tất cả sản phẩm' },
   { id: 'ban', name: 'Bàn' },
   { id: 'ghe', name: 'Ghế & Sofa' },
   { id: 'ke', name: 'Kệ sách & Tivi' },
   { id: 'tu', name: 'Tủ quần áo' },
   { id: 'trang-tri', name: 'Trang trí' },
+  { id: 'phong-ngu', name: 'Phòng ngủ' },
 ]
 
 /**
@@ -25,9 +26,26 @@ const ProductListPage = () => {
   const currentCategory = searchParams.get('category') || ''
 
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ page: 1, total_items: 0, total_pages: 1 })
 
+  // Nạp danh sách danh mục động kèm số lượng sản phẩm
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const catData = await productService.getCategories()
+        if (catData && catData.length > 0) {
+          setCategories([{ id: '', name: 'Tất cả sản phẩm' }, ...catData])
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+      }
+    }
+    fetchCategories()
+  }, [])
+
+  // Nạp sản phẩm theo search / category
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true)
@@ -59,6 +77,9 @@ const ProductListPage = () => {
     setSearchParams(params)
   }
 
+  // Tên danh mục đang chọn (để hiển thị tiêu đề)
+  const activeCategoryObj = categories.find((c) => c.id === currentCategory)
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
@@ -71,6 +92,8 @@ const ProductListPage = () => {
             <h1 className="text-2xl font-display font-bold text-gray-900">
               {currentSearch ? (
                 <>Kết quả tìm kiếm cho: <span className="text-primary-600 font-extrabold">"{currentSearch}"</span></>
+              ) : currentCategory ? (
+                <>Danh mục: <span className="text-primary-600 font-extrabold">{activeCategoryObj?.name || currentCategory}</span></>
               ) : (
                 'Danh sách Sản phẩm Nội thất'
               )}
@@ -86,21 +109,30 @@ const ProductListPage = () => {
         </div>
 
         {/* Categories Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none">
-          {CATEGORIES.map((cat) => {
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-3 mb-6 scrollbar-none">
+          {categories.map((cat) => {
             const isActive = currentCategory === cat.id
             return (
               <button
                 key={cat.id}
                 type="button"
                 onClick={() => handleCategorySelect(cat.id)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                   isActive
                     ? 'bg-primary-600 text-white shadow-sm'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                 }`}
               >
-                {cat.name}
+                <span>{cat.name}</span>
+                {cat.count !== undefined && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+                      isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                )}
               </button>
             )
           })}
