@@ -37,6 +37,9 @@ def get_products():
     """
     search_query = request.args.get("search", type=str)
     category = request.args.get("category", type=str)
+    min_price = request.args.get("min_price", type=float)
+    max_price = request.args.get("max_price", type=float)
+    sort = request.args.get("sort", default="newest", type=str)
     page = request.args.get("page", default=1, type=int)
     limit = request.args.get("limit", default=12, type=int)
 
@@ -46,6 +49,9 @@ def get_products():
     result = ProductService.search_products(
         search_query=search_query,
         category=category,
+        min_price=min_price,
+        max_price=max_price,
+        sort=sort,
         page=page,
         limit=limit,
     )

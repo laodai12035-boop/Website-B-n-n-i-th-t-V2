@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import ProductCard from '@/components/product/ProductCard'
 import SearchBar from '@/components/product/SearchBar'
+import ProductFilters from '@/components/product/ProductFilters'
 import productService from '@/services/productService'
 
 const DEFAULT_CATEGORIES = [
@@ -17,13 +18,16 @@ const DEFAULT_CATEGORIES = [
 
 /**
  * ProductListPage — Trang Danh sách & Tìm kiếm sản phẩm.
- * Hỗ trợ từ khóa `search` và bộ lọc danh mục `category`.
+ * Hỗ trợ từ khóa `search`, bộ lọc danh mục `category`, khoảng giá `min_price`/`max_price` và `sort`.
  */
 const ProductListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const currentSearch = searchParams.get('search') || ''
   const currentCategory = searchParams.get('category') || ''
+  const currentMinPrice = searchParams.get('min_price') || ''
+  const currentMaxPrice = searchParams.get('max_price') || ''
+  const currentSort = searchParams.get('sort') || 'newest'
 
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
@@ -45,7 +49,7 @@ const ProductListPage = () => {
     fetchCategories()
   }, [])
 
-  // Nạp sản phẩm theo search / category
+  // Nạp sản phẩm theo search / category / price / sort
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true)
@@ -53,6 +57,9 @@ const ProductListPage = () => {
         const data = await productService.getProducts({
           search: currentSearch,
           category: currentCategory,
+          min_price: currentMinPrice,
+          max_price: currentMaxPrice,
+          sort: currentSort,
         })
         setProducts(data.items || [])
         setPagination(data.pagination || { page: 1, total_items: 0, total_pages: 1 })
@@ -65,7 +72,7 @@ const ProductListPage = () => {
     }
 
     fetchProducts()
-  }, [currentSearch, currentCategory])
+  }, [currentSearch, currentCategory, currentMinPrice, currentMaxPrice, currentSort])
 
   const handleCategorySelect = (catId) => {
     const params = new URLSearchParams(searchParams)
@@ -109,7 +116,7 @@ const ProductListPage = () => {
         </div>
 
         {/* Categories Bar */}
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-3 mb-6 scrollbar-none">
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-3 mb-4 scrollbar-none">
           {categories.map((cat) => {
             const isActive = currentCategory === cat.id
             return (
@@ -137,6 +144,9 @@ const ProductListPage = () => {
             )
           })}
         </div>
+
+        {/* Price & Sort Filter Bar */}
+        <ProductFilters />
 
         {/* Content Area */}
         {loading ? (

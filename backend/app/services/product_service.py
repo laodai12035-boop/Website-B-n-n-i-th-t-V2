@@ -23,15 +23,21 @@ class ProductService:
     def search_products(
         search_query: Optional[str] = None,
         category: Optional[str] = None,
+        min_price: Optional[float] = None,
+        max_price: Optional[float] = None,
+        sort: Optional[str] = "newest",
         page: int = 1,
         limit: int = 12,
     ) -> Dict[str, Any]:
         """
-        Tìm kiếm và lọc danh sách sản phẩm.
+        Tìm kiếm, lọc khoảng giá và sắp xếp danh sách sản phẩm.
 
         Args:
             search_query: Từ khóa tìm kiếm (khớp name hoặc description)
             category:     Danh mục lọc ('ban', 'ghe', 'ke', 'tu', 'trang-tri')
+            min_price:    Giá tối thiểu
+            max_price:    Giá tối đa
+            sort:         Tiêu chí sắp xếp: 'newest', 'price_asc', 'price_desc', 'rating_desc'
             page:         Số trang (mặc định 1)
             limit:        Số sản phẩm mỗi trang (mặc định 12)
 
@@ -54,8 +60,25 @@ class ProductService:
                 )
             )
 
-        # Sắp xếp mới nhất trước
-        query = query.order_by(Product.created_at.desc())
+        # Lọc theo khoảng giá (Effective Price = discount_price nếu có, ngược lại là price)
+        effective_price = db.func.coalesce(Product.discount_price, Product.price)
+
+        if min_price is not None and min_price >= 0:
+            query = query.filter(effective_price >= min_price)
+
+        if max_price is not None and max_price >= 0:
+            query = query.filter(effective_price <= max_price)
+
+        # Sắp xếp
+        if sort == "price_asc":
+            query = query.order_by(effective_price.asc())
+        elif sort == "price_desc":
+            query = query.order_by(effective_price.desc())
+        elif sort == "rating_desc":
+            query = query.order_by(Product.rating.desc(), Product.rating_count.desc())
+        else:
+            # 'newest' hoặc mặc định
+            query = query.order_by(Product.created_at.desc())
 
         # Tổng số items khớp filter
         total_items = query.count()
