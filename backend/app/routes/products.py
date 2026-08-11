@@ -55,3 +55,25 @@ def get_products():
         message="Lấy danh sách sản phẩm thành công",
         status=200,
     )
+
+
+# ============================================================
+# GET /api/v1/products/categories — Thống kê danh mục sản phẩm
+# ============================================================
+@products_bp.route("/categories", methods=["GET"])
+def get_categories():
+    """
+    Lấy danh sách các danh mục sản phẩm kèm số lượng items.
+
+    Responses:
+        200: Trả về list danh mục
+    """
+    ProductService.seed_initial_products()
+    categories = ProductService.get_categories_summary()
+
+    return _success(
+        data={"categories": categories},
+        message="Lấy danh sách danh mục sản phẩm thành công",
+        status=200,
+    )
+

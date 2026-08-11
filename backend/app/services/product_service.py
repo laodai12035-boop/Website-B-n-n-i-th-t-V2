@@ -79,6 +79,44 @@ class ProductService:
         }
 
     @staticmethod
+    def get_categories_summary() -> list:
+        """
+        Lấy danh sách các danh mục tiêu chuẩn kèm tổng số sản phẩm active (count).
+
+        Returns:
+            List of dict: [{ id, name, count }, ...]
+        """
+        categories_def = [
+            {"id": "ban", "name": "Bàn ăn & Bàn làm việc"},
+            {"id": "ghe", "name": "Ghế & Sofa"},
+            {"id": "ke", "name": "Kệ sách & Tivi"},
+            {"id": "tu", "name": "Tủ quần áo & Trang trí"},
+            {"id": "trang-tri", "name": "Trang trí & Đèn"},
+            {"id": "phong-ngu", "name": "Phòng ngủ (Trống)"},
+        ]
+
+        # Đếm sản phẩm theo category
+        counts_query = (
+            db.session.query(Product.category, db.func.count(Product.id))
+            .filter(Product.is_active == True)
+            .group_by(Product.category)
+            .all()
+        )
+        count_map = {cat: count for cat, count in counts_query}
+
+        result = []
+        for cat in categories_def:
+            result.append(
+                {
+                    "id": cat["id"],
+                    "name": cat["name"],
+                    "count": count_map.get(cat["id"], 0),
+                }
+            )
+
+        return result
+
+    @staticmethod
     def seed_initial_products() -> None:
         """Helper tự động seed dữ liệu 8+ sản phẩm mẫu nếu DB rỗng."""
         if db.session.query(Product).count() > 0:
