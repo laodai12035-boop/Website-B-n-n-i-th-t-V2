@@ -6,18 +6,20 @@ import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import ProfilePage from '@/pages/user/ProfilePage'
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage'
 import ForbiddenPage from '@/pages/error/ForbiddenPage'
+import ProductListPage from '@/pages/product/ProductListPage'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AdminRoute from '@/components/auth/AdminRoute'
 
 function App() {
   return (
     <Routes>
-      {/* Public Auth routes */}
+      {/* Public routes */}
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/403" element={<ForbiddenPage />} />
+      <Route path="/products" element={<ProductListPage />} />
 
       {/* Protected User routes */}
       <Route

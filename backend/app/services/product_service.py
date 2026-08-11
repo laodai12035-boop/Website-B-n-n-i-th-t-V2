@@ -1,0 +1,184 @@
+"""
+services/product_service.py — Business logic layer cho Quản lý Sản phẩm.
+
+Bao gồm:
+- Search & Filter sản phẩm với `name` hoặc `description` LIKE %search%
+- Phân trang results
+- Auto-seed dữ liệu sản phẩm ban đầu cho testing
+"""
+
+import logging
+from typing import Dict, Any, Optional
+from sqlalchemy import or_
+from app.extensions import db
+from app.models.product import Product
+
+logger = logging.getLogger(__name__)
+
+
+class ProductService:
+    """Service xử lý nghiệp vụ liên quan tới Sản phẩm."""
+
+    @staticmethod
+    def search_products(
+        search_query: Optional[str] = None,
+        category: Optional[str] = None,
+        page: int = 1,
+        limit: int = 12,
+    ) -> Dict[str, Any]:
+        """
+        Tìm kiếm và lọc danh sách sản phẩm.
+
+        Args:
+            search_query: Từ khóa tìm kiếm (khớp name hoặc description)
+            category:     Danh mục lọc ('ban', 'ghe', 'ke', 'tu', 'trang-tri')
+            page:         Số trang (mặc định 1)
+            limit:        Số sản phẩm mỗi trang (mặc định 12)
+
+        Returns:
+            Dict chứa danh sách `items` và metadata `pagination`.
+        """
+        query = db.session.query(Product).filter(Product.is_active == True)
+
+        # Lọc theo danh mục
+        if category and category.strip():
+            query = query.filter(Product.category == category.strip().lower())
+
+        # Lọc theo từ khóa (name OR description ILIKE/LIKE %search_query%)
+        if search_query and search_query.strip():
+            term = f"%{search_query.strip()}%"
+            query = query.filter(
+                or_(
+                    Product.name.ilike(term),
+                    Product.description.ilike(term),
+                )
+            )
+
+        # Sắp xếp mới nhất trước
+        query = query.order_by(Product.created_at.desc())
+
+        # Tổng số items khớp filter
+        total_items = query.count()
+
+        # Calculation pagination
+        page = max(1, page)
+        limit = max(1, min(100, limit))
+        total_pages = (total_items + limit - 1) // limit if total_items > 0 else 1
+
+        offset = (page - 1) * limit
+        products = query.offset(offset).limit(limit).all()
+
+        return {
+            "items": [p.to_dict() for p in products],
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total_items": total_items,
+                "total_pages": total_pages,
+            },
+        }
+
+    @staticmethod
+    def seed_initial_products() -> None:
+        """Helper tự động seed dữ liệu 8+ sản phẩm mẫu nếu DB rỗng."""
+        if db.session.query(Product).count() > 0:
+            return
+
+        sample_products = [
+            Product(
+                name="Bộ Sofa Gỗ Óc Chó Cao Cấp",
+                slug="bo-sofa-go-oc-cho-cao-cap",
+                description="Bộ sofa gỗ óc chó tự nhiên kết hợp đệm bọc da Ý cao cấp sang trọng cho phòng khách.",
+                price=28500000.00,
+                discount_price=25000000.00,
+                category="ghe",
+                stock=5,
+                image_url="https://images.unsplash.com/photo-1555041469-a586c61ea9bc",
+                is_active=True,
+            ),
+            Product(
+                name="Ghế Sofa Văng Da Hiện Đại",
+                slug="ghe-sofa-vang-da-hien-dai",
+                description="Sofa văng da bò thật phong cách Bắc Âu tối giản, khung gỗ sồi chắc chắn.",
+                price=15800000.00,
+                discount_price=None,
+                category="ghe",
+                stock=8,
+                image_url="https://images.unsplash.com/photo-1586023492125-27b2c045efd7",
+                is_active=True,
+            ),
+            Product(
+                name="Bàn Ăn Gỗ Sồi 6 Ghế",
+                slug="ban-an-go-soi-6-ghe",
+                description="Bộ bàn ăn gia đình 6 ghế bằng gỗ sồi Nga lau màu óc chó tinh tế.",
+                price=12500000.00,
+                discount_price=10900000.00,
+                category="ban",
+                stock=10,
+                image_url="https://images.unsplash.com/photo-1617806118233-18e1de247200",
+                is_active=True,
+            ),
+            Product(
+                name="Bàn Làm Việc Chân Sắt Tối Giản",
+                slug="ban-lam-viec-chan-sat-toi-gian",
+                description="Bàn làm việc mặt gỗ công nghiệp phủ Melamine chống xước, chân sắt sơn tĩnh điện.",
+                price=2450000.00,
+                discount_price=None,
+                category="ban",
+                stock=20,
+                image_url="https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd",
+                is_active=True,
+            ),
+            Product(
+                name="Kệ Sách Gỗ Khung Kim Loại",
+                slug="ke-sach-go-khung-kim-loai",
+                description="Kệ sách trang trí 5 tầng khung thép tĩnh điện phong cách Industrial.",
+                price=3200000.00,
+                discount_price=2800000.00,
+                category="ke",
+                stock=15,
+                image_url="https://images.unsplash.com/photo-1594620302200-9a762244a156",
+                is_active=True,
+            ),
+            Product(
+                name="Kệ Tivi Gỗ Tự Nhiên Modern",
+                slug="ke-tivi-go-tu-nhien-modern",
+                description="Kệ tivi phòng khách thiết kế nhiều ngăn kéo lưu trữ tiện lợi.",
+                price=6800000.00,
+                discount_price=None,
+                category="ke",
+                stock=7,
+                image_url="https://images.unsplash.com/photo-1595428774223-ef52624120d2",
+                is_active=True,
+            ),
+            Product(
+                name="Tủ Quần Áo 4 Cánh Cửa Lùa",
+                slug="tu-quan-ao-4-canh-cua-lua",
+                description="Tủ quần áo hiện đại tích hợp gương soi toàn thân và kệ trang trí bên hông.",
+                price=14500000.00,
+                discount_price=12900000.00,
+                category="tu",
+                stock=4,
+                image_url="https://images.unsplash.com/photo-1558997519-83ea9252edf8",
+                is_active=True,
+            ),
+            Product(
+                name="Đèn Sàn Trang Trí Đọc Sách Scandinavian",
+                slug="den-san-trang-tri-doc-sach-scandinavian",
+                description="Đèn cây trang trí góc sofa với ánh sáng vàng ấm áp bảo vệ mắt.",
+                price=1200000.00,
+                discount_price=950000.00,
+                category="trang-tri",
+                stock=25,
+                image_url="https://images.unsplash.com/photo-1507473885765-e6ed057f782c",
+                is_active=True,
+            ),
+        ]
+
+        db.session.add_all(sample_products)
+        try:
+            db.session.commit()
+            logger.info("Successfully seeded %d sample products", len(sample_products))
+        except Exception as exc:
+            db.session.rollback()
+            logger.error("Error seeding products: %s", exc)
