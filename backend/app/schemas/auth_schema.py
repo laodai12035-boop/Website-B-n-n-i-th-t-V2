@@ -78,26 +78,29 @@ class LoginSchema(Schema):
     """
     Schema validate request đăng nhập hệ thống.
     POST /api/v1/auth/login
+    Hỗ trợ cả Email hoặc Số điện thoại.
     """
 
-    email = fields.Email(
+    email = fields.String(
         required=True,
+        validate=validate.Length(min=1, error="Email hoặc số điện thoại là bắt buộc"),
         error_messages={
-            "required": "Email là bắt buộc",
-            "invalid": "Email không hợp lệ",
+            "required": "Email hoặc số điện thoại là bắt buộc",
+            "invalid": "Email hoặc số điện thoại không hợp lệ",
         },
     )
 
     password = fields.String(
         required=True,
+        validate=validate.Length(min=1, error="Mật khẩu là bắt buộc"),
         error_messages={"required": "Mật khẩu là bắt buộc"},
         load_only=True,
     )
 
     @validates("email")
     def normalize_email(self, value: str) -> str:
-        """Normalize email về lowercase."""
-        return value.lower().strip()
+        """Strip khoảng trắng thừa."""
+        return value.strip()
 
 
 login_schema = LoginSchema()

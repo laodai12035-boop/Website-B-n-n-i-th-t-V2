@@ -10,6 +10,7 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import create_access_token, decode_token
 
@@ -89,29 +90,38 @@ class AuthService:
     @staticmethod
     def login(email: str, password: str) -> tuple[str, User]:
         """
-        Xác thực đăng nhập người dùng và tạo JWT token.
+        Xác thực đăng nhập người dùng (hỗ trợ cả Email hoặc Số điện thoại) và tạo JWT token.
 
         Args:
-            email:    Email đăng nhập (đã normalize)
+            email:    Email hoặc Số điện thoại đăng nhập
             password: Mật khẩu nhập vào
 
         Returns:
             Tuple (access_token, user_instance)
 
         Raises:
-            ValueError("INVALID_CREDENTIALS"): Khi email không tìm thấy hoặc mật khẩu không khớp.
+            ValueError("INVALID_CREDENTIALS"): Khi không tìm thấy tài khoản hoặc mật khẩu không khớp.
             ValueError("ACCOUNT_LOCKED"):     Khi tài khoản bị khóa (is_active=False).
         """
-        email = email.lower().strip()
+        identifier = email.strip()
+        lower_identifier = identifier.lower()
 
-        user = User.query.filter_by(email=email).first()
+        # Tìm user khớp email (lowercase) hoặc số điện thoại
+        user = User.query.filter(
+            or_(
+                User.email == lower_identifier,
+                User.phone == identifier,
+                User.phone == lower_identifier,
+            )
+        ).first()
+
         if not user:
-            logger.warning("Login failed: email %s not found", email)
+            logger.warning("Login failed: identifier %s not found", email)
             raise ValueError("INVALID_CREDENTIALS")
 
         # Verify password
         if not bcrypt.check_password_hash(user.password_hash, password):
-            logger.warning("Login failed: invalid password for email %s", email)
+            logger.warning("Login failed: invalid password for identifier %s", email)
             raise ValueError("INVALID_CREDENTIALS")
 
         # Check account status
