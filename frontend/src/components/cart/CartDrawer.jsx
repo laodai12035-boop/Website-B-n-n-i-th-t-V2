@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react_router_dom'
+import { Link } from 'react-router-dom'
 import { useCart } from '@/contexts/CartContext'
 
 /**
