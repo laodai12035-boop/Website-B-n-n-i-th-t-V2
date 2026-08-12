@@ -201,3 +201,34 @@ def confirm_qr_payment(order_id: int):
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
     return _success(data=order, message="Xác nhận thanh toán thành công", status=200)
+
+
+# ============================================================
+# POST/PUT /api/v1/orders/<id>/cancel — Hủy đơn hàng (QTN-03, QTN-04)
+# ============================================================
+@orders_bp.route("/<int:order_id>/cancel", methods=["POST", "PUT"])
+@jwt_required()
+def cancel_order(order_id: int):
+    user_id = int(get_jwt_identity())
+    body = request.get_json() or {}
+    reason = body.get("reason", "").strip()
+
+    try:
+        order = OrderService.cancel_order(user_id=user_id, order_id=order_id, reason=reason)
+        return _success(data=order, message="Đã hủy đơn hàng thành công và hoàn lại số lượng tồn kho.", status=200)
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "ORDER_NOT_FOUND":
+            return jsonify({"status": "error", "message": "Đơn hàng không tồn tại.", "code": "ORDER_NOT_FOUND"}), 404
+        elif err_str == "FORBIDDEN":
+            return jsonify({"status": "error", "message": "Bạn không có quyền hủy đơn hàng này.", "code": "FORBIDDEN"}), 403
+        elif err_str == "ORDER_ALREADY_CANCELLED":
+            return jsonify({"status": "error", "message": "Đơn hàng này đã được hủy trước đó.", "code": "ORDER_ALREADY_CANCELLED"}), 400
+        elif err_str == "CANNOT_CANCEL_SHIPPED_ORDER":
+            return jsonify({
+                "status": "error",
+                "message": "Đơn hàng đã qua giai đoạn có thể hủy. Không thể hủy đơn khi đã giao cho vận chuyển.",
+                "code": "CANNOT_CANCEL_SHIPPED_ORDER",
+            }), 400
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+

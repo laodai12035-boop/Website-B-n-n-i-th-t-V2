@@ -181,3 +181,56 @@ class OrderService:
 
         return order.to_dict()
 
+    @staticmethod
+    def cancel_order(user_id: int, order_id: int, reason: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Hủy đơn hàng khi chưa chuyển sang giao hàng (QTN-04) và hoàn tồn kho (QTN-03).
+
+        Args:
+            user_id: ID khách hàng
+            order_id: ID đơn hàng
+            reason: Lý do hủy (tùy chọn)
+
+        Returns:
+            Dict chi tiết đơn hàng sau khi hủy.
+
+        Raises:
+            ValueError: ORDER_NOT_FOUND (404), FORBIDDEN (403),
+                        ORDER_ALREADY_CANCELLED (400), CANNOT_CANCEL_SHIPPED_ORDER (400)
+        """
+        order = db.session.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            raise ValueError("ORDER_NOT_FOUND")
+
+        # 1. Kiểm tra phân quyền (Khách sở hữu đơn hoặc Admin)
+        if order.user_id != user_id:
+            from app.models.user import User
+            user = db.session.query(User).filter(User.id == user_id).first()
+            if not user or user.role != "admin":
+                raise ValueError("FORBIDDEN")
+
+        # 2. Kiểm tra quy tắc trạng thái (QTN-04)
+        if order.status == "cancelled":
+            raise ValueError("ORDER_ALREADY_CANCELLED")
+
+        if order.status in ["shipping", "delivered"]:
+            raise ValueError("CANNOT_CANCEL_SHIPPED_ORDER")
+
+        if order.status not in ["pending", "confirmed", "processing"]:
+            raise ValueError("CANNOT_CANCEL_ORDER")
+
+        # 3. Chuyển trạng thái đơn thành cancelled
+        order.status = "cancelled"
+        if reason and reason.strip():
+            order.note = f"{order.note} | Lý do hủy: {reason.strip()}" if order.note else f"Lý do hủy: {reason.strip()}"
+
+        # 4. Hoàn lại số lượng tồn kho sản phẩm (QTN-03)
+        for item in order.items:
+            product = db.session.query(Product).filter(Product.id == item.product_id).first()
+            if product:
+                product.stock += item.quantity
+
+        db.session.commit()
+        return order.to_dict()
+
+
