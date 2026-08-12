@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import orderService from '@/services/orderService'
+import returnService from '@/services/returnService'
 import OrderTimeline from '@/components/order/OrderTimeline'
+import ReturnRequestModal from '@/components/order/ReturnRequestModal'
 
 /**
- * OrderDetailPage — Trang xem chi tiết đơn hàng cho Khách hàng (NT-06-CN-002).
+ * OrderDetailPage — Trang xem chi tiết đơn hàng cho Khách hàng (NT-06-CN-002, NT-06-CN-003, NT-06-CN-004).
  * Tuyến đường: /orders/:id
  */
 const OrderDetailPage = () => {
@@ -17,6 +19,9 @@ const OrderDetailPage = () => {
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
   const [cancelSuccess, setCancelSuccess] = useState('')
+  const [returnRequest, setReturnRequest] = useState(null)
+  const [showReturnModal, setShowReturnModal] = useState(false)
+  const [returnSuccess, setReturnSuccess] = useState('')
 
   const handleCancelOrder = async (e) => {
     e.preventDefault()
@@ -44,6 +49,16 @@ const OrderDetailPage = () => {
       try {
         const data = await orderService.getOrderDetail(id)
         setOrder(data)
+
+        // Lấy thông tin yêu cầu đổi/trả nếu đơn hàng ở trạng thái delivered
+        if (data.status === 'delivered') {
+          try {
+            const retData = await returnService.getReturnRequestByOrder(id)
+            setReturnRequest(retData)
+          } catch (e) {
+            // Ignore if no return request
+          }
+        }
       } catch (err) {
         const status = err.response?.status
         const code = err.response?.data?.code || 'ERROR'
@@ -183,6 +198,35 @@ const OrderDetailPage = () => {
                     >
                       <span>✖</span> Hủy đơn hàng
                     </button>
+                  )}
+
+                  {/* Nút Yêu cầu Đổi/Trả hàng (Chỉ hiện khi delivered - QTN-05) */}
+                  {order.status === 'delivered' && (
+                    returnRequest ? (
+                      <span className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 border ${
+                        returnRequest.status === 'pending'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200'
+                          : returnRequest.status === 'approved'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : 'bg-red-50 text-red-800 border-red-200'
+                      }`}>
+                        <span>🔄</span> {
+                          returnRequest.status === 'pending'
+                            ? '⏳ Đang chờ Admin duyệt đổi/trả'
+                            : returnRequest.status === 'approved'
+                            ? '✅ Yêu cầu đổi/trả đã được chấp nhận'
+                            : '❌ Yêu cầu đổi/trả bị từ chối'
+                        }
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowReturnModal(true)}
+                        className="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-extrabold transition-colors flex items-center gap-1 shadow-2xs"
+                      >
+                        <span>🔄</span> Yêu cầu đổi/trả
+                      </button>
+                    )
                   )}
                 </div>
               </div>
@@ -348,6 +392,18 @@ const OrderDetailPage = () => {
             </form>
           </div>
         </div>
+      )}
+      {/* Return Request Modal */}
+      {showReturnModal && (
+        <ReturnRequestModal
+          order={order}
+          onClose={() => setShowReturnModal(false)}
+          onSuccess={(req) => {
+            setReturnRequest(req)
+            setReturnSuccess('Đã gửi yêu cầu đổi/trả hàng thành công! Admin sẽ liên hệ xử lý.')
+            setTimeout(() => setReturnSuccess(''), 6000)
+          }}
+        />
       )}
     </div>
   )
