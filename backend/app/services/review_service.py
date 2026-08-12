@@ -136,41 +136,50 @@ class ReviewService:
         }
 
     @staticmethod
-    def get_product_reviews(product_id: int, current_user_id: Optional[int] = None) -> Dict[str, Any]:
+    def get_product_reviews(
+        product_id: int, star: Optional[int] = None, current_user_id: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
-        Lấy danh sách các nhận xét đã duyệt của sản phẩm kèm tổng quan phân bổ sao.
+        Lấy danh sách các nhận xét đã duyệt của sản phẩm kèm tổng quan phân bổ sao và bộ lọc.
 
         Args:
             product_id: ID sản phẩm
+            star: Lọc nhận xét theo số sao (1 đến 5, tùy chọn)
             current_user_id: ID người dùng đang xem (nếu có)
 
         Returns:
             Dict chứa reviews, summary, và can_review (QTN-06).
         """
-        reviews = (
+        # 1. Lấy tất cả approved reviews để tính summary thống kê sao
+        all_reviews = (
             db.session.query(Review)
             .filter(Review.product_id == product_id, Review.is_approved == True)
             .order_by(Review.created_at.desc())
             .all()
         )
 
-        # Tính toán phân bổ số sao 1-5
         breakdown = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
         total_rating_sum = 0
-        for r in reviews:
+        for r in all_reviews:
             if 1 <= r.rating <= 5:
                 breakdown[r.rating] += 1
                 total_rating_sum += r.rating
 
-        total_count = len(reviews)
+        total_count = len(all_reviews)
         avg_rating = round(total_rating_sum / total_count, 1) if total_count > 0 else 5.0
+
+        # 2. Lọc danh sách nhận xét nếu có star parameter
+        if star is not None and isinstance(star, int) and 1 <= star <= 5:
+            filtered_reviews = [r for r in all_reviews if r.rating == star]
+        else:
+            filtered_reviews = all_reviews
 
         can_review = False
         if current_user_id:
             can_review = ReviewService.check_user_eligible_to_review(current_user_id, product_id)
 
         return {
-            "reviews": [r.to_dict() for r in reviews],
+            "reviews": [r.to_dict() for r in filtered_reviews],
             "summary": {
                 "average_rating": avg_rating,
                 "total_reviews": total_count,
