@@ -69,11 +69,6 @@ const ProductDetailPage = () => {
     }
   }, [id])
 
-  const handleAddToCart = () => {
-    setAddedToCartToast(true)
-    setTimeout(() => setAddedToCartToast(false), 3000)
-  }
-
   const inCompare = product ? isComparing(product.id) : false
 
   const handleToggleCompare = () => {

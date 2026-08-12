@@ -12,6 +12,7 @@ import CategoryNav from '@/components/product/CategoryNav'
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
   const { wishlistCount } = useWishlist()
+  const { cartCount, setIsCartOpen } = useCart()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
