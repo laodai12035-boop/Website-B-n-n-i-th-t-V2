@@ -4,6 +4,7 @@ import Navbar from '@/components/layout/Navbar'
 import productService from '@/services/productService'
 import { useCompare } from '@/contexts/CompareContext'
 import { useWishlist } from '@/contexts/WishlistContext'
+import { useCart } from '@/contexts/CartContext'
 
 import RelatedProducts from '@/components/product/RelatedProducts'
 import ProductReviews from '@/components/product/ProductReviews'
@@ -16,12 +17,31 @@ const ProductDetailPage = () => {
   const { id } = useParams()
   const { isComparing, addToCompare, removeFromCompare } = useCompare()
   const { isWishlisted, toggleWishlist } = useWishlist()
+  const { addToCart } = useCart()
 
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedImage, setSelectedImage] = useState('')
   const [quantity, setQuantity] = useState(1)
-  const [addedToCartToast, setAddedToCartToast] = useState(false)
+
+  const [cartError, setCartError] = useState('')
+  const [cartSuccess, setCartSuccess] = useState('')
+
+  const handleAddToCart = async () => {
+    if (!product) return
+    setCartError('')
+    setCartSuccess('')
+    try {
+      await addToCart(product, quantity)
+      setCartSuccess(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`)
+      setTimeout(() => setCartSuccess(''), 3000)
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Không thể thêm sản phẩm vào giỏ hàng'
+      setCartError(msg)
+      setTimeout(() => setCartError(''), 4000)
+    }
+  }
 
   const formatCurrency = (val) => {
     if (!val) return '0đ'
@@ -256,14 +276,26 @@ const ProductDetailPage = () => {
                 </div>
               </div>
 
+              {/* Cart Banners */}
+              {cartSuccess && (
+                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 font-semibold flex items-center gap-2 animate-fade-in">
+                  <span>✅</span> {cartSuccess}
+                </div>
+              )}
+              {cartError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-semibold flex items-center gap-2 animate-fade-in">
+                  <span>⚠️</span> {cartError}
+                </div>
+              )}
+
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={handleAddToCart}
                   disabled={product.stock <= 0}
-                  className="flex-1 bg-amber-700 hover:bg-amber-800 text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2"
+                  className="flex-1 bg-amber-700 hover:bg-amber-800 text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
                 >
-                  <span>🛒</span> Thêm vào giỏ hàng
+                  <span>🛒</span> {product.stock <= 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
                 </button>
 
                 {/* Wishlist Button */}
