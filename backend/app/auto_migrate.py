@@ -8,7 +8,10 @@ from app.extensions import db
 
 
 def run_auto_migrations(app):
-    """Kiểm tra và tự động cập nhật bảng MySQL XAMPP."""
+    """Kiểm tra và tự động cập nhật bảng MySQL XAMPP (Chỉ chạy ở môi trường Dev/Prod, bỏ qua Testing)."""
+    if app.config.get("TESTING"):
+        return
+
     with app.app_context():
         try:
             # 1. Tạo tất cả các bảng mới nếu chưa có (coupons, cart_items, v.v.)
@@ -39,6 +42,8 @@ def run_auto_migrations(app):
                     alter_statements.append("ADD COLUMN subtotal DOUBLE NOT NULL DEFAULT 0.0")
                 if "discount_amount" not in columns:
                     alter_statements.append("ADD COLUMN discount_amount DOUBLE NOT NULL DEFAULT 0.0")
+                if "qr_expire_at" not in columns:
+                    alter_statements.append("ADD COLUMN qr_expire_at DATETIME NULL")
 
                 if alter_statements:
                     sql = f"ALTER TABLE orders {', '.join(alter_statements)}"

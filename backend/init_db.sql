@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS orders (
     subtotal         DOUBLE NOT NULL DEFAULT 0.0,
     discount_amount  DOUBLE NOT NULL DEFAULT 0.0,
     total_amount     DOUBLE NOT NULL DEFAULT 0.0,
+    qr_expire_at     DATETIME NULL COMMENT 'QR payment expiry timestamp (NT-05-CN-002)',
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_orders_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     INDEX idx_orders_user (user_id),
