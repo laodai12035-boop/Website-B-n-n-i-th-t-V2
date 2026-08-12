@@ -233,4 +233,74 @@ class OrderService:
         db.session.commit()
         return order.to_dict()
 
+    @staticmethod
+    def update_order_status(
+        admin_id: int, order_id: int, new_status: str, note: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Admin cập nhật trạng thái đơn hàng theo đúng State Machine quy trình và hoàn kho QTN-03 khi hủy đơn.
+
+        Args:
+            admin_id: ID của Quản trị viên
+            order_id: ID đơn hàng
+            new_status: Trạng thái mới ('pending', 'confirmed', 'shipping', 'delivered', 'cancelled')
+            note: Ghi chú phản hồi (tùy chọn)
+
+        Returns:
+            Dict chi tiết đơn hàng sau khi cập nhật.
+
+        Raises:
+            ValueError: FORBIDDEN (403), ORDER_NOT_FOUND (404),
+                        INVALID_STATUS (400), INVALID_STATUS_TRANSITION (400)
+        """
+        # 1. Kiểm tra quyền Admin
+        from app.models.user import User
+        admin = db.session.query(User).filter(User.id == admin_id).first()
+        if not admin or admin.role != "admin":
+            raise ValueError("FORBIDDEN")
+
+        # 2. Kiểm tra đơn hàng tồn tại
+        order = db.session.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            raise ValueError("ORDER_NOT_FOUND")
+
+        # 3. Kiểm tra trạng thái mới có hợp lệ không
+        valid_statuses = ["pending", "confirmed", "shipping", "delivered", "cancelled"]
+        if new_status not in valid_statuses:
+            raise ValueError("INVALID_STATUS")
+
+        current_status = order.status
+
+        # 4. Kiểm tra quy tắc chuyển đổi State Machine
+        if current_status == new_status:
+            raise ValueError("INVALID_STATUS_TRANSITION_SAME")
+
+        if current_status in ["delivered", "cancelled"]:
+            raise ValueError("INVALID_STATUS_TRANSITION_FINAL")
+
+        allowed_transitions = {
+            "pending": ["confirmed", "cancelled"],
+            "confirmed": ["shipping", "cancelled"],
+            "shipping": ["delivered"],
+        }
+
+        if new_status not in allowed_transitions.get(current_status, []):
+            raise ValueError("INVALID_STATUS_TRANSITION")
+
+        # 5. Nếu chuyển sang cancelled: Hoàn lại tồn kho sản phẩm (QTN-03)
+        if new_status == "cancelled":
+            for item in order.items:
+                product = db.session.query(Product).filter(Product.id == item.product_id).first()
+                if product:
+                    product.stock += item.quantity
+
+        # 6. Cập nhật trạng thái và ghi chú
+        order.status = new_status
+        if note and note.strip():
+            order.note = f"{order.note} | Admin: {note.strip()}" if order.note else f"Admin: {note.strip()}"
+
+        db.session.commit()
+        return order.to_dict()
+
+
 

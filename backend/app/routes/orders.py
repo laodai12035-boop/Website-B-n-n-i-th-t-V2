@@ -210,7 +210,7 @@ def confirm_qr_payment(order_id: int):
 @jwt_required()
 def cancel_order(order_id: int):
     user_id = int(get_jwt_identity())
-    body = request.get_json() or {}
+    body = request.get_json(silent=True) or {}
     reason = body.get("reason", "").strip()
 
     try:
@@ -231,4 +231,53 @@ def cancel_order(order_id: int):
                 "code": "CANNOT_CANCEL_SHIPPED_ORDER",
             }), 400
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+# ============================================================
+# PUT /api/v1/orders/<id>/status — Admin cập nhật trạng thái đơn (NT-06-CN-006)
+# ============================================================
+@orders_bp.route("/<int:order_id>/status", methods=["PUT", "PATCH"])
+@jwt_required()
+def update_order_status(order_id: int):
+    admin_id = int(get_jwt_identity())
+    body = request.get_json(silent=True) or {}
+    new_status = body.get("status", "").strip()
+    note = body.get("note", "").strip()
+
+    if not new_status:
+        return jsonify({"status": "error", "message": "Trạng thái mới 'status' là bắt buộc.", "code": "MISSING_STATUS"}), 400
+
+    try:
+        order = OrderService.update_order_status(
+            admin_id=admin_id, order_id=order_id, new_status=new_status, note=note
+        )
+        return _success(
+            data=order,
+            message=f"Đã cập nhật trạng thái đơn hàng sang '{new_status}' thành công.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "FORBIDDEN":
+            return jsonify({"status": "error", "message": "Chỉ Quản trị viên (Admin) mới có quyền cập nhật trạng thái đơn hàng.", "code": "FORBIDDEN"}), 403
+        elif err_str == "ORDER_NOT_FOUND":
+            return jsonify({"status": "error", "message": "Đơn hàng không tồn tại.", "code": "ORDER_NOT_FOUND"}), 404
+        elif err_str == "INVALID_STATUS":
+            return jsonify({"status": "error", "message": "Trạng thái mới không hợp lệ.", "code": "INVALID_STATUS"}), 400
+        elif err_str == "INVALID_STATUS_TRANSITION_SAME":
+            return jsonify({"status": "error", "message": "Đơn hàng đã ở trạng thái này.", "code": "INVALID_STATUS_TRANSITION"}), 400
+        elif err_str == "INVALID_STATUS_TRANSITION_FINAL":
+            return jsonify({
+                "status": "error",
+                "message": "Không thể thay đổi trạng thái của đơn hàng đã ở giai đoạn hoàn thành hoặc đã hủy.",
+                "code": "INVALID_STATUS_TRANSITION",
+            }), 400
+        elif err_str == "INVALID_STATUS_TRANSITION":
+            return jsonify({
+                "status": "error",
+                "message": "Chuyển đổi trạng thái đơn hàng không hợp lệ theo quy trình.",
+                "code": "INVALID_STATUS_TRANSITION",
+            }), 400
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
 
