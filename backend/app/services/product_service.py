@@ -44,6 +44,43 @@ class ProductService:
         return product.to_dict()
 
     @staticmethod
+    def get_related_products(product_id: int, limit: int = 4) -> List[Dict[str, Any]]:
+        """
+        Lấy danh sách các sản phẩm liên quan (cùng danh mục, loại trừ sản phẩm hiện tại).
+
+        Args:
+            product_id: ID sản phẩm đang xem
+            limit:      Số lượng sản phẩm gợi ý tối đa (mặc định 4)
+
+        Returns:
+            List các product dictionary liên quan.
+
+        Raises:
+            ValueError("PRODUCT_NOT_FOUND"): Nếu sản phẩm gốc không tồn tại hoặc đã ngừng kinh doanh.
+        """
+        target = (
+            db.session.query(Product)
+            .filter(Product.id == product_id, Product.is_active == True)
+            .first()
+        )
+        if not target:
+            raise ValueError("PRODUCT_NOT_FOUND")
+
+        related = (
+            db.session.query(Product)
+            .filter(
+                Product.category == target.category,
+                Product.id != target.id,
+                Product.is_active == True,
+            )
+            .order_by(Product.rating.desc(), Product.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+        return [p.to_dict() for p in related]
+
+    @staticmethod
     def search_products(
         search_query: Optional[str] = None,
         category: Optional[str] = None,
