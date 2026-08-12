@@ -12,13 +12,13 @@ class Order(db.Model):
     __tablename__ = "orders"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    order_code = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    order_code = db.Column(db.String(50), unique=True, nullable=True, index=True)
     user_id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    recipient_name = db.Column(db.String(100), nullable=False)
-    recipient_phone = db.Column(db.String(20), nullable=False)
-    shipping_address = db.Column(db.String(255), nullable=False)
+    recipient_name = db.Column(db.String(100), nullable=True)
+    recipient_phone = db.Column(db.String(20), nullable=True)
+    shipping_address = db.Column(db.String(255), nullable=True)
     note = db.Column(db.String(255), nullable=True)
     payment_method = db.Column(db.String(20), nullable=False, default="COD")  # 'COD', 'VNPAY'
     payment_status = db.Column(db.String(20), nullable=False, default="unpaid")  # 'unpaid', 'paid'
