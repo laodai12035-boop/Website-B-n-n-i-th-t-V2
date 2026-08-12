@@ -148,5 +148,31 @@ CREATE TABLE IF NOT EXISTS cart_items (
     INDEX idx_cart_items_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------
+-- Bảng coupons (Mã giảm giá & Khuyến mãi QTN-01)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS coupons (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    code            VARCHAR(50) NOT NULL UNIQUE COMMENT 'Mã giảm giá (ví dụ: NOITHAT10)',
+    description     VARCHAR(255) COMMENT 'Mô tả khuyến mãi',
+    discount_type   ENUM('percent', 'fixed') NOT NULL DEFAULT 'percent' COMMENT 'Loại giảm giá',
+    discount_value  DOUBLE NOT NULL COMMENT 'Giá trị giảm (% hoặc VND)',
+    min_order_value DOUBLE NOT NULL DEFAULT 0.0 COMMENT 'Giá trị đơn hàng tối thiểu QTN-01',
+    max_discount    DOUBLE NULL COMMENT 'Số tiền giảm tối đa',
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Trạng thái',
+    start_date      DATETIME NULL COMMENT 'Ngày bắt đầu',
+    end_date        DATETIME NULL COMMENT 'Ngày hết hạn',
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_coupons_code (code),
+    INDEX idx_coupons_is_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Seed coupons data
+INSERT IGNORE INTO coupons (id, code, description, discount_type, discount_value, min_order_value, max_discount, is_active) VALUES
+(1, 'NOITHAT10', 'Giảm 10% cho đơn hàng từ 2.000.000đ', 'percent', 10.0, 2000000.0, 1000000.0, 1),
+(2, 'GIAM500K', 'Giảm trực tiếp 500.000đ cho đơn từ 5.000.000đ', 'fixed', 500000.0, 5000000.0, NULL, 1),
+(3, 'HETHAN2025', 'Mã ưu đãi đã hết hạn sử dụng', 'percent', 20.0, 1000000.0, NULL, 0);
+
+
 
 

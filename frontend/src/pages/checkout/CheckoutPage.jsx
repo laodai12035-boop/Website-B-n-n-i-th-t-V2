@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
+import couponService from '@/services/couponService'
 
 /**
  * CheckoutPage — Trang Thanh toán đặt hàng (Express Checkout / Standard Checkout).
@@ -19,12 +20,36 @@ const CheckoutPage = () => {
   const [note, setNote] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('cod')
 
+  const [couponCode, setCouponCode] = useState('')
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponError, setCouponError] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+
   const [submitting, setSubmitting] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
+  }
+
+  const handleApplyCoupon = async (e) => {
+    e.preventDefault()
+    setCouponError('')
+    if (!couponCode.trim()) return
+
+    setCouponLoading(true)
+    try {
+      const res = await couponService.applyCoupon(couponCode, cartTotal)
+      setAppliedCoupon(res)
+      setCouponError('')
+    } catch (err) {
+      setAppliedCoupon(null)
+      const msg = err.response?.data?.message || 'Mã giảm giá không hợp lệ hoặc đã hết hạn.'
+      setCouponError(msg)
+    } finally {
+      setCouponLoading(false)
+    }
   }
 
   const handlePlaceOrder = async (e) => {
@@ -274,10 +299,44 @@ const CheckoutPage = () => {
                     <span>Phí vận chuyển:</span>
                     <span className="font-bold text-emerald-600">Miễn phí</span>
                   </div>
-                  <div className="flex justify-between text-base font-extrabold text-gray-900 pt-2 border-t border-gray-100">
-                    <span>Tổng tiền:</span>
-                    <span className="text-amber-800 font-display">{formatCurrency(cartTotal)}</span>
+                  {appliedCoupon && (
+                    <div className="flex justify-between items-center text-emerald-700 bg-emerald-50 p-2 rounded-xl text-xs font-semibold">
+                      <span>🏷️ Mã {appliedCoupon.coupon_code}:</span>
+                      <span className="font-bold">-{formatCurrency(appliedCoupon.discount_amount)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Coupon Form */}
+                <form onSubmit={handleApplyCoupon} className="space-y-1.5 pt-2 border-t border-gray-100">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Mã giảm giá (NOITHAT10)"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 uppercase font-semibold"
+                    />
+                    <button
+                      type="submit"
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-3.5 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-colors disabled:bg-gray-300"
+                    >
+                      {couponLoading ? '...' : 'Áp dụng'}
+                    </button>
                   </div>
+                  {couponError && (
+                    <p className="text-[11px] text-red-600 font-medium px-1">
+                      ⚠️ {couponError}
+                    </p>
+                  )}
+                </form>
+
+                <div className="pt-3 border-t border-gray-100 flex justify-between items-baseline">
+                  <span className="text-sm font-bold text-gray-900">Tổng tiền:</span>
+                  <span className="text-xl font-extrabold text-amber-800 font-display">
+                    {formatCurrency(appliedCoupon ? appliedCoupon.final_total : cartTotal)}
+                  </span>
                 </div>
 
                 <button
