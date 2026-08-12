@@ -14,50 +14,55 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AdminRoute from '@/components/auth/AdminRoute'
 import { CompareProvider } from '@/contexts/CompareContext'
 import { WishlistProvider } from '@/contexts/WishlistContext'
+import { CartProvider } from '@/contexts/CartContext'
+import CartDrawer from '@/components/cart/CartDrawer'
 import CompareDrawer from '@/components/product/CompareDrawer'
 
 function App() {
   return (
     <WishlistProvider>
       <CompareProvider>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/403" element={<ForbiddenPage />} />
-          <Route path="/products" element={<ProductListPage />} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
-          <Route path="/compare" element={<ProductComparePage />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
+        <CartProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/403" element={<ForbiddenPage />} />
+            <Route path="/products" element={<ProductListPage />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
+            <Route path="/compare" element={<ProductComparePage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
 
-          {/* Protected User routes */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+            {/* Protected User routes */}
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
 
-        {/* Protected Admin routes (QTN-09) */}
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminDashboardPage />
-            </AdminRoute>
-          }
-        />
+            {/* Protected Admin routes (QTN-09) */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboardPage />
+                </AdminRoute>
+              }
+            />
 
-        {/* Default redirect về /login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-      </Routes>
+            {/* Default redirect về /products */}
+            <Route path="/" element={<Navigate to="/products" replace />} />
+          </Routes>
 
-      {/* Floating Compare Bar */}
-      <CompareDrawer />
+          {/* Floating Drawers */}
+          <CompareDrawer />
+          <CartDrawer />
+        </CartProvider>
       </CompareProvider>
     </WishlistProvider>
   )
