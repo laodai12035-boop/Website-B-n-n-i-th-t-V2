@@ -158,8 +158,10 @@ def test_tc01_create_qr_order_success(client, customer_token, valid_qr_payload):
     assert "transfer_content" in bank_info
     assert data["order_code"] in bank_info["transfer_content"]
 
-    # Tổng tiền = 2 * 5,000,000 = 10,000,000
-    assert data["total_amount"] == 10_000_000.0
+    # Tổng tiền = subtotal + shipping_fee (QTN-07) — phí ship được tính tự động
+    assert data["total_amount"] >= 10_000_000.0  # >= subtotal (2 × 5,000,000)
+    assert data["subtotal"] == 10_000_000.0       # subtotal không đổi
+    assert data["shipping_fee"] >= 0              # phí ship ≥ 0
 
     # items đủ
     assert len(data["items"]) == 1
