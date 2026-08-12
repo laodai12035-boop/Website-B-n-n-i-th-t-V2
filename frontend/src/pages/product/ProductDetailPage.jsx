@@ -43,6 +43,19 @@ const ProductDetailPage = () => {
     }
   }
 
+  const handleBuyNow = async () => {
+    if (!product) return
+    setCartError('')
+    try {
+      await addToCart(product, quantity)
+      navigate('/checkout')
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Không thể thực hiện Mua ngay'
+      setCartError(msg)
+      setTimeout(() => setCartError(''), 4000)
+    }
+  }
+
   const formatCurrency = (val) => {
     if (!val) return '0đ'
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
@@ -278,9 +291,18 @@ const ProductDetailPage = () => {
                   type="button"
                   onClick={handleAddToCart}
                   disabled={product.stock <= 0}
-                  className="flex-1 bg-amber-700 hover:bg-amber-800 text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
+                  className="flex-1 bg-amber-700 hover:bg-amber-800 text-white font-bold py-3.5 px-5 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none text-xs sm:text-sm"
                 >
                   <span>🛒</span> {product.stock <= 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={product.stock <= 0}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-extrabold py-3.5 px-5 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:from-gray-200 disabled:to-gray-200 disabled:text-gray-400 disabled:shadow-none active:scale-98 text-xs sm:text-sm"
+                >
+                  <span>⚡</span> Mua ngay
                 </button>
 
                 {/* Wishlist Button */}
