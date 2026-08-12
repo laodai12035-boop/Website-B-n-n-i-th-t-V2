@@ -82,3 +82,54 @@ CREATE TABLE IF NOT EXISTS wishlists (
     INDEX idx_wishlists_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------
+-- Bảng orders (Đơn hàng)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS orders (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    user_id      INT NOT NULL,
+    status       VARCHAR(20) NOT NULL DEFAULT 'delivered',
+    total_amount DOUBLE NOT NULL DEFAULT 0.0,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_orders_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_orders_user (user_id),
+    INDEX idx_orders_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- Bảng order_items (Chi tiết đơn hàng)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS order_items (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    order_id   INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity   INT NOT NULL DEFAULT 1,
+    price      DOUBLE NOT NULL DEFAULT 0.0,
+    CONSTRAINT fk_order_items_orders FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+    CONSTRAINT fk_order_items_products FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+    INDEX idx_order_items_order (order_id),
+    INDEX idx_order_items_product (product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- Bảng reviews (Đánh giá & Bình luận sản phẩm)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS reviews (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT NOT NULL,
+    product_id  INT NOT NULL,
+    order_id    INT NULL,
+    rating      INT NOT NULL,
+    comment     TEXT NULL,
+    is_approved BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uix_user_product_review UNIQUE (user_id, product_id),
+    CONSTRAINT fk_reviews_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_reviews_products FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+    CONSTRAINT fk_reviews_orders FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE SET NULL,
+    INDEX idx_reviews_user (user_id),
+    INDEX idx_reviews_product (product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
