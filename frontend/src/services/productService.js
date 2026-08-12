@@ -46,6 +46,18 @@ const productService = {
     const response = await api.post('/products/compare', { product_ids: productIds })
     return response.data.data.products
   },
+
+  /**
+   * Lấy danh sách sản phẩm liên quan (gợi ý mua kèm).
+   *
+   * @param {number|string} productId
+   * @param {number} limit
+   * @returns {Promise<Array>} List of related products
+   */
+  async getRelatedProducts(productId, limit = 4) {
+    const response = await api.get(`/products/${productId}/related`, { params: { limit } })
+    return response.data.data.related_products
+  },
 }
 
 export default productService
