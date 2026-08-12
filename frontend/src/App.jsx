@@ -9,26 +9,30 @@ import ForbiddenPage from '@/pages/error/ForbiddenPage'
 import ProductListPage from '@/pages/product/ProductListPage'
 import ProductDetailPage from '@/pages/product/ProductDetailPage'
 import ProductComparePage from '@/pages/product/ProductComparePage'
+import WishlistPage from '@/pages/user/WishlistPage'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AdminRoute from '@/components/auth/AdminRoute'
 import { CompareProvider } from '@/contexts/CompareContext'
+import { WishlistProvider } from '@/contexts/WishlistContext'
 import CompareDrawer from '@/components/product/CompareDrawer'
 
 function App() {
   return (
-    <CompareProvider>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/403" element={<ForbiddenPage />} />
-        <Route path="/products" element={<ProductListPage />} />
-        <Route path="/products/:id" element={<ProductDetailPage />} />
-        <Route path="/compare" element={<ProductComparePage />} />
+    <WishlistProvider>
+      <CompareProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/403" element={<ForbiddenPage />} />
+          <Route path="/products" element={<ProductListPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/compare" element={<ProductComparePage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
 
-        {/* Protected User routes */}
+          {/* Protected User routes */}
         <Route
           path="/profile"
           element={
@@ -54,7 +58,8 @@ function App() {
 
       {/* Floating Compare Bar */}
       <CompareDrawer />
-    </CompareProvider>
+      </CompareProvider>
+    </WishlistProvider>
   )
 }
 

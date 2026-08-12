@@ -8,7 +8,7 @@ Bao gồm:
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from sqlalchemy import or_
 from app.extensions import db
 from app.models.product import Product

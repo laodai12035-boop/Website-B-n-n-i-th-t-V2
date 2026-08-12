@@ -66,3 +66,19 @@ INSERT IGNORE INTO products (id, name, slug, description, price, discount_price,
 (6, 'Kệ Tivi Gỗ Tự Nhiên Modern', 'ke-tivi-go-tu-nhien-modern', 'Kệ tivi phòng khách thiết kế nhiều ngăn kéo lưu trữ tiện lợi.', 6800000.00, NULL, 'ke', 7, 'https://images.unsplash.com/photo-1595428774223-ef52624120d2', 1),
 (7, 'Tủ Quần Áo 4 Cánh Cửa Lùa', 'tu-quan-ao-4-canh-cua-lua', 'Tủ quần áo hiện đại tích hợp gương soi toàn thân và kệ trang trí bên hông.', 14500000.00, 12900000.00, 'tu', 4, 'https://images.unsplash.com/photo-1558997519-83ea9252edf8', 1),
 (8, 'Đèn Sàn Trang Trí Đọc Sách Scandinavian', 'den-san-trang-tri-doc-sach-scandinavian', 'Đèn cây trang trí góc sofa với ánh sáng vàng ấm áp bảo vệ mắt.', 1200000.00, 950000.00, 'trang-tri', 25, 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c', 1);
+
+-- ------------------------------------------------------------
+-- Bảng wishlists (Sản phẩm yêu thích)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS wishlists (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NOT NULL,
+    product_id INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uix_user_product_wishlist UNIQUE (user_id, product_id),
+    CONSTRAINT fk_wishlists_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_wishlists_products FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+    INDEX idx_wishlists_user (user_id),
+    INDEX idx_wishlists_product (product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
