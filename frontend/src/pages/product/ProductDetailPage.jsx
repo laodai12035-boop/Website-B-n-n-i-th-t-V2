@@ -6,6 +6,7 @@ import { useCompare } from '@/contexts/CompareContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 
 import RelatedProducts from '@/components/product/RelatedProducts'
+import ProductReviews from '@/components/product/ProductReviews'
 
 /**
  * ProductDetailPage — Trang Chi tiết sản phẩm.
@@ -346,6 +347,9 @@ const ProductDetailPage = () => {
 
         {/* Related & Recommended Products */}
         <RelatedProducts productId={product.id} />
+
+        {/* Product Reviews & Rating (QTN-06) */}
+        <ProductReviews productId={product.id} />
 
       </main>
     </div>

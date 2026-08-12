@@ -6,7 +6,10 @@ Public API: Không yêu cầu Authentication.
 
 import logging
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
 from app.services.product_service import ProductService
+from app.services.review_service import ReviewService
 
 logger = logging.getLogger(__name__)
 
@@ -216,6 +219,76 @@ def get_related_products(product_id: int):
         message="Lấy danh sách sản phẩm liên quan thành công",
         status=200,
     )
+
+
+# ============================================================
+# GET /api/v1/products/<int:product_id>/reviews — Lấy danh sách đánh giá
+# ============================================================
+@products_bp.route("/<int:product_id>/reviews", methods=["GET"])
+@jwt_required(optional=True)
+def get_product_reviews(product_id: int):
+    """
+    Lấy danh sách đánh giá và nhận xét của sản phẩm kèm phân bổ sao.
+    """
+    current_user = get_jwt_identity()
+    user_id = int(current_user) if current_user else None
+
+    data = ReviewService.get_product_reviews(product_id, current_user_id=user_id)
+    return _success(
+        data=data,
+        message="Lấy danh sách đánh giá sản phẩm thành công",
+        status=200,
+    )
+
+
+# ============================================================
+# POST /api/v1/products/<int:product_id>/reviews — Viết đánh giá (QTN-06)
+# ============================================================
+@products_bp.route("/<int:product_id>/reviews", methods=["POST"])
+@jwt_required()
+def create_product_review(product_id: int):
+    """
+    Đăng đánh giá kèm số sao (1-5) cho sản phẩm (Tuân thủ QTN-06).
+
+    Request Body:
+        rating (int, required): Số sao (1 đến 5)
+        comment (str, optional): Nội dung nhận xét
+    """
+    user_id = int(get_jwt_identity())
+    body = request.get_json() or {}
+
+    rating = body.get("rating")
+    comment = body.get("comment", "")
+
+    if rating is None or not isinstance(rating, int):
+        return jsonify(
+            {"status": "error", "message": "Vui lòng chọn số sao đánh giá hợp lệ (1-5)", "code": "INVALID_RATING"}
+        ), 400
+
+    try:
+        result = ReviewService.create_review(user_id, product_id, rating, comment)
+    except ValueError as exc:
+        err_msg = str(exc)
+        if err_msg == "REVIEW_NOT_ALLOWED":
+            return jsonify(
+                {
+                    "status": "error",
+                    "message": "Bạn chỉ được viết đánh giá cho sản phẩm thuộc đơn hàng đã giao thành công (QTN-06).",
+                    "code": "REVIEW_NOT_ALLOWED",
+                }
+            ), 403
+        elif err_msg == "PRODUCT_NOT_FOUND":
+            return jsonify(
+                {"status": "error", "message": "Sản phẩm không tồn tại hoặc đã bị ngừng kinh doanh", "code": "PRODUCT_NOT_FOUND"}
+            ), 404
+        elif err_msg == "INVALID_RATING":
+            return jsonify(
+                {"status": "error", "message": "Số sao đánh giá phải từ 1 đến 5 sao", "code": "INVALID_RATING"}
+            ), 400
+        return jsonify({"status": "error", "message": err_msg, "code": "BAD_REQUEST"}), 400
+
+    return _success(data=result, message="Đăng đánh giá sản phẩm thành công", status=201)
+
 
 
 

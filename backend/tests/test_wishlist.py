@@ -37,9 +37,9 @@ def app():
             email="customer@example.com",
             full_name="Khách Hàng",
             phone="0901234567",
+            password_hash="some_hashed_password",
             role="user",
         )
-        user.set_password("Password123!")
 
         # Create products
         p1 = Product(
