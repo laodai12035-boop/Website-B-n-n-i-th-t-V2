@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import { useCart } from '@/contexts/CartContext'
@@ -30,6 +30,14 @@ const CheckoutPage = () => {
   const [orderSuccess, setOrderSuccess] = useState(false)
   const [createdOrderInfo, setCreatedOrderInfo] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
+
+  // QR payment states
+  const [qrOrderInfo, setQrOrderInfo] = useState(null)   // { order_code, id, qr_url, bank_info, qr_expire_at }
+  const [qrPaymentStatus, setQrPaymentStatus] = useState('pending_payment') // 'pending_payment' | 'paid'
+  const [qrExpired, setQrExpired] = useState(false)
+  const [qrSecondsLeft, setQrSecondsLeft] = useState(900) // 15 min = 900s
+  const pollingRef = useRef(null)
+  const countdownRef = useRef(null)
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
@@ -65,16 +73,53 @@ const CheckoutPage = () => {
 
     setSubmitting(true)
     try {
-      const createdOrder = await orderService.createCodOrder({
+      const orderPayload = {
         recipient_name: fullName.trim(),
         recipient_phone: phone.trim(),
         shipping_address: address.trim(),
         note: note.trim(),
         coupon_code: appliedCoupon ? appliedCoupon.coupon_code : null,
-      })
-      setCreatedOrderInfo(createdOrder)
-      if (fetchCart) await fetchCart()
-      setOrderSuccess(true)
+      }
+
+      if (paymentMethod === 'qr') {
+        // QR Bank Payment flow
+        const result = await orderService.createQrOrder(orderPayload)
+        setQrOrderInfo(result)
+        // Start countdown
+        const expireAt = new Date(result.qr_expire_at + 'Z')
+        const secondsLeft = Math.max(0, Math.floor((expireAt - Date.now()) / 1000))
+        setQrSecondsLeft(secondsLeft)
+        if (fetchCart) await fetchCart()
+        // Start polling every 5s
+        pollingRef.current = setInterval(async () => {
+          try {
+            const status = await orderService.getQrStatus(result.id)
+            setQrPaymentStatus(status.payment_status)
+            setQrExpired(status.expired)
+            if (status.payment_status === 'paid' || status.expired) {
+              clearInterval(pollingRef.current)
+            }
+          } catch {}
+        }, 5000)
+        // Countdown timer
+        countdownRef.current = setInterval(() => {
+          setQrSecondsLeft(s => {
+            if (s <= 1) {
+              clearInterval(countdownRef.current)
+              clearInterval(pollingRef.current)
+              setQrExpired(true)
+              return 0
+            }
+            return s - 1
+          })
+        }, 1000)
+      } else {
+        // COD flow
+        const createdOrder = await orderService.createCodOrder(orderPayload)
+        setCreatedOrderInfo(createdOrder)
+        if (fetchCart) await fetchCart()
+        setOrderSuccess(true)
+      }
     } catch (err) {
       const msg = err.response?.data?.message || 'Đã có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại!'
       setErrorMsg(msg)
@@ -83,6 +128,109 @@ const CheckoutPage = () => {
     }
   }
 
+  // ---- QR Screen ----
+  if (qrOrderInfo) {
+    const mm = String(Math.floor(qrSecondsLeft / 60)).padStart(2, '0')
+    const ss = String(qrSecondsLeft % 60).padStart(2, '0')
+    const isPaid = qrPaymentStatus === 'paid'
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-lg mx-auto w-full p-6 my-8 flex flex-col items-center text-center animate-fade-in">
+          {isPaid ? (
+            <>
+              <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center text-4xl mb-4 shadow-lg">
+                ✅
+              </div>
+              <h2 className="text-2xl font-display font-bold text-gray-900 mb-1">Thanh toán thành công!</h2>
+              <p className="text-xs text-emerald-700 font-bold bg-emerald-50 px-3 py-1 rounded-full mb-4">
+                Mã đơn hàng: {qrOrderInfo.order_code}
+              </p>
+              <p className="text-xs text-gray-500 mb-6">
+                Đơn hàng đã được xác nhận và đang chẩn bị giao. Cảm ơn bạn đã tin tưởng <strong>Nội Thất Đẹp</strong>!
+              </p>
+              <Link to="/products" className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold transition-colors shadow-sm">
+                Tiếp tục mua sắm
+              </Link>
+            </>
+          ) : qrExpired ? (
+            <>
+              <div className="w-20 h-20 bg-red-100 text-red-500 rounded-3xl flex items-center justify-center text-4xl mb-4 shadow-lg">
+                ⏰
+              </div>
+              <h2 className="text-xl font-display font-bold text-gray-900 mb-2">Mã QR đã hết hạn</h2>
+              <p className="text-xs text-gray-500 mb-6">
+                Quá 15 phút mà chưa có giao dịch. Đơn hàng giữ trạng thái <strong>chưa thanh toán</strong>. Bạn có thể liên hệ chúng tôi hoặc đặt lại.
+              </p>
+              <p className="text-xs text-amber-700 bg-amber-50 px-3 py-1 rounded-full mb-6">
+                Mã đơn: {qrOrderInfo.order_code}
+              </p>
+              <Link to="/products" className="w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-2xl text-xs font-bold transition-colors">
+                Quay lại mua sắm
+              </Link>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-display font-bold text-gray-900 mb-1">Quét mã QR để thanh toán</h2>
+              <p className="text-xs text-amber-700 font-bold bg-amber-50 px-3 py-1 rounded-full mb-4">
+                Mã đơn: {qrOrderInfo.order_code}
+              </p>
+
+              {/* QR Code Image */}
+              <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 mb-4 w-fit mx-auto">
+                <img
+                  src={qrOrderInfo.qr_url}
+                  alt="Mã QR ngân hàng"
+                  className="w-56 h-56 object-contain"
+                  onError={(e) => { e.target.style.display = 'none' }}
+                />
+              </div>
+
+              {/* Countdown */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-gray-500 text-xs">Hết hạn sau:</span>
+                <span className={`font-mono font-bold text-lg ${qrSecondsLeft < 60 ? 'text-red-500' : 'text-amber-700'}`}>
+                  {mm}:{ss}
+                </span>
+              </div>
+
+              {/* Bank Info */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-4 w-full text-left text-xs space-y-2 mb-4 shadow-sm">
+                <p className="font-bold text-gray-800 text-sm mb-1">Thông tin chuyển khoản</p>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Ngân hàng:</span>
+                  <span className="font-bold text-gray-900">{qrOrderInfo.bank_info?.bank_id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Số tài khoản:</span>
+                  <span className="font-bold text-gray-900 tracking-wider">{qrOrderInfo.bank_info?.account_no}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Chủ tài khoản:</span>
+                  <span className="font-bold text-gray-900">{qrOrderInfo.bank_info?.account_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Số tiền:</span>
+                  <span className="font-extrabold text-amber-800">{formatCurrency(qrOrderInfo.total_amount)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Nội dung CK:</span>
+                  <span className="font-bold text-blue-700 tracking-wide">{qrOrderInfo.bank_info?.transfer_content}</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-400">
+                Hệ thống sẽ tự động xác nhận sau khi nhận được thanh toán. Đang kiểm tra...
+              </p>
+            </>
+          )}
+        </main>
+      </div>
+    )
+  }
+
+  // ---- COD Success Screen ----
   if (orderSuccess && createdOrderInfo) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -267,23 +415,23 @@ const CheckoutPage = () => {
 
                   <label
                     className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${
-                      paymentMethod === 'vnpay'
-                        ? 'border-amber-500 bg-amber-50/50 shadow-sm'
+                      paymentMethod === 'qr'
+                        ? 'border-blue-500 bg-blue-50/50 shadow-sm'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <input
                       type="radio"
                       name="payment"
-                      value="vnpay"
-                      checked={paymentMethod === 'vnpay'}
-                      onChange={() => setPaymentMethod('vnpay')}
-                      className="text-amber-600 focus:ring-amber-500"
+                      value="qr"
+                      checked={paymentMethod === 'qr'}
+                      onChange={() => setPaymentMethod('qr')}
+                      className="text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-lg">🏦</span>
+                    <span className="text-lg">📱</span>
                     <div>
-                      <h4 className="text-xs font-bold text-gray-900">Chuyển khoản Ngân hàng / VNPAY QR</h4>
-                      <p className="text-[11px] text-gray-500">Thanh toán tức thì qua mã QR Ngân hàng hoặc thẻ ATM/Visa nội địa</p>
+                      <h4 className="text-xs font-bold text-gray-900">Chuyển khoản QR ngân hàng</h4>
+                      <p className="text-[11px] text-gray-500">Quét mã QR VietQR bằng app ngân hàng — xác nhận tức thì, hỗ trợ tất cả ngân hàng Việt Nam</p>
                     </div>
                   </label>
                 </div>

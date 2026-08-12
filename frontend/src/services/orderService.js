@@ -4,7 +4,6 @@ export const orderService = {
   /**
    * Tạo đơn hàng Thanh toán khi nhận hàng (COD).
    * @param {Object} orderData { recipient_name, recipient_phone, shipping_address, note, coupon_code }
-   * @returns {Promise<Object>}
    */
   async createCodOrder(orderData) {
     const response = await api.post('/orders/cod', orderData)
@@ -12,8 +11,27 @@ export const orderService = {
   },
 
   /**
+   * Tạo đơn hàng Thanh toán QR ngân hàng (VietQR).
+   * @param {Object} orderData { recipient_name, recipient_phone, shipping_address, note, coupon_code }
+   * @returns {{ order_code, qr_url, qr_expire_at, bank_info, ... }}
+   */
+  async createQrOrder(orderData) {
+    const response = await api.post('/orders/qr', orderData)
+    return response.data.data
+  },
+
+  /**
+   * Lấy trạng thái thanh toán QR — dùng cho polling.
+   * @param {number|string} orderId
+   * @returns {{ payment_status, expired, qr_url, qr_expire_at, ... }}
+   */
+  async getQrStatus(orderId) {
+    const response = await api.get(`/orders/${orderId}/qr`)
+    return response.data.data
+  },
+
+  /**
    * Lấy danh sách đơn hàng của người dùng.
-   * @returns {Promise<Array>}
    */
   async getUserOrders() {
     const response = await api.get('/orders')
@@ -23,7 +41,6 @@ export const orderService = {
   /**
    * Lấy chi tiết đơn hàng.
    * @param {number|string} orderId
-   * @returns {Promise<Object>}
    */
   async getOrderDetail(orderId) {
     const response = await api.get(`/orders/${orderId}`)
