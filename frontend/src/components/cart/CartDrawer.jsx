@@ -153,20 +153,29 @@ const CartDrawer = () => {
                 <span className="text-lg font-extrabold text-amber-800 font-display">{formatPrice(cartTotal)}</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={clearCart}
-                  className="px-4 py-3 border border-gray-200 rounded-2xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors"
-                >
-                  Xóa toàn bộ
-                </button>
+              <div className="flex flex-col gap-2">
                 <Link
-                  to="/checkout"
+                  to="/cart"
                   onClick={() => setIsCartOpen(false)}
-                  className="px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold text-center transition-colors shadow-sm"
+                  className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl text-xs font-bold text-center transition-colors shadow-sm"
                 >
-                  Thanh toán ngay
+                  Xem giỏ hàng đầy đủ 📋
                 </Link>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={clearCart}
+                    className="px-3 py-2.5 border border-gray-200 rounded-2xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors"
+                  >
+                    Xóa toàn bộ
+                  </button>
+                  <Link
+                    to="/checkout"
+                    onClick={() => setIsCartOpen(false)}
+                    className="px-3 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold text-center transition-colors shadow-sm"
+                  >
+                    Thanh toán
+                  </Link>
+                </div>
               </div>
             </div>
           )}
