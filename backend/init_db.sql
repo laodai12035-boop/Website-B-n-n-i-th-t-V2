@@ -132,4 +132,21 @@ CREATE TABLE IF NOT EXISTS reviews (
     INDEX idx_reviews_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------
+-- Bảng cart_items (Giỏ hàng người dùng)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS cart_items (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity   INT NOT NULL DEFAULT 1,
+    added_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uix_user_product_cart UNIQUE (user_id, product_id),
+    CONSTRAINT fk_cart_items_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_cart_items_products FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+    INDEX idx_cart_items_user (user_id),
+    INDEX idx_cart_items_product (product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 
