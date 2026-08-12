@@ -53,7 +53,9 @@ def _register_blueprints(app: Flask) -> None:
     from app.routes.auth import auth_bp
     from app.routes.admin import admin_bp
     from app.routes.products import products_bp
+    from app.routes.wishlist import wishlist_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
     app.register_blueprint(admin_bp, url_prefix="/api/v1/admin")
     app.register_blueprint(products_bp, url_prefix="/api/v1/products")
+    app.register_blueprint(wishlist_bp, url_prefix="/api/v1/wishlist")
