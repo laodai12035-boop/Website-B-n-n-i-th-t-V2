@@ -86,7 +86,8 @@ def create_cod_order():
 @jwt_required()
 def get_user_orders():
     user_id = int(get_jwt_identity())
-    orders = OrderService.get_user_orders(user_id)
+    status_filter = request.args.get("status")
+    orders = OrderService.get_user_orders(user_id, status_filter=status_filter)
     return _success(data=orders, status=200)
 
 
@@ -99,8 +100,20 @@ def get_order_detail(order_id: int):
     user_id = int(get_jwt_identity())
     try:
         order = OrderService.get_order_detail(user_id, order_id)
-    except ValueError:
-        return jsonify({"status": "error", "message": "Đơn hàng không tồn tại", "code": "ORDER_NOT_FOUND"}), 404
+    except ValueError as exc:
+        err_code = str(exc)
+        if err_code == "FORBIDDEN":
+            return jsonify({
+                "status": "error",
+                "message": "Bạn không có quyền truy cập thông tin đơn hàng này.",
+                "code": "FORBIDDEN",
+            }), 403
+        return jsonify({
+            "status": "error",
+            "message": "Đơn hàng không tồn tại.",
+            "code": "ORDER_NOT_FOUND",
+        }), 404
+
     return _success(data=order, status=200)
 
 

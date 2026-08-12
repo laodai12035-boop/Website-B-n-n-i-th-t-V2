@@ -154,24 +154,30 @@ class OrderService:
         return order.to_dict()
 
     @staticmethod
-    def get_user_orders(user_id: int) -> List[Dict[str, Any]]:
-        """Lấy danh sách đơn hàng của người dùng."""
-        orders = (
-            db.session.query(Order)
-            .filter(Order.user_id == user_id)
-            .order_by(Order.created_at.desc())
-            .all()
-        )
+    def get_user_orders(user_id: int, status_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Lấy danh sách đơn hàng của người dùng (hỗ trợ lọc theo trạng thái)."""
+        query = db.session.query(Order).filter(Order.user_id == user_id)
+        if status_filter and status_filter.strip() and status_filter.strip() != "all":
+            query = query.filter(Order.status == status_filter.strip())
+        orders = query.order_by(Order.created_at.desc()).all()
         return [o.to_dict() for o in orders]
 
     @staticmethod
     def get_order_detail(user_id: int, order_id: int) -> Dict[str, Any]:
-        """Lấy chi tiết một đơn hàng của người dùng."""
-        order = (
-            db.session.query(Order)
-            .filter(Order.id == order_id, Order.user_id == user_id)
-            .first()
-        )
+        """
+        Lấy chi tiết một đơn hàng của người dùng.
+        - Trả về ORDER_NOT_FOUND (404) nếu đơn không tồn tại
+        - Trả về FORBIDDEN (403) nếu đơn tồn tại nhưng thuộc tài khoản khác (và user không phải admin)
+        """
+        order = db.session.query(Order).filter(Order.id == order_id).first()
         if not order:
             raise ValueError("ORDER_NOT_FOUND")
+
+        if order.user_id != user_id:
+            from app.models.user import User
+            user = db.session.query(User).filter(User.id == user_id).first()
+            if not user or user.role != "admin":
+                raise ValueError("FORBIDDEN")
+
         return order.to_dict()
+
