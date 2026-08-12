@@ -4,6 +4,8 @@ import Navbar from '@/components/layout/Navbar'
 import productService from '@/services/productService'
 import { useCompare } from '@/contexts/CompareContext'
 
+import RelatedProducts from '@/components/product/RelatedProducts'
+
 /**
  * ProductDetailPage — Trang Chi tiết sản phẩm.
  * Hiển thị đầy đủ thông số, giá, mô tả, đánh giá, tồn kho và nút mua hàng.
@@ -319,6 +321,9 @@ const ProductDetailPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Related & Recommended Products */}
+        <RelatedProducts productId={product.id} />
 
       </main>
     </div>
