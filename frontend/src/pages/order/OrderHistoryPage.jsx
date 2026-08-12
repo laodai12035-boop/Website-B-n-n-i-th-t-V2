@@ -199,13 +199,21 @@ const OrderHistoryPage = () => {
                     </span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setSelectedOrderId(order.id)}
-                    className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
-                  >
-                    Xem chi tiết đơn hàng →
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOrderId(order.id)}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors"
+                    >
+                      ⚡ Xem nhanh
+                    </button>
+                    <Link
+                      to={`/orders/${order.id}`}
+                      className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+                    >
+                      Xem chi tiết đơn hàng →
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
