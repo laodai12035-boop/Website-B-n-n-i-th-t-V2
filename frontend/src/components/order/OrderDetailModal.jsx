@@ -204,7 +204,29 @@ const OrderDetailModal = ({ orderId, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/50 flex justify-end">
+        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+          <div>
+            {order && (order.status === 'pending' || order.status === 'confirmed') && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (window.confirm(`Bạn có chắc chắn muốn hủy đơn hàng ${order.order_code} không?`)) {
+                    try {
+                      await orderService.cancelOrder(order.id, 'Hủy từ xem nhanh đơn hàng')
+                      alert('Đã hủy đơn hàng thành công và hoàn lại số lượng tồn kho!')
+                      onClose()
+                    } catch (err) {
+                      alert(err.response?.data?.message || 'Không thể hủy đơn hàng.')
+                    }
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-extrabold transition-colors flex items-center gap-1"
+              >
+                <span>✖</span> Hủy đơn hàng
+              </button>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={onClose}

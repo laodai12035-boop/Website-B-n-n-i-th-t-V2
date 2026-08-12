@@ -48,6 +48,16 @@ export const orderService = {
     const response = await api.get(`/orders/${orderId}`)
     return response.data.data
   },
+
+  /**
+   * Hủy đơn hàng (QTN-03, QTN-04).
+   * @param {number|string} orderId
+   * @param {string} [reason]
+   */
+  async cancelOrder(orderId, reason) {
+    const response = await api.post(`/orders/${orderId}/cancel`, { reason })
+    return response.data
+  },
 }
 
 export default orderService

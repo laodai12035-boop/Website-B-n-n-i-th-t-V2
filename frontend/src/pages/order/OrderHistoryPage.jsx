@@ -200,6 +200,24 @@ const OrderHistoryPage = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {(order.status === 'pending' || order.status === 'confirmed') && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (window.confirm(`Bạn có chắc chắn muốn hủy đơn hàng ${order.order_code} không?`)) {
+                            try {
+                              await orderService.cancelOrder(order.id, 'Hủy từ danh sách đơn hàng')
+                              await fetchOrders(activeTab)
+                            } catch (err) {
+                              alert(err.response?.data?.message || 'Không thể hủy đơn hàng.')
+                            }
+                          }
+                        }}
+                        className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-extrabold transition-colors"
+                      >
+                        ✖ Hủy đơn
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setSelectedOrderId(order.id)}
