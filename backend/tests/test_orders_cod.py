@@ -106,7 +106,10 @@ class TestOrdersCOD:
         assert data["status"] == "pending"
         assert data["payment_method"] == "COD"
         assert data["payment_status"] == "unpaid"
-        assert data["total_amount"] == 28500000.0
+        # total_amount = subtotal + shipping_fee (QTN-07) – phí ship được tính tự động
+        assert data["total_amount"] >= 28500000.0  # >= subtotal
+        assert data["subtotal"] == 28500000.0       # subtotal không đổi
+        assert data["shipping_fee"] >= 0            # phí ship ≥ 0
         assert len(data["items"]) == 1
 
         # Check cart cleared

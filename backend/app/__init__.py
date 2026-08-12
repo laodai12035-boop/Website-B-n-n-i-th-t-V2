@@ -61,6 +61,7 @@ def _register_blueprints(app: Flask) -> None:
     from app.routes.cart import cart_bp
     from app.routes.coupons import coupons_bp
     from app.routes.orders import orders_bp
+    from app.routes.shipping import shipping_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
     app.register_blueprint(admin_bp, url_prefix="/api/v1/admin")
@@ -69,3 +70,4 @@ def _register_blueprints(app: Flask) -> None:
     app.register_blueprint(cart_bp, url_prefix="/api/v1/cart")
     app.register_blueprint(coupons_bp, url_prefix="/api/v1/coupons")
     app.register_blueprint(orders_bp, url_prefix="/api/v1/orders")
+    app.register_blueprint(shipping_bp, url_prefix="/api/v1/shipping")

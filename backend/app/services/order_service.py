@@ -6,6 +6,7 @@ from app.models.order import Order, OrderItem
 from app.models.cart_item import CartItem
 from app.models.product import Product
 from app.services.coupon_service import CouponService
+from app.services.shipping_service import ShippingService
 
 
 class OrderService:
@@ -99,9 +100,17 @@ class OrderService:
             coupon_res = CouponService.validate_and_apply(coupon_code, subtotal)
             discount_amount = coupon_res["discount_amount"]
 
-        total_amount = max(0.0, round(subtotal - discount_amount, 2))
+        # 5. Tính phí vận chuyển QTN-07
+        try:
+            shipping_result = ShippingService.calculate_shipping_fee(user_id, shipping_address)
+            shipping_fee = float(shipping_result["fee"])
+        except Exception:
+            # An toàn: nếu lỗi thì không chặn tạo đơn
+            shipping_fee = 0.0
 
-        # 5. Tạo đơn hàng và chi tiết đơn hàng trong DB Transaction
+        total_amount = max(0.0, round(subtotal - discount_amount + shipping_fee, 2))
+
+        # 6. Tạo đơn hàng và chi tiết đơn hàng trong DB Transaction
         order_code = OrderService._generate_order_code()
 
         order = Order(
@@ -116,6 +125,7 @@ class OrderService:
             status="pending",
             subtotal=subtotal,
             discount_amount=discount_amount,
+            shipping_fee=shipping_fee,
             total_amount=total_amount,
         )
 

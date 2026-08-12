@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS products (
     stock          INT           NOT NULL DEFAULT 0 COMMENT 'Tồn kho',
     image_url      VARCHAR(500)  COMMENT 'URL ảnh đại diện',
     material       VARCHAR(100)  COMMENT 'Chất liệu sản phẩm',
-    dimensions     VARCHAR(100)  COMMENT 'Kích thước',
+    dimensions     VARCHAR(100)  COMMENT 'Kích thước (Dài x Rộng x Cao) đơn vị cm, VD: 120x60x75',
+    weight_kg      FLOAT         NULL COMMENT 'Trọng lượng thực tế (kg) - QTN-07',
     rating         FLOAT         NOT NULL DEFAULT 5.0 COMMENT 'Đánh giá trung bình',
     rating_count   INT           NOT NULL DEFAULT 0 COMMENT 'Số lượt đánh giá',
     is_active      BOOLEAN       NOT NULL DEFAULT TRUE COMMENT 'Hiển thị',
@@ -56,16 +57,16 @@ CREATE TABLE IF NOT EXISTS products (
     INDEX idx_is_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Sample furniture data
-INSERT IGNORE INTO products (id, name, slug, description, price, discount_price, category, stock, image_url, is_active) VALUES
-(1, 'Bộ Sofa Gỗ Óc Chó Cao Cấp', 'bo-sofa-go-oc-cho-cao-cap', 'Bộ sofa gỗ óc chó tự nhiên kết hợp đệm bọc da Ý cao cấp sang trọng cho phòng khách.', 28500000.00, 25000000.00, 'ghe', 5, 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc', 1),
-(2, 'Ghế Sofa Văng Da Hiện Đại', 'ghe-sofa-vang-da-hien-dai', 'Sofa văng da bò thật phong cách Bắc Âu tối giản, khung gỗ sồi chắc chắn.', 15800000.00, NULL, 'ghe', 8, 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7', 1),
-(3, 'Bàn Ăn Gỗ Sồi 6 Ghế', 'ban-an-go-soi-6-ghe', 'Bộ bàn ăn gia đình 6 ghế bằng gỗ sồi Nga lau màu óc chó tinh tế.', 12500000.00, 10900000.00, 'ban', 10, 'https://images.unsplash.com/photo-1617806118233-18e1de247200', 1),
-(4, 'Bàn Làm Việc Chân Sắt Tối Giản', 'ban-lam-viec-chan-sat-toi-gian', 'Bàn làm việc mặt gỗ công nghiệp phủ Melamine chống xước, chân sắt sơn tĩnh điện.', 2450000.00, NULL, 'ban', 20, 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd', 1),
-(5, 'Kệ Sách Gỗ Khung Kim Loại', 'ke-sach-go-khung-kim-loai', 'Kệ sách trang trí 5 tầng khung thép tĩnh điện phong cách Industrial.', 3200000.00, 2800000.00, 'ke', 15, 'https://images.unsplash.com/photo-1594620302200-9a762244a156', 1),
-(6, 'Kệ Tivi Gỗ Tự Nhiên Modern', 'ke-tivi-go-tu-nhien-modern', 'Kệ tivi phòng khách thiết kế nhiều ngăn kéo lưu trữ tiện lợi.', 6800000.00, NULL, 'ke', 7, 'https://images.unsplash.com/photo-1595428774223-ef52624120d2', 1),
-(7, 'Tủ Quần Áo 4 Cánh Cửa Lùa', 'tu-quan-ao-4-canh-cua-lua', 'Tủ quần áo hiện đại tích hợp gương soi toàn thân và kệ trang trí bên hông.', 14500000.00, 12900000.00, 'tu', 4, 'https://images.unsplash.com/photo-1558997519-83ea9252edf8', 1),
-(8, 'Đèn Sàn Trang Trí Đọc Sách Scandinavian', 'den-san-trang-tri-doc-sach-scandinavian', 'Đèn cây trang trí góc sofa với ánh sáng vàng ấm áp bảo vệ mắt.', 1200000.00, 950000.00, 'trang-tri', 25, 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c', 1);
+-- Sample furniture data (with weight_kg and dimensions for QTN-07)
+INSERT IGNORE INTO products (id, name, slug, description, price, discount_price, category, stock, image_url, is_active, dimensions, weight_kg) VALUES
+(1, 'Bộ Sofa Gỗ Óc Chó Cao Cấp', 'bo-sofa-go-oc-cho-cao-cap', 'Bộ sofa gỗ óc chó tự nhiên kết hợp đệm bọc da Ý cao cấp sang trọng cho phòng khách.', 28500000.00, 25000000.00, 'ghe', 5, 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc', 1, '220x90x85', 25.0),
+(2, 'Ghế Sofa Văng Da Hiện Đại', 'ghe-sofa-vang-da-hien-dai', 'Sofa văng da bò thật phong cách Bắc Âu tối giản, khung gỗ sồi chắc chắn.', 15800000.00, NULL, 'ghe', 8, 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7', 1, '180x80x75', 18.0),
+(3, 'Bàn Ăn Gỗ Sồi 6 Ghế', 'ban-an-go-soi-6-ghe', 'Bộ bàn ăn gia đình 6 ghế bằng gỗ sồi Nga lau màu óc chó tinh tế.', 12500000.00, 10900000.00, 'ban', 10, 'https://images.unsplash.com/photo-1617806118233-18e1de247200', 1, '200x90x78', 35.0),
+(4, 'Bàn Làm Việc Chân Sắt Tối Giản', 'ban-lam-viec-chan-sat-toi-gian', 'Bàn làm việc mặt gỗ công nghiệp phủ Melamine chống xước, chân sắt sơn tĩnh điện.', 2450000.00, NULL, 'ban', 20, 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd', 1, '140x60x75', 12.0),
+(5, 'Kệ Sách Gỗ Khung Kim Loại', 'ke-sach-go-khung-kim-loai', 'Kệ sách trang trí 5 tầng khung thép tĩnh điện phong cách Industrial.', 3200000.00, 2800000.00, 'ke', 15, 'https://images.unsplash.com/photo-1594620302200-9a762244a156', 1, '80x30x180', 8.0),
+(6, 'Kệ Tivi Gỗ Tự Nhiên Modern', 'ke-tivi-go-tu-nhien-modern', 'Kệ tivi phòng khách thiết kế nhiều ngăn kéo lưu trữ tiện lợi.', 6800000.00, NULL, 'ke', 7, 'https://images.unsplash.com/photo-1595428774223-ef52624120d2', 1, '160x40x55', 15.0),
+(7, 'Tủ Quần Áo 4 Cánh Cửa Lưa', 'tu-quan-ao-4-canh-cua-lua', 'Tủ quần áo hiện đại tích hợp gương soi toàn thân và kệ trang trí bên hông.', 14500000.00, 12900000.00, 'tu', 4, 'https://images.unsplash.com/photo-1558997519-83ea9252edf8', 1, '200x60x220', 45.0),
+(8, 'Đèn Sàn Trang Trí Đọc Sách Scandinavian', 'den-san-trang-tri-doc-sach-scandinavian', 'Đèn cây trang trí góc sofa với ánh sáng vàng ấm áp bảo vệ mắt.', 1200000.00, 950000.00, 'trang-tri', 25, 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c', 1, '30x30x150', 2.5);
 
 -- ------------------------------------------------------------
 -- Bảng wishlists (Sản phẩm yêu thích)
@@ -98,7 +99,9 @@ CREATE TABLE IF NOT EXISTS orders (
     status           VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT 'pending, confirmed, shipping, delivered, cancelled',
     subtotal         DOUBLE NOT NULL DEFAULT 0.0,
     discount_amount  DOUBLE NOT NULL DEFAULT 0.0,
+    shipping_fee     DOUBLE NOT NULL DEFAULT 0.0 COMMENT 'Phí vận chuyển QTN-07',
     total_amount     DOUBLE NOT NULL DEFAULT 0.0,
+    qr_expire_at     DATETIME NULL COMMENT 'QR payment expiry timestamp (NT-05-CN-002)',
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_orders_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     INDEX idx_orders_user (user_id),

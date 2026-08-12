@@ -4,6 +4,7 @@ models/product.py — SQLAlchemy model cho bảng products.
 Theo quy định tại product-context.md:
 - id, name, slug, description, price, discount_price, category, stock, image_url, is_active
 - category nằm trong tập ['ban', 'ghe', 'ke', 'tu', 'trang-tri']
+- weight_kg: trọng lượng thực tế (kg) dùng cho tính phí vận chuyển QTN-07
 """
 
 from datetime import datetime
@@ -28,7 +29,8 @@ class Product(db.Model):
     stock = db.Column(db.Integer, nullable=False, default=0, comment="Số lượng tồn kho")
     image_url = db.Column(db.String(500), nullable=True, comment="URL ảnh đại diện sản phẩm")
     material = db.Column(db.String(100), nullable=True, comment="Chất liệu sản phẩm")
-    dimensions = db.Column(db.String(100), nullable=True, comment="Kích thước (Dài x Rộng x Cao)")
+    dimensions = db.Column(db.String(100), nullable=True, comment="Kích thước (Dài x Rộng x Cao) đơn vị cm, VD: 120x60x75")
+    weight_kg = db.Column(db.Float, nullable=True, comment="Trọng lượng thực tế (kg) — QTN-07")
     rating = db.Column(db.Float, nullable=False, default=5.0, comment="Đánh giá trung bình (1-5 sao)")
     rating_count = db.Column(db.Integer, nullable=False, default=0, comment="Tổng số lượt đánh giá")
     is_active = db.Column(db.Boolean, nullable=False, default=True, comment="True = hiển thị")
@@ -54,6 +56,7 @@ class Product(db.Model):
             "image_url": self.image_url,
             "material": self.material or "Gỗ tự nhiên cao cấp",
             "dimensions": self.dimensions or "Đang cập nhật",
+            "weight_kg": float(self.weight_kg) if self.weight_kg is not None else None,
             "rating": float(self.rating) if self.rating is not None else 5.0,
             "rating_count": self.rating_count or 0,
             "is_active": self.is_active,
