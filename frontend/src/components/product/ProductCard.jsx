@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom'
 import { useCompare } from '@/contexts/CompareContext'
+import { useWishlist } from '@/contexts/WishlistContext'
 
 /**
  * ProductCard — Thẻ hiển thị sản phẩm nội thất.
  */
 const ProductCard = ({ product }) => {
   const { isComparing, addToCompare, removeFromCompare } = useCompare()
+  const { isWishlisted, toggleWishlist } = useWishlist()
+
   const inCompare = isComparing(product.id)
+  const wishlisted = isWishlisted(product.id)
 
   const handleToggleCompare = (e) => {
     e.preventDefault()
@@ -16,6 +20,12 @@ const ProductCard = ({ product }) => {
     } else {
       addToCompare(product)
     }
+  }
+
+  const handleToggleWishlist = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleWishlist(product)
   }
 
   const formatCurrency = (val) => {
@@ -40,28 +50,52 @@ const ProductCard = ({ product }) => {
           loading="lazy"
         />
 
-        {/* Discount Badge */}
-        {hasDiscount && (
-          <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-            -{discountPercent}%
-          </span>
-        )}
+        {/* Badges & Actions overlay */}
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+          <div>
+            {hasDiscount ? (
+              <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                Giảm {discountPercent}%
+              </span>
+            ) : (
+              <span className="bg-gray-900/60 backdrop-blur-md text-white text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full">
+                {product.category || 'Nội thất'}
+              </span>
+            )}
+          </div>
 
-        {/* Compare Toggle Button */}
-        <button
-          type="button"
-          onClick={handleToggleCompare}
-          className={`absolute top-3 right-3 p-1.5 rounded-full backdrop-blur-md transition-all shadow-sm flex items-center justify-center ${
-            inCompare
-              ? 'bg-amber-500 text-white font-bold'
-              : 'bg-white/80 text-gray-700 hover:bg-white hover:text-amber-600'
-          }`}
-          title={inCompare ? 'Bỏ so sánh' : 'Thêm vào so sánh'}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-        </button>
+          <div className="flex items-center gap-1.5 pointer-events-auto">
+            {/* Wishlist Heart Button */}
+            <button
+              onClick={handleToggleWishlist}
+              title={wishlisted ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'}
+              className={`p-1.5 rounded-full transition-all duration-200 shadow-sm ${
+                wishlisted
+                  ? 'bg-red-500 text-white scale-110'
+                  : 'bg-white/80 hover:bg-white text-gray-600 hover:text-red-500 backdrop-blur-sm'
+              }`}
+            >
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            </button>
+
+            {/* Compare Checkbox Button */}
+            <button
+              onClick={handleToggleCompare}
+              title={inCompare ? 'Bỏ so sánh' : 'Thêm vào so sánh'}
+              className={`p-1.5 rounded-full transition-all duration-200 shadow-sm ${
+                inCompare
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-white/80 hover:bg-white text-gray-600 hover:text-amber-600 backdrop-blur-sm'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
         {/* Stock status badge */}
         {product.stock <= 0 && (

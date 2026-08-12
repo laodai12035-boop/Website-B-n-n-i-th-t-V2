@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useWishlist } from '@/contexts/WishlistContext'
 import SearchBar from '@/components/product/SearchBar'
 import CategoryNav from '@/components/product/CategoryNav'
 
@@ -9,6 +10,7 @@ import CategoryNav from '@/components/product/CategoryNav'
  */
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
+  const { wishlistCount } = useWishlist()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -63,7 +65,23 @@ const Navbar = () => {
           </nav>
 
           {/* Right Section: User Account & Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+
+            {/* Wishlist Link Icon */}
+            <Link
+              to="/wishlist"
+              className="relative p-2 text-gray-500 hover:text-red-500 transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center"
+              title="Danh sách yêu thích"
+            >
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
 
             {isAuthenticated ? (
               /* User Menu Dropdown (Đã đăng nhập) */

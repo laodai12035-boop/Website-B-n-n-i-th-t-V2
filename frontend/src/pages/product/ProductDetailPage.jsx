@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import productService from '@/services/productService'
 import { useCompare } from '@/contexts/CompareContext'
+import { useWishlist } from '@/contexts/WishlistContext'
 
 import RelatedProducts from '@/components/product/RelatedProducts'
 
@@ -13,6 +14,7 @@ import RelatedProducts from '@/components/product/RelatedProducts'
 const ProductDetailPage = () => {
   const { id } = useParams()
   const { isComparing, addToCompare, removeFromCompare } = useCompare()
+  const { isWishlisted, toggleWishlist } = useWishlist()
 
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -259,23 +261,43 @@ const ProductDetailPage = () => {
                   type="button"
                   onClick={handleAddToCart}
                   disabled={product.stock <= 0}
-                  className="flex-1 btn-primary py-3 rounded-2xl font-bold text-sm shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 bg-amber-700 hover:bg-amber-800 text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z" />
-                  </svg>
-                  Thêm vào giỏ hàng
+                  <span>🛒</span> Thêm vào giỏ hàng
                 </button>
 
+                {/* Wishlist Button */}
                 <button
                   type="button"
-                  onClick={handleToggleCompare}
-                  className={`p-3 rounded-2xl border transition-all ${
-                    inCompare
-                      ? 'bg-amber-500 text-white border-amber-500'
-                      : 'bg-white text-gray-700 border-gray-200 hover:bg-amber-50 hover:text-amber-600'
+                  onClick={() => toggleWishlist(product)}
+                  title={isWishlisted(product.id) ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'}
+                  className={`p-3.5 rounded-2xl border transition-all ${
+                    isWishlisted(product.id)
+                      ? 'bg-red-50 border-red-200 text-red-600'
+                      : 'bg-white border-gray-200 text-gray-600 hover:text-red-500 hover:border-red-200'
                   }`}
-                  title={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'}
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                </button>
+
+                {/* Compare Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isComparing(product.id)) {
+                      removeFromCompare(product.id)
+                    } else {
+                      addToCompare(product)
+                    }
+                  }}
+                  title={isComparing(product.id) ? 'Bỏ so sánh' : 'Thêm vào so sánh'}
+                  className={`p-3.5 rounded-2xl border transition-all ${
+                    isComparing(product.id)
+                      ? 'bg-amber-100 border-amber-300 text-amber-800 font-bold'
+                      : 'bg-white border-gray-200 text-gray-600 hover:text-amber-700'
+                  }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
