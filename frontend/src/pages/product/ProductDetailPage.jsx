@@ -17,7 +17,7 @@ const ProductDetailPage = () => {
   const { id } = useParams()
   const { isComparing, addToCompare, removeFromCompare } = useCompare()
   const { isWishlisted, toggleWishlist } = useWishlist()
-  const { addToCart } = useCart()
+  const { addToCart, buyNow } = useCart()
 
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -47,7 +47,7 @@ const ProductDetailPage = () => {
     if (!product) return
     setCartError('')
     try {
-      await addToCart(product, quantity)
+      await buyNow(product, quantity)
       navigate('/checkout')
     } catch (err) {
       const msg = err.response?.data?.message || 'Không thể thực hiện Mua ngay'

@@ -57,6 +57,24 @@ export const CartProvider = ({ children }) => {
     }
   }
 
+  // Buy Now Express Checkout
+  const buyNow = async (product, quantity = 1) => {
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để sử dụng tính năng Mua ngay!')
+      return
+    }
+
+    try {
+      const data = await cartService.buyNow(product.id, quantity)
+      setItems(data.items || [])
+      setCartCount(data.cart_count || 0)
+      setCartTotal(data.subtotal || 0)
+      return data
+    } catch (err) {
+      throw err
+    }
+  }
+
   // Update Item Quantity
   const updateQuantity = async (productId, quantity) => {
     if (!isAuthenticated) return
@@ -109,6 +127,7 @@ export const CartProvider = ({ children }) => {
         setIsCartOpen,
         loading,
         addToCart,
+        buyNow,
         updateQuantity,
         removeFromCart,
         clearCart,

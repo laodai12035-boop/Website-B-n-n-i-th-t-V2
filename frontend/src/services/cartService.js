@@ -25,6 +25,17 @@ const cartService = {
   },
 
   /**
+   * Mua ngay một sản phẩm và chuyển hướng sang Checkout (Tuân thủ QTN-02).
+   * @param {number|string} productId
+   * @param {number} quantity
+   * @returns {Promise<Object>}
+   */
+  async buyNow(productId, quantity = 1) {
+    const response = await api.post('/cart/buy-now', { product_id: Number(productId), quantity: Number(quantity) })
+    return response.data.data
+  },
+
+  /**
    * Cập nhật số lượng sản phẩm trong giỏ hàng (Tuân thủ QTN-02).
    * @param {number|string} productId
    * @param {number} quantity
