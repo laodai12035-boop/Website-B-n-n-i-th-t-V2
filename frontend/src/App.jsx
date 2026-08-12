@@ -5,6 +5,7 @@ import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import ProfilePage from '@/pages/user/ProfilePage'
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage'
+import AdminOrdersPage from '@/pages/admin/AdminOrdersPage'
 import ForbiddenPage from '@/pages/error/ForbiddenPage'
 import ProductListPage from '@/pages/product/ProductListPage'
 import ProductDetailPage from '@/pages/product/ProductDetailPage'
@@ -73,6 +74,14 @@ function App() {
               element={
                 <AdminRoute>
                   <AdminDashboardPage />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/orders"
+              element={
+                <AdminRoute>
+                  <AdminOrdersPage />
                 </AdminRoute>
               }
             />

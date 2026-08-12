@@ -40,15 +40,29 @@ def get_dashboard():
         401: Chưa đăng nhập
         403: Không có quyền Admin (code: FORBIDDEN)
     """
-    # Đếm tổng số user trong DB
+    from app.models.product import Product
+    from app.models.order import Order
+    from sqlalchemy.sql import func
+
     total_users = db.session.query(User).count()
+    total_orders = db.session.query(Order).count()
+    total_products = db.session.query(Product).count()
+
+    total_revenue_val = (
+        db.session.query(func.sum(Order.total_amount))
+        .filter(Order.payment_status == "paid")
+        .scalar()
+        or 0.0
+    )
+
+    formatted_revenue = f"{int(total_revenue_val):,}đ".replace(",", ".")
 
     dashboard_data = {
         "stats": {
             "total_users": total_users,
-            "total_orders": 0,
-            "total_products": 0,
-            "revenue": "0đ",
+            "total_orders": total_orders,
+            "total_products": total_products,
+            "revenue": formatted_revenue,
             "system_status": "Hoạt động bình thường",
         }
     }
@@ -90,4 +104,55 @@ def quick_search():
         message="Tra cứu tìm kiếm nhanh Admin thành công",
         status=200,
     )
+
+
+# ============================================================
+# GET /api/v1/admin/orders — Admin xem và lọc danh sách đơn hàng (NT-06-CN-005)
+# ============================================================
+@admin_bp.route("/orders", methods=["GET"])
+@admin_required()
+def get_admin_orders():
+    """
+    Admin xem và lọc danh sách đơn hàng theo trạng thái, từ khóa, khoảng thời gian. (NT-06-CN-005)
+
+    Query Parameters:
+        status (str): Trạng thái đơn ('all', 'pending', 'confirmed', 'shipping', 'delivered', 'cancelled')
+        q / search (str): Từ khóa tìm kiếm (mã đơn, tên/sĐT/địa chỉ nhận)
+        start_date (str): Ngày bắt đầu YYYY-MM-DD
+        end_date (str): Ngày kết thúc YYYY-MM-DD
+        page (int): Trang hiện tại (mặc định 1)
+        limit (int): Số bản ghi/trang (mặc định 20)
+
+    Header:
+        Authorization: Bearer <admin_token>
+
+    Responses:
+        200: Trả về danh sách đơn hàng, pagination metadata & summary thống kê
+        401: Chưa đăng nhập
+        403: Không có quyền Admin (code: FORBIDDEN)
+    """
+    from flask import request
+
+    status_filter = request.args.get("status", default="all", type=str)
+    search_query = request.args.get("q", default=request.args.get("search", default="", type=str), type=str)
+    start_date = request.args.get("start_date", default=None, type=str)
+    end_date = request.args.get("end_date", default=None, type=str)
+    page = request.args.get("page", default=1, type=int)
+    limit = request.args.get("limit", default=request.args.get("per_page", default=20, type=int), type=int)
+
+    result = AdminService.get_admin_orders(
+        status_filter=status_filter,
+        search_query=search_query,
+        start_date=start_date,
+        end_date=end_date,
+        page=page,
+        limit=limit,
+    )
+
+    return _success(
+        data=result,
+        message="Lấy danh sách đơn hàng cho Admin thành công",
+        status=200,
+    )
+
 
