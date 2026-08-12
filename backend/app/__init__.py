@@ -45,6 +45,10 @@ def create_app(config_name: str = None) -> Flask:
     # --- Đăng ký blueprints ---
     _register_blueprints(app)
 
+    # --- Tự động migrate schema MySQL (tránh lỗi OperationalError 1054) ---
+    from app.auto_migrate import run_auto_migrations
+    run_auto_migrations(app)
+
     return app
 
 
