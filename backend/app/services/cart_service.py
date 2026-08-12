@@ -154,3 +154,34 @@ class CartService:
         db.session.query(CartItem).filter(CartItem.user_id == user_id).delete()
         db.session.commit()
         return CartService.get_cart(user_id)
+
+    @staticmethod
+    def buy_now(user_id: int, product_id: int, quantity: int = 1) -> Dict[str, Any]:
+        """
+        Thực hiện Mua ngay một sản phẩm (Tuân thủ QTN-02).
+        Tự động thêm sản phẩm vào giỏ và trả về giỏ hàng sẵn sàng cho Checkout.
+
+        Args:
+            user_id: ID người dùng
+            product_id: ID sản phẩm
+            quantity: Số lượng đặt (mặc định 1)
+
+        Returns:
+            Dict chứa giỏ hàng cập nhật.
+        """
+        if quantity <= 0:
+            raise ValueError("INVALID_QUANTITY")
+
+        product = (
+            db.session.query(Product)
+            .filter(Product.id == product_id, Product.is_active == True)
+            .first()
+        )
+        if not product:
+            raise ValueError("PRODUCT_NOT_FOUND")
+
+        # Kiểm tra QTN-02
+        if quantity > product.stock:
+            raise ValueError(f"EXCEED_STOCK:{product.stock}")
+
+        return CartService.add_to_cart(user_id, product_id, quantity)

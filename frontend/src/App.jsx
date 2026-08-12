@@ -11,6 +11,7 @@ import ProductDetailPage from '@/pages/product/ProductDetailPage'
 import ProductComparePage from '@/pages/product/ProductComparePage'
 import WishlistPage from '@/pages/user/WishlistPage'
 import CartPage from '@/pages/cart/CartPage'
+import CheckoutPage from '@/pages/checkout/CheckoutPage'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AdminRoute from '@/components/auth/AdminRoute'
 import { CompareProvider } from '@/contexts/CompareContext'
@@ -36,6 +37,7 @@ function App() {
             <Route path="/compare" element={<ProductComparePage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
 
             {/* Protected User routes */}
             <Route

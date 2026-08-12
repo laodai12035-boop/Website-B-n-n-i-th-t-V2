@@ -121,3 +121,37 @@ def clear_cart():
     user_id = int(get_jwt_identity())
     updated_cart = CartService.clear_cart(user_id)
     return _success(data=updated_cart, message="Đã xóa toàn bộ giỏ hàng", status=200)
+
+
+# ============================================================
+# POST /api/v1/cart/buy-now — Mua ngay (QTN-02 & Express Checkout)
+# ============================================================
+@cart_bp.route("/buy-now", methods=["POST"])
+@jwt_required()
+def buy_now():
+    user_id = int(get_jwt_identity())
+    body = request.get_json() or {}
+
+    product_id = body.get("product_id")
+    quantity = body.get("quantity", 1)
+
+    if not product_id or not isinstance(product_id, int):
+        return jsonify({"status": "error", "message": "Vui lòng chọn sản phẩm hợp lệ", "code": "INVALID_PRODUCT"}), 400
+
+    try:
+        updated_cart = CartService.buy_now(user_id, product_id, quantity)
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str.startswith("EXCEED_STOCK:"):
+            stock = err_str.split(":")[1]
+            return jsonify({
+                "status": "error",
+                "message": f"Sản phẩm đã hết hàng hoặc số lượng đặt vượt quá tồn kho còn lại (Tồn kho còn: {stock} sản phẩm).",
+                "code": "EXCEED_STOCK",
+                "available_stock": int(stock),
+            }), 400
+        elif err_str == "PRODUCT_NOT_FOUND":
+            return jsonify({"status": "error", "message": "Sản phẩm không tồn tại hoặc đã bị ẩn", "code": "PRODUCT_NOT_FOUND"}), 404
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+    return _success(data=updated_cart, message="Chuẩn bị đơn hàng Mua ngay thành công", status=200)
