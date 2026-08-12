@@ -130,16 +130,6 @@ const ProductDetailPage = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
 
-      {/* Added to Cart Toast Alert */}
-      {addedToCartToast && (
-        <div className="fixed top-20 right-4 z-50 bg-emerald-900/90 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-slide-down">
-          <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          <span className="text-sm font-semibold">Đã thêm sản phẩm vào giỏ hàng!</span>
-        </div>
-      )}
-
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
 
         {/* Breadcrumb Navigation */}
