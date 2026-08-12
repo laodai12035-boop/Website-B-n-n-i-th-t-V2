@@ -27,6 +27,7 @@ class Order(db.Model):
     )
     subtotal = db.Column(db.Float, nullable=False, default=0.0)
     discount_amount = db.Column(db.Float, nullable=False, default=0.0)
+    shipping_fee = db.Column(db.Float, nullable=False, default=0.0, comment="Phí vận chuyển QTN-07")
     total_amount = db.Column(db.Float, nullable=False, default=0.0)
     qr_expire_at = db.Column(db.DateTime, nullable=True)  # NT-05-CN-002: QR payment expiry timestamp
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -48,6 +49,7 @@ class Order(db.Model):
             "status": self.status,
             "subtotal": float(self.subtotal),
             "discount_amount": float(self.discount_amount),
+            "shipping_fee": float(self.shipping_fee) if self.shipping_fee is not None else 0.0,
             "total_amount": float(self.total_amount),
             "qr_expire_at": self.qr_expire_at.isoformat() if self.qr_expire_at else None,
             "items": [item.to_dict() for item in self.items],

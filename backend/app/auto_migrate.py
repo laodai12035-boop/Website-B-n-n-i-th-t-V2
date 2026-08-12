@@ -44,6 +44,8 @@ def run_auto_migrations(app):
                     alter_statements.append("ADD COLUMN discount_amount DOUBLE NOT NULL DEFAULT 0.0")
                 if "qr_expire_at" not in columns:
                     alter_statements.append("ADD COLUMN qr_expire_at DATETIME NULL")
+                if "shipping_fee" not in columns:
+                    alter_statements.append("ADD COLUMN shipping_fee DOUBLE NOT NULL DEFAULT 0.0")
 
                 if alter_statements:
                     sql = f"ALTER TABLE orders {', '.join(alter_statements)}"
@@ -66,6 +68,20 @@ def run_auto_migrations(app):
                     db.session.execute(text(sql))
                     db.session.commit()
                     print("[AutoMigrate] Updated table order_items columns successfully.")
+
+            # 5. Cập nhật bảng products nếu thiếu cột weight_kg (QTN-07)
+            if inspector.has_table("products"):
+                columns = [c["name"] for c in inspector.get_columns("products")]
+                alter_statements = []
+
+                if "weight_kg" not in columns:
+                    alter_statements.append("ADD COLUMN weight_kg FLOAT NULL")
+
+                if alter_statements:
+                    sql = f"ALTER TABLE products {', '.join(alter_statements)}"
+                    db.session.execute(text(sql))
+                    db.session.commit()
+                    print("[AutoMigrate] Updated table products columns (weight_kg) successfully.")
 
             # 4. Seed dữ liệu coupons nếu chưa có
             if inspector.has_table("coupons"):
