@@ -97,6 +97,7 @@ class CartService:
     def update_quantity(user_id: int, product_id: int, quantity: int) -> Dict[str, Any]:
         """
         Cập nhật số lượng của một sản phẩm trong giỏ hàng (Tuân thủ QTN-02).
+        Nếu số lượng <= 0 -> Tự động xóa sản phẩm khỏi giỏ hàng.
 
         Args:
             user_id: ID người dùng
@@ -104,7 +105,7 @@ class CartService:
             quantity: Số lượng mới
 
         Returns:
-            Dict chứa giỏ hàng cập nhật.
+            Dict chứa thông tin giỏ hàng cập nhật.
         """
         if quantity <= 0:
             return CartService.remove_item(user_id, product_id)
