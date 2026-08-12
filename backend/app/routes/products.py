@@ -177,4 +177,46 @@ def get_product_detail(product_id: int):
     )
 
 
+# ============================================================
+# GET /api/v1/products/<int:product_id>/related — Sản phẩm liên quan
+# ============================================================
+@products_bp.route("/<int:product_id>/related", methods=["GET"])
+def get_related_products(product_id: int):
+    """
+    Lấy danh sách các sản phẩm liên quan (gợi ý mua kèm cùng danh mục).
+
+    Path Parameter:
+        product_id (int): ID của sản phẩm đang xem
+
+    Query Parameter:
+        limit (int, optional): Số lượng sản phẩm gợi ý (mặc định 4)
+
+    Responses:
+        200: Trả về danh sách related_products
+        404: Sản phẩm gốc không tồn tại (code: PRODUCT_NOT_FOUND)
+    """
+    limit = request.args.get("limit", default=4, type=int)
+    ProductService.seed_initial_products()
+
+    try:
+        related = ProductService.get_related_products(product_id, limit=limit)
+    except ValueError as exc:
+        if str(exc) == "PRODUCT_NOT_FOUND":
+            return jsonify(
+                {
+                    "status": "error",
+                    "message": "Sản phẩm gốc không tồn tại hoặc đã bị ngừng kinh doanh",
+                    "code": "PRODUCT_NOT_FOUND",
+                }
+            ), 404
+        return jsonify({"status": "error", "message": str(exc), "code": "NOT_FOUND"}), 404
+
+    return _success(
+        data={"related_products": related},
+        message="Lấy danh sách sản phẩm liên quan thành công",
+        status=200,
+    )
+
+
+
 
