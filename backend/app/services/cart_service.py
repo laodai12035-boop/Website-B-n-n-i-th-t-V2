@@ -34,7 +34,7 @@ class CartService:
 
         items_data = [item.to_dict() for item in cart_items]
         cart_count = sum(item.quantity for item in cart_items)
-        subtotal = round(sum(item.to_dict()["subtotal"] for item in cart_items), 2)
+        subtotal = round(sum(float(item.to_dict()["subtotal"]) for item in cart_items), 2)
 
         return {
             "items": items_data,

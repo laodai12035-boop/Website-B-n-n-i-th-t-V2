@@ -30,7 +30,8 @@ class CartItem(db.Model):
     product = db.relationship("Product", backref=db.backref("cart_items", lazy="dynamic", cascade="all, delete-orphan"))
 
     def to_dict(self):
-        unit_price = self.product.discount_price if (self.product and self.product.discount_price and self.product.discount_price < self.product.price) else (self.product.price if self.product else 0.0)
+        raw_price = self.product.discount_price if (self.product and self.product.discount_price and float(self.product.discount_price) < float(self.product.price)) else (self.product.price if self.product else 0.0)
+        unit_price = float(raw_price) if raw_price else 0.0
         return {
             "id": self.id,
             "user_id": self.user_id,
