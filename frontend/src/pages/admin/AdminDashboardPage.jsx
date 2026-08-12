@@ -75,9 +75,9 @@ const AdminDashboardPage = () => {
           </div>
 
           {/* Stat Item 2 */}
-          <div className="card border-l-4 border-l-blue-500">
+          <Link to="/admin/orders" className="card border-l-4 border-l-blue-500 hover:shadow-md transition-shadow group block">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng Đơn Hàng</span>
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Tổng Đơn Hàng</span>
               <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -85,8 +85,8 @@ const AdminDashboardPage = () => {
               </div>
             </div>
             <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.total_orders}</p>
-            <span className="text-xs text-blue-600 font-medium mt-1 inline-block">Sẵn sàng xử lý</span>
-          </div>
+            <span className="text-xs text-blue-600 font-bold mt-1 inline-block">Quản lý đơn hàng →</span>
+          </Link>
 
           {/* Stat Item 3 */}
           <div className="card border-l-4 border-l-emerald-500">
