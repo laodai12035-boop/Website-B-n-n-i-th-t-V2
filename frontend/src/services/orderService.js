@@ -31,10 +31,12 @@ export const orderService = {
   },
 
   /**
-   * Lấy danh sách đơn hàng của người dùng.
+   * Lấy danh sách đơn hàng của người dùng (có thể lọc theo trạng thái).
+   * @param {string} [statusFilter] - 'all' | 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'cancelled'
    */
-  async getUserOrders() {
-    const response = await api.get('/orders')
+  async getUserOrders(statusFilter) {
+    const params = statusFilter && statusFilter !== 'all' ? { status: statusFilter } : {}
+    const response = await api.get('/orders', { params })
     return response.data.data
   },
 
