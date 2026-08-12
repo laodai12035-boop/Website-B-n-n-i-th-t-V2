@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useCompare } from '@/contexts/CompareContext'
 import { useWishlist } from '@/contexts/WishlistContext'
+import { useCart } from '@/contexts/CartContext'
 
 /**
  * ProductCard — Thẻ hiển thị sản phẩm nội thất.
@@ -8,6 +9,7 @@ import { useWishlist } from '@/contexts/WishlistContext'
 const ProductCard = ({ product }) => {
   const { isComparing, addToCompare, removeFromCompare } = useCompare()
   const { isWishlisted, toggleWishlist } = useWishlist()
+  const { addToCart } = useCart()
 
   const inCompare = isComparing(product.id)
   const wishlisted = isWishlisted(product.id)
@@ -26,6 +28,12 @@ const ProductCard = ({ product }) => {
     e.preventDefault()
     e.stopPropagation()
     toggleWishlist(product)
+  }
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    await addToCart(product, 1)
   }
 
   const formatCurrency = (val) => {
@@ -155,15 +163,32 @@ const ProductCard = ({ product }) => {
             )}
           </div>
 
-          <Link
-            to={`/products/${product.id}`}
-            className="p-2.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-primary-600 hover:text-white transition-colors"
-            title="Xem chi tiết"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleAddToCart}
+              disabled={product.stock <= 0}
+              className={`p-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center ${
+                product.stock <= 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-amber-500 hover:bg-amber-600 text-white active:scale-95'
+              }`}
+              title={product.stock <= 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            </button>
+
+            <Link
+              to={`/products/${product.id}`}
+              className="p-2.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              title="Xem chi tiết"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </Link>
+          </div>
         </div>
 
       </div>

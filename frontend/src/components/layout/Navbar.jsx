@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useWishlist } from '@/contexts/WishlistContext'
+import { useCart } from '@/contexts/CartContext'
 import SearchBar from '@/components/product/SearchBar'
 import CategoryNav from '@/components/product/CategoryNav'
 
@@ -11,6 +12,7 @@ import CategoryNav from '@/components/product/CategoryNav'
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
   const { wishlistCount } = useWishlist()
+  const { cartCount, setIsCartOpen } = useCart()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -82,6 +84,23 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+
+            {/* Cart Icon Link */}
+            <button
+              type="button"
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-gray-500 hover:text-amber-600 transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center"
+              title="Giỏ hàng của bạn"
+            >
+              <svg className="w-5.5 h-5.5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-amber-600 text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white">
+                  {cartCount}
+                </span>
+              )}
+            </button>
 
             {isAuthenticated ? (
               /* User Menu Dropdown (Đã đăng nhập) */
