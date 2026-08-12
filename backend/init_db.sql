@@ -226,3 +226,25 @@ INSERT IGNORE INTO combo_items (id, combo_id, product_id, quantity) VALUES
 (2, 1, 6, 1), -- Kệ tivi gỗ (id=6)
 (3, 2, 4, 1), -- Bàn làm việc (id=4)
 (4, 2, 5, 1); -- Kệ sách (id=5)
+
+-- ------------------------------------------------------------
+-- Bảng return_requests (Yêu cầu Đổi/Trả hàng NT-06-CN-004)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS return_requests (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    order_id        INT NOT NULL,
+    user_id         INT NOT NULL,
+    request_type    VARCHAR(20) NOT NULL DEFAULT 'return' COMMENT 'return/exchange/warranty',
+    reason          TEXT NOT NULL COMMENT 'Lý do đổi trả',
+    proof_image_url TEXT NULL COMMENT 'URL ảnh minh chứng',
+    status          VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT 'pending/approved/rejected',
+    admin_note      TEXT NULL COMMENT 'Ghi chú Admin',
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_return_requests_orders FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+    CONSTRAINT fk_return_requests_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_return_requests_order (order_id),
+    INDEX idx_return_requests_user (user_id),
+    INDEX idx_return_requests_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
