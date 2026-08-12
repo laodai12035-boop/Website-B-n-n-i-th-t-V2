@@ -5,13 +5,15 @@ import api from '@/services/api'
  */
 const reviewService = {
   /**
-   * Lấy danh sách đánh giá sản phẩm kèm phân bổ sao.
+   * Lấy danh sách đánh giá sản phẩm kèm phân bổ sao và bộ lọc.
    *
    * @param {number|string} productId
+   * @param {number|null} star
    * @returns {Promise<Object>} { reviews: [], summary: {}, can_review: boolean }
    */
-  async getProductReviews(productId) {
-    const response = await api.get(`/products/${productId}/reviews`)
+  async getProductReviews(productId, star = null) {
+    const params = star ? { star } : {}
+    const response = await api.get(`/products/${productId}/reviews`, { params })
     return response.data.data
   },
 
