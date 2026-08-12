@@ -8,6 +8,7 @@ import { useCart } from '@/contexts/CartContext'
 
 import RelatedProducts from '@/components/product/RelatedProducts'
 import ProductReviews from '@/components/product/ProductReviews'
+import ComboSection from '@/components/product/ComboSection'
 
 /**
  * ProductDetailPage — Trang Chi tiết sản phẩm.
@@ -382,6 +383,9 @@ const ProductDetailPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Furniture Combo Offer Section (NT-05-CN-005) */}
+        <ComboSection productId={product.id} />
 
         {/* Related & Recommended Products */}
         <RelatedProducts productId={product.id} />

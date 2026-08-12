@@ -119,5 +119,35 @@ def run_auto_migrations(app):
                     db.session.commit()
                     print("[AutoMigrate] Seeded sample coupons successfully.")
 
+            # 6. Seed dữ liệu combos nếu chưa có
+            if inspector.has_table("combos") and inspector.has_table("combo_items"):
+                from app.models.combo import Combo, ComboItem
+                if db.session.query(Combo).count() == 0:
+                    cb1 = Combo(
+                        id=1,
+                        name="Bộ Trọn Gói Phòng Khách Sang Trọng",
+                        description="Bộ Combo gồm 01 Bộ Sofa Gỗ Óc Chó và 01 Kệ Tivi Gỗ Tự Nhiên với ưu đãi giảm giá 15% khi mua trọn bộ.",
+                        discount_percent=15.0,
+                        is_active=True,
+                    )
+                    cb2 = Combo(
+                        id=2,
+                        name="Bộ Góc Làm Việc Tối Giản",
+                        description="Bộ Combo gồm 01 Bàn Làm Việc Chân Sắt và 01 Kệ Sách Gỗ Khung Kim Loại giảm ngay 10%.",
+                        discount_percent=10.0,
+                        is_active=True,
+                    )
+                    db.session.add_all([cb1, cb2])
+                    db.session.commit()
+
+                    item1 = ComboItem(id=1, combo_id=1, product_id=1, quantity=1)
+                    item2 = ComboItem(id=2, combo_id=1, product_id=6, quantity=1)
+                    item3 = ComboItem(id=3, combo_id=2, product_id=4, quantity=1)
+                    item4 = ComboItem(id=4, combo_id=2, product_id=5, quantity=1)
+                    db.session.add_all([item1, item2, item3, item4])
+                    db.session.commit()
+                    print("[AutoMigrate] Seeded sample combos successfully.")
+
         except Exception as e:
             print(f"[AutoMigrate Error] {e}")
+

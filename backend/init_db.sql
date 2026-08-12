@@ -188,6 +188,41 @@ INSERT IGNORE INTO coupons (id, code, description, discount_type, discount_value
 (2, 'GIAM500K', 'Giảm trực tiếp 500.000đ cho đơn từ 5.000.000đ', 'fixed', 500000.0, 5000000.0, NULL, 1),
 (3, 'HETHAN2025', 'Mã ưu đãi đã hết hạn sử dụng', 'percent', 20.0, 1000000.0, NULL, 0);
 
+-- ------------------------------------------------------------
+-- Bảng combos (Bộ sản phẩm ưu đãi NT-05-CN-005)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS combos (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    name             VARCHAR(200) NOT NULL COMMENT 'Tên combo',
+    description      TEXT NULL COMMENT 'Mô tả combo',
+    discount_percent FLOAT NOT NULL DEFAULT 0.0 COMMENT '% giảm giá khi mua trọn bộ',
+    is_active        BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Trạng thái bật/tắt',
+    created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_combos_is_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------
+-- Bảng combo_items (Chi tiết sản phẩm trong combo)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS combo_items (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    combo_id   INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity   INT NOT NULL DEFAULT 1,
+    CONSTRAINT uix_combo_product UNIQUE (combo_id, product_id),
+    CONSTRAINT fk_combo_items_combos FOREIGN KEY (combo_id) REFERENCES combos (id) ON DELETE CASCADE,
+    CONSTRAINT fk_combo_items_products FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+    INDEX idx_combo_items_combo (combo_id),
+    INDEX idx_combo_items_product (product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Seed combos data
+INSERT IGNORE INTO combos (id, name, description, discount_percent, is_active) VALUES
+(1, 'Bộ Trọn Gói Phòng Khách Sang Trọng', 'Bộ Combo gồm 01 Bộ Sofa Gỗ Óc Chó và 01 Kệ Tivi Gỗ Tự Nhiên với ưu đãi giảm giá 15% khi mua trọn bộ.', 15.0, 1),
+(2, 'Bộ Góc Làm Việc Tối Giản', 'Bộ Combo gồm 01 Bàn Làm Việc Chân Sắt và 01 Kệ Sách Gỗ Khung Kim Loại giảm ngay 10%.', 10.0, 1);
 
+INSERT IGNORE INTO combo_items (id, combo_id, product_id, quantity) VALUES
+(1, 1, 1, 1), -- Sofa gỗ óc chó (id=1)
+(2, 1, 6, 1), -- Kệ tivi gỗ (id=6)
+(3, 2, 4, 1), -- Bàn làm việc (id=4)
+(4, 2, 5, 1); -- Kệ sách (id=5)
