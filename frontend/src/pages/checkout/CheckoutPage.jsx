@@ -4,12 +4,13 @@ import Navbar from '@/components/layout/Navbar'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import couponService from '@/services/couponService'
+import orderService from '@/services/orderService'
 
 /**
  * CheckoutPage — Trang Thanh toán đặt hàng (Express Checkout / Standard Checkout).
  */
 const CheckoutPage = () => {
-  const { items, cartTotal, clearCart } = useCart()
+  const { items, cartTotal, clearCart, fetchCart } = useCart()
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -27,6 +28,7 @@ const CheckoutPage = () => {
 
   const [submitting, setSubmitting] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState(false)
+  const [createdOrderInfo, setCreatedOrderInfo] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
 
   const formatCurrency = (val) => {
@@ -63,49 +65,73 @@ const CheckoutPage = () => {
 
     setSubmitting(true)
     try {
-      // Simulate placing order
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      await clearCart()
+      const createdOrder = await orderService.createCodOrder({
+        recipient_name: fullName.trim(),
+        recipient_phone: phone.trim(),
+        shipping_address: address.trim(),
+        note: note.trim(),
+        coupon_code: appliedCoupon ? appliedCoupon.coupon_code : null,
+      })
+      setCreatedOrderInfo(createdOrder)
+      if (fetchCart) await fetchCart()
       setOrderSuccess(true)
     } catch (err) {
-      setErrorMsg('Đã có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại!')
+      const msg = err.response?.data?.message || 'Đã có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại!'
+      setErrorMsg(msg)
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (orderSuccess) {
+  if (orderSuccess && createdOrderInfo) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <Navbar />
-        <main className="flex-1 max-w-lg mx-auto w-full p-6 my-12 flex flex-col items-center justify-center text-center animate-fade-in">
+        <main className="flex-1 max-w-lg mx-auto w-full p-6 my-8 flex flex-col items-center justify-center text-center animate-fade-in">
           <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center text-4xl mb-4 shadow-lg animate-bounce">
             🎉
           </div>
-          <h2 className="text-2xl font-display font-bold text-gray-900 mb-2">Đặt hàng thành công!</h2>
-          <p className="text-xs text-gray-500 mb-6">
-            Cảm ơn bạn đã tin tưởng chọn mua sản phẩm tại <strong className="text-gray-800">Nội Thất Đẹp</strong>. Đơn hàng của bạn đang được xử lý và sẽ sớm giao tận tay.
+          <h2 className="text-2xl font-display font-bold text-gray-900 mb-1">Đặt hàng thành công!</h2>
+          <p className="text-xs text-amber-800 font-bold bg-amber-50 px-3 py-1 rounded-full mb-4">
+            Mã đơn hàng: {createdOrderInfo.order_code}
           </p>
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 w-full text-left text-xs space-y-2 mb-6 shadow-sm">
-            <div className="flex justify-between">
+          <p className="text-xs text-gray-500 mb-6">
+            Cảm ơn bạn đã đặt hàng tại <strong className="text-gray-800">Nội Thất Đẹp</strong>. Đơn hàng của bạn đang ở trạng thái <span className="font-bold text-amber-600 uppercase">Chờ xác nhận</span> và sẽ sớm được giao.
+          </p>
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 w-full text-left text-xs space-y-2.5 mb-6 shadow-sm">
+            <div className="flex justify-between border-b border-gray-100 pb-2">
               <span className="text-gray-500">Người nhận:</span>
-              <span className="font-bold text-gray-900">{fullName}</span>
+              <span className="font-bold text-gray-900">{createdOrderInfo.recipient_name} ({createdOrderInfo.recipient_phone})</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Số điện thoại:</span>
-              <span className="font-bold text-gray-900">{phone}</span>
+            <div className="flex justify-between border-b border-gray-100 pb-2">
+              <span className="text-gray-500">Địa chỉ giao:</span>
+              <span className="font-bold text-gray-900 truncate max-w-[200px]">{createdOrderInfo.shipping_address}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between border-b border-gray-100 pb-2">
               <span className="text-gray-500">Hình thức thanh toán:</span>
-              <span className="font-bold text-amber-800 uppercase">{paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : 'Chuyển khoản VNPAY/QR'}</span>
+              <span className="font-bold text-amber-800 uppercase">Thanh toán khi nhận hàng (COD)</span>
+            </div>
+            <div className="flex justify-between pt-1">
+              <span className="text-gray-900 font-bold">Tổng thanh toán:</span>
+              <span className="font-extrabold text-amber-800 text-sm font-display">{formatCurrency(createdOrderInfo.total_amount)}</span>
             </div>
           </div>
-          <Link
-            to="/products"
-            className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold transition-colors shadow-sm"
-          >
-            Tiếp tục mua sắm
-          </Link>
+
+          <div className="flex gap-3 w-full">
+            <Link
+              to="/products"
+              className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-2xl text-xs font-bold transition-colors text-center"
+            >
+              Tiếp tục mua sắm
+            </Link>
+            <Link
+              to="/products"
+              className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold transition-colors text-center shadow-sm"
+            >
+              Xem đơn hàng
+            </Link>
+          </div>
         </main>
       </div>
     )

@@ -86,13 +86,23 @@ CREATE TABLE IF NOT EXISTS wishlists (
 -- Bảng orders (Đơn hàng)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS orders (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    user_id      INT NOT NULL,
-    status       VARCHAR(20) NOT NULL DEFAULT 'delivered',
-    total_amount DOUBLE NOT NULL DEFAULT 0.0,
-    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    order_code       VARCHAR(50) NOT NULL UNIQUE COMMENT 'Mã đơn hàng (VD: ORD-20260812-1001)',
+    user_id          INT NOT NULL,
+    recipient_name   VARCHAR(100) NOT NULL COMMENT 'Họ tên người nhận',
+    recipient_phone  VARCHAR(20) NOT NULL COMMENT 'SĐT người nhận',
+    shipping_address VARCHAR(255) NOT NULL COMMENT 'Địa chỉ giao hàng',
+    note             VARCHAR(255) NULL COMMENT 'Ghi chú đơn hàng',
+    payment_method   VARCHAR(20) NOT NULL DEFAULT 'COD' COMMENT 'COD hoặc VNPAY',
+    payment_status   VARCHAR(20) NOT NULL DEFAULT 'unpaid' COMMENT 'unpaid hoặc paid',
+    status           VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT 'pending, confirmed, shipping, delivered, cancelled',
+    subtotal         DOUBLE NOT NULL DEFAULT 0.0,
+    discount_amount  DOUBLE NOT NULL DEFAULT 0.0,
+    total_amount     DOUBLE NOT NULL DEFAULT 0.0,
+    created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_orders_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     INDEX idx_orders_user (user_id),
+    INDEX idx_orders_code (order_code),
     INDEX idx_orders_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -100,11 +110,13 @@ CREATE TABLE IF NOT EXISTS orders (
 -- Bảng order_items (Chi tiết đơn hàng)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS order_items (
-    id         INT AUTO_INCREMENT PRIMARY KEY,
-    order_id   INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity   INT NOT NULL DEFAULT 1,
-    price      DOUBLE NOT NULL DEFAULT 0.0,
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    order_id     INT NOT NULL,
+    product_id   INT NOT NULL,
+    product_name VARCHAR(200) NULL,
+    quantity     INT NOT NULL DEFAULT 1,
+    price        DOUBLE NOT NULL DEFAULT 0.0,
+    subtotal     DOUBLE NOT NULL DEFAULT 0.0,
     CONSTRAINT fk_order_items_orders FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
     CONSTRAINT fk_order_items_products FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
     INDEX idx_order_items_order (order_id),
