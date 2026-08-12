@@ -16,6 +16,7 @@ const ProductReviews = ({ productId }) => {
   })
   const [canReview, setCanReview] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [selectedStar, setSelectedStar] = useState(null)
 
   // Form state
   const [rating, setRating] = useState(5)
@@ -30,7 +31,7 @@ const ProductReviews = ({ productId }) => {
       if (!productId) return
       setLoading(true)
       try {
-        const data = await reviewService.getProductReviews(productId)
+        const data = await reviewService.getProductReviews(productId, selectedStar)
         setReviews(data.reviews || [])
         setSummary(data.summary || summary)
         setCanReview(data.can_review || false)
@@ -42,7 +43,7 @@ const ProductReviews = ({ productId }) => {
     }
 
     fetchReviewsData()
-  }, [productId, isAuthenticated])
+  }, [productId, isAuthenticated, selectedStar])
 
   const handleSubmitReview = async (e) => {
     e.preventDefault()
@@ -94,7 +95,7 @@ const ProductReviews = ({ productId }) => {
   }
 
   return (
-    <section className="mt-12 pt-8 border-t border-gray-100">
+    <section id="product-reviews" className="mt-12 pt-8 border-t border-gray-100 scroll-mt-24">
       <div className="flex items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-xl font-display font-bold text-gray-900 flex items-center gap-2">
@@ -137,6 +138,40 @@ const ProductReviews = ({ productId }) => {
             )
           })}
         </div>
+      </div>
+
+      {/* Star Filter Buttons */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <span className="text-xs font-semibold text-gray-500 mr-2">Lọc nhận xét:</span>
+        <button
+          type="button"
+          onClick={() => setSelectedStar(null)}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+            selectedStar === null
+              ? 'bg-amber-500 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Tất cả ({summary.total_reviews})
+        </button>
+        {[5, 4, 3, 2, 1].map((s) => {
+          const count = summary.rating_breakdown?.[s] || 0
+          return (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSelectedStar(s)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+                selectedStar === s
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <span>{s}★</span>
+              <span className="text-[10px] opacity-80">({count})</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Review Form Area (QTN-06) */}

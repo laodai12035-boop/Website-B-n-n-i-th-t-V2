@@ -228,12 +228,16 @@ def get_related_products(product_id: int):
 @jwt_required(optional=True)
 def get_product_reviews(product_id: int):
     """
-    Lấy danh sách đánh giá và nhận xét của sản phẩm kèm phân bổ sao.
+    Lấy danh sách đánh giá và nhận xét của sản phẩm kèm phân bổ sao và bộ lọc.
+
+    Query Parameter:
+        star (int, optional): Lọc nhận xét theo số sao (1 đến 5)
     """
+    star = request.args.get("star", default=None, type=int)
     current_user = get_jwt_identity()
     user_id = int(current_user) if current_user else None
 
-    data = ReviewService.get_product_reviews(product_id, current_user_id=user_id)
+    data = ReviewService.get_product_reviews(product_id, star=star, current_user_id=user_id)
     return _success(
         data=data,
         message="Lấy danh sách đánh giá sản phẩm thành công",
