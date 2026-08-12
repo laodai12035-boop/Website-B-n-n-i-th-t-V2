@@ -17,6 +17,7 @@ from app.models.order import Order, OrderItem
 from app.models.cart_item import CartItem
 from app.models.product import Product
 from app.services.coupon_service import CouponService
+from app.services.shipping_service import ShippingService
 
 # ------------------------------------------------------------------ #
 # Cấu hình tài khoản ngân hàng nhận tiền (đọc từ env hoặc dùng mặc định)
@@ -129,7 +130,14 @@ class QRPaymentService:
             coupon_res = CouponService.validate_and_apply(coupon_code, subtotal)
             discount_amount = coupon_res["discount_amount"]
 
-        total_amount = max(0.0, round(subtotal - discount_amount, 2))
+        # 5. Tính phí vận chuyển QTN-07
+        try:
+            shipping_result = ShippingService.calculate_shipping_fee(user_id, shipping_address)
+            shipping_fee = float(shipping_result["fee"])
+        except Exception:
+            shipping_fee = 0.0
+
+        total_amount = max(0.0, round(subtotal - discount_amount + shipping_fee, 2))
 
         # 5. Tính thời hạn QR
         qr_expire_at = datetime.utcnow() + timedelta(minutes=QR_EXPIRE_MINUTES)
@@ -148,6 +156,7 @@ class QRPaymentService:
             status="pending",
             subtotal=subtotal,
             discount_amount=discount_amount,
+            shipping_fee=shipping_fee,
             total_amount=total_amount,
             qr_expire_at=qr_expire_at,
         )

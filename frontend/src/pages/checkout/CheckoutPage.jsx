@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import couponService from '@/services/couponService'
 import orderService from '@/services/orderService'
+import shippingService from '@/services/shippingService'
 
 /**
  * CheckoutPage — Trang Thanh toán đặt hàng (Express Checkout / Standard Checkout).
@@ -32,12 +33,43 @@ const CheckoutPage = () => {
   const [errorMsg, setErrorMsg] = useState('')
 
   // QR payment states
-  const [qrOrderInfo, setQrOrderInfo] = useState(null)   // { order_code, id, qr_url, bank_info, qr_expire_at }
-  const [qrPaymentStatus, setQrPaymentStatus] = useState('pending_payment') // 'pending_payment' | 'paid'
+  const [qrOrderInfo, setQrOrderInfo] = useState(null)
+  const [qrPaymentStatus, setQrPaymentStatus] = useState('pending_payment')
   const [qrExpired, setQrExpired] = useState(false)
-  const [qrSecondsLeft, setQrSecondsLeft] = useState(900) // 15 min = 900s
+  const [qrSecondsLeft, setQrSecondsLeft] = useState(900)
   const pollingRef = useRef(null)
   const countdownRef = useRef(null)
+
+  // Shipping fee states (QTN-07)
+  const [shippingFee, setShippingFee] = useState(null)       // null = chưa tính
+  const [shippingZone, setShippingZone] = useState(null)     // 'inner_city' | 'province'
+  const [shippingWarning, setShippingWarning] = useState(false)
+  const [shippingLoading, setShippingLoading] = useState(false)
+  const shippingDebounceRef = useRef(null)
+
+  // Debounce tính phí vận chuyển khi user nhập địa chỉ (800ms)
+  useEffect(() => {
+    if (shippingDebounceRef.current) clearTimeout(shippingDebounceRef.current)
+    if (!address.trim() || address.trim().length < 5) {
+      setShippingFee(null)
+      setShippingZone(null)
+      return
+    }
+    shippingDebounceRef.current = setTimeout(async () => {
+      setShippingLoading(true)
+      try {
+        const res = await shippingService.calculateShipping(address.trim())
+        setShippingFee(res.fee)
+        setShippingZone(res.zone)
+        setShippingWarning(res.missing_data_warning)
+      } catch {
+        setShippingFee(120000) // fallback default
+      } finally {
+        setShippingLoading(false)
+      }
+    }, 800)
+    return () => clearTimeout(shippingDebounceRef.current)
+  }, [address])
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
@@ -506,11 +538,58 @@ const CheckoutPage = () => {
                   )}
                 </form>
 
-                <div className="pt-3 border-t border-gray-100 flex justify-between items-baseline">
-                  <span className="text-sm font-bold text-gray-900">Tổng tiền:</span>
-                  <span className="text-xl font-extrabold text-amber-800 font-display">
-                    {formatCurrency(appliedCoupon ? appliedCoupon.final_total : cartTotal)}
-                  </span>
+                <div className="pt-3 border-t border-gray-100 space-y-2">
+                  {/* Tạm tính */}
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Tạm tính:</span>
+                    <span className="font-semibold text-gray-800">{formatCurrency(appliedCoupon ? appliedCoupon.final_total : cartTotal)}</span>
+                  </div>
+
+                  {/* Phí vận chuyển QTN-07 */}
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      🚚 Phí vận chuyển
+                      {shippingZone && (
+                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${shippingZone === 'inner_city' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}`}>
+                          {shippingZone === 'inner_city' ? 'Nội thành' : 'Tỉnh/Thành khác'}
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      {shippingLoading ? (
+                        <span className="text-gray-400 text-[11px]">Đang tính...</span>
+                      ) : shippingFee !== null ? (
+                        formatCurrency(shippingFee)
+                      ) : (
+                        <span className="text-gray-400 text-[11px]">Nhập địa chỉ để tính</span>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Cảnh báo thiếu data QTN-07 TC-02 */}
+                  {shippingWarning && (
+                    <p className="text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded-lg">
+                      ⚠️ Một số sản phẩm thiếu thông tin trọng lượng. Phí vận chuyển ước tính.
+                    </p>
+                  )}
+
+                  {/* Giảm giá */}
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-xs text-emerald-600">
+                      <span>🏷️ Giảm giá ({appliedCoupon.coupon_code}):</span>
+                      <span className="font-bold">-{formatCurrency(appliedCoupon.discount_amount)}</span>
+                    </div>
+                  )}
+
+                  {/* Tổng thanh toán = hàng + ship - giảm giá */}
+                  <div className="flex justify-between items-baseline pt-2 border-t border-gray-100">
+                    <span className="text-sm font-bold text-gray-900">Tổng thanh toán:</span>
+                    <span className="text-xl font-extrabold text-amber-800 font-display">
+                      {formatCurrency(
+                        (appliedCoupon ? appliedCoupon.final_total : cartTotal) + (shippingFee || 0)
+                      )}
+                    </span>
+                  </div>
                 </div>
 
                 <button
