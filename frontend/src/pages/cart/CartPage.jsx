@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import { useCart } from '@/contexts/CartContext'
+import couponService from '@/services/couponService'
 
 /**
  * CartPage — Trang Giỏ hàng đầy đủ.
@@ -11,7 +12,9 @@ const CartPage = () => {
   const navigate = useNavigate()
   const [stockError, setStockError] = useState({}) // { [productId]: 'Error message' }
   const [couponCode, setCouponCode] = useState('')
-  const [couponApplied, setCouponApplied] = useState(false)
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponError, setCouponError] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null) // { coupon_code, discount_amount, final_total }
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
@@ -53,10 +56,29 @@ const CartPage = () => {
     }
   }
 
-  const handleApplyCoupon = (e) => {
+  const handleApplyCoupon = async (e) => {
     e.preventDefault()
+    setCouponError('')
     if (!couponCode.trim()) return
-    setCouponApplied(true)
+
+    setCouponLoading(true)
+    try {
+      const res = await couponService.applyCoupon(couponCode, cartTotal)
+      setAppliedCoupon(res)
+      setCouponError('')
+    } catch (err) {
+      setAppliedCoupon(null)
+      const msg = err.response?.data?.message || 'Mã giảm giá không hợp lệ hoặc đã hết hạn.'
+      setCouponError(msg)
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode('')
+    setCouponError('')
   }
 
   return (
@@ -216,35 +238,57 @@ const CartPage = () => {
                     <span>Phí vận chuyển:</span>
                     <span className="font-bold text-emerald-600">Miễn phí</span>
                   </div>
-                  {couponApplied && (
-                    <div className="flex justify-between text-emerald-700 bg-emerald-50 p-2 rounded-xl">
-                      <span>Mã giảm giá (NOITHAT10):</span>
-                      <span className="font-bold">-10%</span>
+                  {appliedCoupon && (
+                    <div className="flex justify-between items-center text-emerald-700 bg-emerald-50 p-2.5 rounded-xl text-xs font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        <span>🏷️</span>
+                        <span>Mã {appliedCoupon.coupon_code}:</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold">-{formatCurrency(appliedCoupon.discount_amount)}</span>
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          className="text-red-500 hover:text-red-700 font-bold ml-1"
+                          title="Gỡ mã giảm giá"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Coupon Form */}
-                <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Mã giảm giá (Ví dụ: NOITHAT10)"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500"
-                  />
-                  <button
-                    type="submit"
-                    className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition-colors"
-                  >
-                    Áp dụng
-                  </button>
+                <form onSubmit={handleApplyCoupon} className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Nhập mã giảm giá (Ví dụ: NOITHAT10)"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      className="flex-1 px-3.5 py-2.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 uppercase font-semibold"
+                    />
+                    <button
+                      type="submit"
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-colors disabled:bg-gray-300"
+                    >
+                      {couponLoading ? '...' : 'Áp dụng'}
+                    </button>
+                  </div>
+
+                  {couponError && (
+                    <p className="text-[11px] text-red-600 font-medium px-1 animate-fade-in">
+                      ⚠️ {couponError}
+                    </p>
+                  )}
                 </form>
 
                 <div className="pt-4 border-t border-gray-100 flex justify-between items-baseline">
                   <span className="text-sm font-bold text-gray-900">Tổng thanh toán:</span>
                   <span className="text-xl font-extrabold text-amber-800 font-display">
-                    {formatCurrency(couponApplied ? cartTotal * 0.9 : cartTotal)}
+                    {formatCurrency(appliedCoupon ? appliedCoupon.final_total : cartTotal)}
                   </span>
                 </div>
 
