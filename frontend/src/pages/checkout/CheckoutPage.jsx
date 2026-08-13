@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { useAddress } from '@/contexts/AddressContext'
+import AddAddressModal from '@/components/address/AddAddressModal'
 import couponService from '@/services/couponService'
 import orderService from '@/services/orderService'
 import shippingService from '@/services/shippingService'
@@ -13,7 +15,12 @@ import shippingService from '@/services/shippingService'
 const CheckoutPage = () => {
   const { items, cartTotal, clearCart, fetchCart } = useCart()
   const { user } = useAuth()
+  const { addresses, defaultAddress, fetchAddresses } = useAddress()
   const navigate = useNavigate()
+
+  // Address Selection States
+  const [selectedAddressId, setSelectedAddressId] = useState(null)
+  const [isAddAddressModalOpen, setIsAddAddressModalOpen] = useState(false)
 
   // Form State
   const [fullName, setFullName] = useState(user?.full_name || '')
@@ -21,6 +28,29 @@ const CheckoutPage = () => {
   const [address, setAddress] = useState('')
   const [note, setNote] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('cod')
+
+  // Auto-fill default address when loaded
+  useEffect(() => {
+    if (defaultAddress && !address) {
+      setFullName(defaultAddress.recipient_name)
+      setPhone(defaultAddress.phone)
+      setAddress(`${defaultAddress.detail_address}, ${defaultAddress.ward}, ${defaultAddress.district}, ${defaultAddress.province}`)
+      setSelectedAddressId(defaultAddress.id)
+    } else if (addresses && addresses.length > 0 && !address) {
+      const first = addresses[0]
+      setFullName(first.recipient_name)
+      setPhone(first.phone)
+      setAddress(`${first.detail_address}, ${first.ward}, ${first.district}, ${first.province}`)
+      setSelectedAddressId(first.id)
+    }
+  }, [defaultAddress, addresses])
+
+  const handleSelectAddress = (item) => {
+    setSelectedAddressId(item.id)
+    setFullName(item.recipient_name)
+    setPhone(item.phone)
+    setAddress(`${item.detail_address}, ${item.ward}, ${item.district}, ${item.province}`)
+  }
 
   const [couponCode, setCouponCode] = useState('')
   const [couponLoading, setCouponLoading] = useState(false)
@@ -360,6 +390,55 @@ const CheckoutPage = () => {
                   </div>
                 )}
 
+                {/* Sổ địa chỉ selector */}
+                {addresses && addresses.length > 0 && (
+                  <div className="bg-amber-50/40 p-4 rounded-2xl border border-amber-100/80 mb-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                        <span>🏡</span> Chọn từ Sổ địa chỉ của bạn:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddAddressModalOpen(true)}
+                        className="text-[11px] font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1"
+                      >
+                        <span>+</span> Thêm địa chỉ mới
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {addresses.map((item) => {
+                        const fullStr = `${item.detail_address}, ${item.ward}, ${item.district}, ${item.province}`
+                        const isSelected = selectedAddressId === item.id || address === fullStr
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => handleSelectAddress(item)}
+                            className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border-amber-500 bg-white shadow-xs ring-2 ring-amber-400/50'
+                                : 'border-gray-200 hover:border-amber-300 bg-white/80'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-bold text-xs text-gray-900">{item.recipient_name}</span>
+                              {item.is_default && (
+                                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded text-[9px] font-extrabold uppercase">
+                                  Mặc định
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-gray-600 font-medium">📞 {item.phone}</p>
+                            <p className="text-[11px] text-gray-500 line-clamp-2 mt-0.5 leading-snug">
+                              🏠 {fullStr}
+                            </p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -604,6 +683,13 @@ const CheckoutPage = () => {
           </form>
         )}
       </main>
+
+      {/* Modal Thêm địa chỉ mới trực tiếp từ Checkout */}
+      <AddAddressModal
+        isOpen={isAddAddressModalOpen}
+        onClose={() => setIsAddAddressModalOpen(false)}
+        onSuccess={() => fetchAddresses()}
+      />
     </div>
   )
 }

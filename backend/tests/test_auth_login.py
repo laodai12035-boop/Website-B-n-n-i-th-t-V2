@@ -119,9 +119,17 @@ class TestLoginSuccess:
         assert body["data"]["user"]["full_name"] == "Nguyễn Văn B"
 
     def test_login_case_insensitive_email(self, client, seed_user):
-        """Đăng nhập với email viết hoa/thường đều thành công."""
+        """Email không phân biệt hoa thường khi đăng nhập."""
         response = post_login(client, "USERB@EXAMPLE.COM", "Password123")
         assert response.status_code == 200
+
+    def test_login_with_phone_number(self, client, seed_user):
+        """Hỗ trợ đăng nhập bằng Số điện thoại thay vì Email."""
+        response = post_login(client, "0909876543", "Password123")
+        assert response.status_code == 200
+        body = response.get_json()
+        assert body["status"] == "success"
+        assert body["data"]["user"]["phone"] == "0909876543"
 
 
 # ============================================================

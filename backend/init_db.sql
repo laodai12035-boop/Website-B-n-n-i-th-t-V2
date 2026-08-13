@@ -280,3 +280,28 @@ INSERT IGNORE INTO order_items (id, order_id, product_id, product_name, price, q
 -- Seed return request (NT-06-CN-004)
 INSERT IGNORE INTO return_requests (id, order_id, user_id, request_type, reason, proof_image_url, status, created_at) VALUES
 (1, 4, 1, 'exchange', 'Nẹp viền cánh tủ bị trầy xước nhẹ trong quá trình vận chuyển.', 'https://images.unsplash.com/photo-1558997519-83ea9252edf8', 'pending', DATE_SUB(NOW(), INTERVAL 2 DAY));
+
+-- ------------------------------------------------------------
+-- Bảng addresses (Địa chỉ giao hàng NT-07)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS addresses (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    user_id        INT NOT NULL,
+    recipient_name VARCHAR(100) NOT NULL COMMENT 'Họ tên người nhận',
+    phone          VARCHAR(15) NOT NULL COMMENT 'SĐT người nhận',
+    province       VARCHAR(100) NOT NULL COMMENT 'Tỉnh/Thành phố',
+    district       VARCHAR(100) NOT NULL COMMENT 'Quận/Huyện',
+    ward           VARCHAR(100) NOT NULL COMMENT 'Phường/Xã',
+    detail_address VARCHAR(255) NOT NULL COMMENT 'Địa chỉ chi tiết',
+    is_default     BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Đã đặt làm mặc định',
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_addresses_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_user_default (user_id, is_default)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Seed addresses sample data
+INSERT IGNORE INTO addresses (id, user_id, recipient_name, phone, province, district, ward, detail_address, is_default) VALUES
+(1, 1, 'Nguyễn Văn Anh', '0901234567', 'TP. Hồ Chí Minh', 'Quận 1', 'Phường Bến Nghé', '123 Nguyễn Huệ', 1),
+(2, 2, 'Trần Thị Bình', '0909876543', 'Đà Nẵng', 'Hải Châu', 'Phường 1', '456 Lê Lợi', 1);
+
