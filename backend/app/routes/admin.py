@@ -764,6 +764,178 @@ def delete_admin_banner(banner_id: int):
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
 
+# ============================================================
+# COUPON MANAGEMENT ENDPOINTS (NT-11-CN-002, QTN-01)
+# ============================================================
+@admin_bp.route("/coupons", methods=["GET"])
+@admin_required()
+def get_admin_coupons():
+    """
+    Quản trị viên lấy danh sách tất cả mã giảm giá (NT-11-CN-002).
+    """
+    from app.services.coupon_service import CouponService
+    coupons = CouponService.get_all_coupons_admin()
+    return _success(
+        data=coupons,
+        message="Lấy danh sách mã giảm giá thành công.",
+        status=200,
+    )
+
+
+@admin_bp.route("/coupons", methods=["POST"])
+@admin_required()
+def create_admin_coupon():
+    """
+    Quản trị viên tạo mã giảm giá mới (NT-11-CN-002, QTN-01).
+    """
+    from flask import request
+    from datetime import datetime
+    from app.services.coupon_service import CouponService
+
+    data = request.get_json(silent=True) or {}
+    code = data.get("code")
+    discount_type = data.get("discount_type", "percent")
+    discount_value = data.get("discount_value")
+    description = data.get("description")
+    min_order_value = data.get("min_order_value", 0.0)
+    max_discount = data.get("max_discount")
+    is_active = data.get("is_active", True)
+
+    start_date = None
+    if data.get("start_date"):
+        try:
+            start_date = datetime.fromisoformat(data["start_date"].replace("Z", "+00:00"))
+        except ValueError:
+            pass
+
+    end_date = None
+    if data.get("end_date"):
+        try:
+            end_date = datetime.fromisoformat(data["end_date"].replace("Z", "+00:00"))
+        except ValueError:
+            pass
+
+    if not code or not str(code).strip():
+        return jsonify({
+            "status": "error",
+            "message": "Vui lòng nhập mã giảm giá.",
+            "code": "COUPON_CODE_EMPTY"
+        }), 400
+
+    if discount_value is None or float(discount_value) <= 0:
+        return jsonify({
+            "status": "error",
+            "message": "Giá trị giảm phải lớn hơn 0.",
+            "code": "INVALID_DISCOUNT_VALUE"
+        }), 400
+
+    try:
+        new_coupon = CouponService.create_coupon(
+            code=code,
+            discount_type=discount_type,
+            discount_value=discount_value,
+            description=description,
+            min_order_value=min_order_value,
+            max_discount=max_discount,
+            is_active=is_active,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return _success(
+            data=new_coupon,
+            message="Tạo mã giảm giá mới thành công.",
+            status=201,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "COUPON_CODE_EXISTS":
+            return jsonify({
+                "status": "error",
+                "message": "Mã giảm giá này đã tồn tại trong hệ thống.",
+                "code": "COUPON_CODE_EXISTS"
+            }), 400
+        if err_str == "INVALID_DISCOUNT_PERCENT":
+            return jsonify({
+                "status": "error",
+                "message": "Tỷ lệ giảm giá không được vượt quá 100%.",
+                "code": "INVALID_DISCOUNT_PERCENT"
+            }), 400
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+@admin_bp.route("/coupons/<int:coupon_id>", methods=["PUT"])
+@admin_required()
+def update_admin_coupon(coupon_id: int):
+    """
+    Quản trị viên cập nhật mã giảm giá (NT-11-CN-002).
+    """
+    from flask import request
+    from datetime import datetime
+    from app.services.coupon_service import CouponService
+
+    data = request.get_json(silent=True) or {}
+
+    if "start_date" in data and isinstance(data["start_date"], str):
+        try:
+            data["start_date"] = datetime.fromisoformat(data["start_date"].replace("Z", "+00:00"))
+        except ValueError:
+            data["start_date"] = None
+
+    if "end_date" in data and isinstance(data["end_date"], str):
+        try:
+            data["end_date"] = datetime.fromisoformat(data["end_date"].replace("Z", "+00:00"))
+        except ValueError:
+            data["end_date"] = None
+
+    try:
+        updated = CouponService.update_coupon(coupon_id=coupon_id, data=data)
+        return _success(
+            data=updated,
+            message="Cập nhật mã giảm giá thành công.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "COUPON_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy mã giảm giá.",
+                "code": "COUPON_NOT_FOUND"
+            }), 404
+        if err_str == "COUPON_CODE_EXISTS":
+            return jsonify({
+                "status": "error",
+                "message": "Mã giảm giá này đã tồn tại trong hệ thống.",
+                "code": "COUPON_CODE_EXISTS"
+            }), 400
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+@admin_bp.route("/coupons/<int:coupon_id>", methods=["DELETE"])
+@admin_required()
+def delete_admin_coupon(coupon_id: int):
+    """
+    Quản trị viên xóa mã giảm giá (NT-11-CN-002).
+    """
+    from app.services.coupon_service import CouponService
+    try:
+        CouponService.delete_coupon(coupon_id=coupon_id)
+        return _success(
+            data={"coupon_id": coupon_id},
+            message="Xóa mã giảm giá thành công.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "COUPON_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy mã giảm giá.",
+                "code": "COUPON_NOT_FOUND"
+            }), 404
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
 
 
 
