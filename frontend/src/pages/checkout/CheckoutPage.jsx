@@ -390,52 +390,42 @@ const CheckoutPage = () => {
                   </div>
                 )}
 
-                {/* Sổ địa chỉ selector */}
+                {/* Sổ địa chỉ selector dạng Dropdown */}
                 {addresses && addresses.length > 0 && (
-                  <div className="bg-amber-50/40 p-4 rounded-2xl border border-amber-100/80 mb-2">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                  <div className="bg-amber-50/40 p-3.5 rounded-2xl border border-amber-100/80 mb-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="address_dropdown_select" className="text-xs font-bold text-gray-900 flex items-center gap-1.5 cursor-pointer">
                         <span>🏡</span> Chọn từ Sổ địa chỉ của bạn:
-                      </span>
+                      </label>
                       <button
                         type="button"
                         onClick={() => setIsAddAddressModalOpen(true)}
-                        className="text-[11px] font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1"
+                        className="text-[11px] font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <span>+</span> Thêm địa chỉ mới
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <select
+                      id="address_dropdown_select"
+                      value={selectedAddressId || ''}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (!val) return
+                        const found = addresses.find((a) => String(a.id) === String(val))
+                        if (found) handleSelectAddress(found)
+                      }}
+                      className="w-full px-3 py-2.5 bg-white border border-amber-200 rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-amber-500 shadow-2xs"
+                    >
                       {addresses.map((item) => {
                         const fullStr = `${item.detail_address}, ${item.ward}, ${item.district}, ${item.province}`
-                        const isSelected = selectedAddressId === item.id || address === fullStr
                         return (
-                          <div
-                            key={item.id}
-                            onClick={() => handleSelectAddress(item)}
-                            className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                              isSelected
-                                ? 'border-amber-500 bg-white shadow-xs ring-2 ring-amber-400/50'
-                                : 'border-gray-200 hover:border-amber-300 bg-white/80'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-bold text-xs text-gray-900">{item.recipient_name}</span>
-                              {item.is_default && (
-                                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded text-[9px] font-extrabold uppercase">
-                                  Mặc định
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-[11px] text-gray-600 font-medium">📞 {item.phone}</p>
-                            <p className="text-[11px] text-gray-500 line-clamp-2 mt-0.5 leading-snug">
-                              🏠 {fullStr}
-                            </p>
-                          </div>
+                          <option key={item.id} value={item.id}>
+                            {item.is_default ? '⭐ [MẶC ĐỊNH] ' : ''}{item.recipient_name} ({item.phone}) — {fullStr}
+                          </option>
                         )
                       })}
-                    </div>
+                    </select>
                   </div>
                 )}
 
