@@ -19,6 +19,7 @@ const AdminInventoryPage = () => {
 
   const [receipts, setReceipts] = useState([])
   const [loadingReceipts, setLoadingReceipts] = useState(false)
+  const [lowStockWarnings, setLowStockWarnings] = useState({ count: 0, items: [] })
 
   const [error, setError] = useState(null)
   
@@ -51,9 +52,19 @@ const AdminInventoryPage = () => {
     }
   }
 
+  const fetchLowStockWarnings = async () => {
+    try {
+      const data = await stockService.getLowStockWarnings()
+      setLowStockWarnings(data || { count: 0, items: [] })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   useEffect(() => {
     fetchProducts()
     fetchReceipts()
+    fetchLowStockWarnings()
   }, [])
 
   const handleOpenImportModal = (product = null) => {
@@ -105,6 +116,32 @@ const AdminInventoryPage = () => {
         {error && (
           <div className="mb-4">
             <FormAlert type="error" message={error} />
+          </div>
+        )}
+
+        {/* Banner Cảnh báo Tồn Kho Thấp QTN-08 */}
+        {lowStockWarnings.count > 0 && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-4 animate-slide-down shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0 font-bold">
+                ⚠️
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-amber-900">
+                  Cảnh báo tồn kho thấp (QTN-08): Có {lowStockWarnings.count} sản phẩm đang dưới ngưỡng tối thiểu!
+                </h3>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Quản trị viên cần nhanh chóng lập phiếu nhập kho để bổ sung hàng cho showroom & kho tổng.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleOpenImportModal(lowStockWarnings.items[0])}
+              className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shrink-0 shadow-xs cursor-pointer"
+            >
+              📦 Nhập kho nhanh
+            </button>
           </div>
         )}
 
@@ -162,6 +199,7 @@ const AdminInventoryPage = () => {
                   <tbody className="divide-y divide-gray-100 font-medium">
                     {products.map((p) => {
                       const stock = p.stock || 0
+                      const threshold = p.min_stock_threshold !== undefined && p.min_stock_threshold !== null ? p.min_stock_threshold : 10
                       let stockBadge = (
                         <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-[11px]">
                           Sẵn hàng ({stock})
@@ -169,20 +207,20 @@ const AdminInventoryPage = () => {
                       )
                       if (stock === 0) {
                         stockBadge = (
-                          <span className="px-2.5 py-1 bg-red-50 text-red-700 rounded-xl font-bold text-[11px]">
-                            Hết hàng (0)
+                          <span className="px-2.5 py-1 bg-red-100 text-red-800 rounded-xl font-bold text-[11px] border border-red-200 animate-pulse">
+                            🚨 Hết hàng (0/{threshold})
                           </span>
                         )
-                      } else if (stock <= 5) {
+                      } else if (stock < threshold) {
                         stockBadge = (
-                          <span className="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-xl font-bold text-[11px]">
-                            Sắp hết ({stock})
+                          <span className="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-xl font-bold text-[11px] border border-amber-300">
+                            ⚠️ Dưới ngưỡng ({stock}/{threshold})
                           </span>
                         )
                       }
 
                       return (
-                        <tr key={p.id} className="hover:bg-gray-50/60 transition-colors">
+                        <tr key={p.id} className={`hover:bg-gray-50/60 transition-colors ${stock < threshold ? 'bg-amber-50/20' : ''}`}>
                           <td className="py-3.5 px-6">
                             <div className="flex items-center gap-3">
                               <img
@@ -192,7 +230,7 @@ const AdminInventoryPage = () => {
                               />
                               <div>
                                 <p className="font-bold text-gray-900 line-clamp-1">{p.name}</p>
-                                <span className="text-[11px] text-gray-400 font-mono">ID: #{p.id}</span>
+                                <span className="text-[11px] text-gray-400 font-mono">ID: #{p.id} | Ngưỡng min: {threshold}</span>
                               </div>
                             </div>
                           </td>
@@ -203,7 +241,7 @@ const AdminInventoryPage = () => {
                             {formatVND(p.discount_price || p.price)}
                           </td>
                           <td className="py-3.5 px-4 text-center">
-                            <span className="text-base font-extrabold font-mono text-gray-900">{stock}</span>
+                            <span className={`text-base font-extrabold font-mono ${stock < threshold ? 'text-red-600' : 'text-gray-900'}`}>{stock}</span>
                           </td>
                           <td className="py-3.5 px-4 text-center">
                             {stockBadge}
