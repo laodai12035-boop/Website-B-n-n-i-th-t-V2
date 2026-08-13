@@ -307,3 +307,27 @@ INSERT IGNORE INTO addresses (id, user_id, recipient_name, phone, province, dist
 (1, 1, 'Nguyễn Văn Anh', '0901234567', 'TP. Hồ Chí Minh', 'Quận 1', 'Phường Bến Nghé', '123 Nguyễn Huệ', 1),
 (2, 2, 'Trần Thị Bình', '0909876543', 'Đà Nẵng', 'Hải Châu', 'Phường 1', '456 Lê Lợi', 1);
 
+-- ------------------------------------------------------------
+-- Bảng stock_receipts (Phiếu nhập kho sản phẩm NT-09-CN-001)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS stock_receipts (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    product_id  INT NOT NULL COMMENT 'Sản phẩm nhập kho',
+    quantity    INT NOT NULL COMMENT 'Số lượng nhập (> 0)',
+    supplier    VARCHAR(200) NULL COMMENT 'Nhà cung cấp',
+    unit_cost   DECIMAL(10,2) NULL COMMENT 'Giá nhập 1 đơn vị',
+    import_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Ngày giờ nhập kho',
+    note        TEXT NULL COMMENT 'Ghi chú',
+    created_by  INT NULL COMMENT 'Admin tạo phiếu',
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_stock_receipts_product FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+    CONSTRAINT fk_stock_receipts_user FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
+    INDEX idx_stock_product (product_id),
+    INDEX idx_stock_date (import_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Seed stock receipt sample data
+INSERT IGNORE INTO stock_receipts (id, product_id, quantity, supplier, unit_cost, import_date, note, created_by) VALUES
+(1, 1, 50, 'Xưởng Gỗ Nam Định', 18000000.00, NOW(), 'Nhập bổ sung lô hàng đợt 1', 3);
+
+
