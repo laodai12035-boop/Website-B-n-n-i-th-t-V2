@@ -566,7 +566,11 @@ def moderate_review(review_id: int):
 
     data = request.get_json(silent=True) or {}
     if "is_approved" not in data and "status" not in data:
-        return _error("MISSING_IS_APPROVED_PARAM", "Vui lòng cung cấp tham số is_approved hoặc status.", 400)
+        return jsonify({
+            "status": "error",
+            "message": "Vui lòng cung cấp tham số is_approved hoặc status.",
+            "code": "MISSING_IS_APPROVED_PARAM"
+        }), 400
 
     is_approved = data.get("is_approved")
     if is_approved is None and "status" in data:
@@ -579,8 +583,12 @@ def moderate_review(review_id: int):
     except ValueError as exc:
         err_str = str(exc)
         if err_str == "REVIEW_NOT_FOUND":
-            return _error("REVIEW_NOT_FOUND", "Không tìm thấy bình luận đánh giá.", 404)
-        return _error("BAD_REQUEST", err_str, 400)
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy bình luận đánh giá.",
+                "code": "REVIEW_NOT_FOUND"
+            }), 404
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
 
 
