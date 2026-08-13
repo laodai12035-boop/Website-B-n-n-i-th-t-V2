@@ -430,6 +430,76 @@ def get_admin_combos():
     )
 
 
+# ============================================================
+# POST /api/v1/admin/inventory/import — Admin nhập kho sản phẩm (NT-09-CN-001)
+# ============================================================
+@admin_bp.route("/inventory/import", methods=["POST"])
+@admin_required()
+def import_stock():
+    """
+    Quản trị viên lập phiếu nhập kho cho 1 sản phẩm (NT-09-CN-001).
+
+    Responses:
+        201: Nhập kho thành công (Tồn kho sản phẩm được cộng dồn)
+        400: Số lượng nhập âm hoặc bằng 0 (VALIDATION_ERROR)
+        404: Sản phẩm không tồn tại (PRODUCT_NOT_FOUND)
+        403: Không có quyền Admin (FORBIDDEN)
+    """
+    from flask import request
+    from flask_jwt_extended import get_jwt_identity
+    from app.services.stock_service import StockService
+
+    admin_id = int(get_jwt_identity())
+    json_data = request.get_json(silent=True) or {}
+
+    try:
+        receipt = StockService.import_stock(data=json_data, admin_id=admin_id)
+        return _success(
+            data=receipt,
+            message=f"Nhập kho thành công {receipt['added_quantity']} sản phẩm. Tồn kho mới: {receipt['new_stock']}.",
+            status=201,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "PRODUCT_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy sản phẩm cần nhập kho.",
+                "code": "PRODUCT_NOT_FOUND"
+            }), 404
+        elif err_str == "INVALID_QUANTITY":
+            return jsonify({
+                "status": "error",
+                "message": "Số lượng nhập kho phải là số nguyên lớn hơn 0.",
+                "code": "VALIDATION_ERROR"
+            }), 400
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+# ============================================================
+# GET /api/v1/admin/inventory/receipts — Danh sách phiếu nhập kho
+# ============================================================
+@admin_bp.route("/inventory/receipts", methods=["GET"])
+@admin_required()
+def get_stock_receipts():
+    """
+    Quản trị viên xem lịch sử các phiếu nhập kho.
+    """
+    from flask import request
+    from app.services.stock_service import StockService
+
+    product_id_str = request.args.get("product_id")
+    product_id = int(product_id_str) if product_id_str and product_id_str.isdigit() else None
+
+    receipts = StockService.get_stock_receipts(product_id=product_id)
+    return _success(
+        data=receipts,
+        message="Lấy lịch sử phiếu nhập kho thành công.",
+        status=200,
+    )
+
+
+
 
 
 
