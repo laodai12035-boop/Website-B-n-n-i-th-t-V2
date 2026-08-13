@@ -194,6 +194,18 @@ const AdminDashboardPage = () => {
             <span className="text-xs text-amber-600 font-bold mt-1 inline-block">Tạo & quản lý mã ưu đãi →</span>
           </Link>
 
+          {/* Stat Item 3i: Quản lý Khách Hàng */}
+          <Link to="/admin/customers" className="card border-l-4 border-l-cyan-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-cyan-600 transition-colors">Khách Hàng</span>
+              <div className="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center">
+                <span className="text-lg">👥</span>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : (stats?.customers || 0)} <span className="text-xs font-normal text-gray-500">tài khoản</span></p>
+            <span className="text-xs text-cyan-600 font-bold mt-1 inline-block">Danh sách & thống kê đơn →</span>
+          </Link>
+
           {/* Stat Item 4 */}
           <div className="card border-l-4 border-l-purple-500">
             <div className="flex items-center justify-between mb-2">
