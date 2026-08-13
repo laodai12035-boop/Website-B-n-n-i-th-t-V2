@@ -225,10 +225,8 @@ class OrderService:
             order.note = f"{order.note} | Lý do hủy: {reason.strip()}" if order.note else f"Lý do hủy: {reason.strip()}"
 
         # 4. Hoàn lại số lượng tồn kho sản phẩm (QTN-03)
-        for item in order.items:
-            product = db.session.query(Product).filter(Product.id == item.product_id).first()
-            if product:
-                product.stock += item.quantity
+        from app.services.stock_service import StockService
+        StockService.restore_order_stock(order)
 
         db.session.commit()
         return order.to_dict()
@@ -238,7 +236,7 @@ class OrderService:
         admin_id: int, order_id: int, new_status: str, note: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Admin cập nhật trạng thái đơn hàng theo đúng State Machine quy trình và hoàn kho QTN-03 khi hủy đơn.
+        Admin cập nhật trạng thái đơn hàng theo đúng State Machine quy trình và trừ/hoàn kho QTN-03.
 
         Args:
             admin_id: ID của Quản trị viên
@@ -287,12 +285,12 @@ class OrderService:
         if new_status not in allowed_transitions.get(current_status, []):
             raise ValueError("INVALID_STATUS_TRANSITION")
 
-        # 5. Nếu chuyển sang cancelled: Hoàn lại tồn kho sản phẩm (QTN-03)
+        # 5. Tự động trừ/hoàn tồn kho theo trạng thái đơn hàng (QTN-03)
+        from app.services.stock_service import StockService
         if new_status == "cancelled":
-            for item in order.items:
-                product = db.session.query(Product).filter(Product.id == item.product_id).first()
-                if product:
-                    product.stock += item.quantity
+            StockService.restore_order_stock(order)
+        elif new_status in ["confirmed", "shipping", "delivered"]:
+            StockService.deduct_order_stock(order)
 
         # 6. Cập nhật trạng thái và ghi chú
         order.status = new_status

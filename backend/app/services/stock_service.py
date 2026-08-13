@@ -105,3 +105,71 @@ class StockService:
 
         receipts = query.order_by(StockReceipt.id.desc()).all()
         return [r.to_dict() for r in receipts]
+
+    @staticmethod
+    def deduct_order_stock(order) -> bool:
+        """
+        Tự động trừ tồn kho khi đơn hàng chuyển sang trạng thái đã xác nhận/thanh toán (QTN-03).
+
+        Args:
+            order: Instance của model Order.
+
+        Returns:
+            bool: True nếu đã xử lý trừ kho, False nếu đã trừ trước đó.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+
+        if getattr(order, "stock_deducted", False):
+            # Đơn hàng đã trừ kho trước đó ➔ Bỏ qua (Idempotence)
+            return False
+
+        for item in order.items:
+            product = db.session.query(Product).filter(Product.id == item.product_id).first()
+            if not product:
+                logger.warning("[QTN-03] Product id=%s not found when deducting stock for order #%s", item.product_id, order.id)
+                continue
+
+            current_stock = product.stock or 0
+            if current_stock < item.quantity:
+                logger.warning(
+                    "[QTN-03] Insufficient stock for product id=%s name='%s'. Requested=%s, Available=%s. Continuing deduction.",
+                    product.id, product.name, item.quantity, current_stock
+                )
+
+            product.stock = max(0, current_stock - item.quantity)
+            logger.info("[QTN-03] Deducted %s items of product id=%s (New stock=%s)", item.quantity, product.id, product.stock)
+
+        order.stock_deducted = True
+        return True
+
+    @staticmethod
+    def restore_order_stock(order) -> bool:
+        """
+        Tự động hoàn kho sản phẩm khi đơn hàng bị hủy (QTN-03).
+
+        Args:
+            order: Instance của model Order.
+
+        Returns:
+            bool: True nếu hoàn kho thành công, False nếu đơn chưa từng trừ kho.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+
+        if not getattr(order, "stock_deducted", True):
+            # Đơn chưa từng bị trừ kho ➔ Bỏ qua không hoàn kho
+            return False
+
+        for item in order.items:
+            product = db.session.query(Product).filter(Product.id == item.product_id).first()
+            if not product:
+                logger.warning("[QTN-03] Product id=%s not found when restoring stock for order #%s", item.product_id, order.id)
+                continue
+
+            product.stock = (product.stock or 0) + item.quantity
+            logger.info("[QTN-03] Restored %s items of product id=%s (New stock=%s)", item.quantity, product.id, product.stock)
+
+        order.stock_deducted = False
+        return True
+

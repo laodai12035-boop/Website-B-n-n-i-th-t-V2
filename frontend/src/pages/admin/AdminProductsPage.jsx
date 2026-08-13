@@ -281,6 +281,8 @@ const AdminProductsPage = () => {
             </div>
           </div>
         </div>
+      )}
+
       {/* Modal Nhập kho */}
       <ImportStockModal
         isOpen={!!importStockItem}

@@ -46,6 +46,8 @@ def run_auto_migrations(app):
                     alter_statements.append("ADD COLUMN qr_expire_at DATETIME NULL")
                 if "shipping_fee" not in columns:
                     alter_statements.append("ADD COLUMN shipping_fee DOUBLE NOT NULL DEFAULT 0.0")
+                if "stock_deducted" not in columns:
+                    alter_statements.append("ADD COLUMN stock_deducted BOOLEAN NOT NULL DEFAULT TRUE")
 
                 if alter_statements:
                     sql = f"ALTER TABLE orders {', '.join(alter_statements)}"
