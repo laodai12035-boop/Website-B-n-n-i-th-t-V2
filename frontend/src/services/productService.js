@@ -71,6 +71,25 @@ const productService = {
     const response = await api.get('/admin/products', { params })
     return response.data.data
   },
+
+  /**
+   * Admin chỉnh sửa sản phẩm (NT-08-CN-004).
+   * @param {number} id
+   * @param {Object} data
+   */
+  async updateProduct(id, data) {
+    const response = await api.put(`/admin/products/${id}`, data)
+    return response.data.data
+  },
+
+  /**
+   * Admin chuyển sản phẩm sang ngừng bán (NT-08-CN-004).
+   * @param {number} id
+   */
+  async deleteProduct(id) {
+    const response = await api.delete(`/admin/products/${id}`)
+    return response.data.data
+  },
 }
 
 export default productService
