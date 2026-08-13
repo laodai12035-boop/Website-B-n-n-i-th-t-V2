@@ -373,6 +373,8 @@ class ProductService:
             material=data.get("material", "").strip() if data.get("material") else None,
             dimensions=data.get("dimensions", "").strip() if data.get("dimensions") else None,
             weight_kg=data.get("weight_kg"),
+            warranty_months=data.get("warranty_months", 12),
+            warranty_terms=data.get("warranty_terms", "").strip() if data.get("warranty_terms") else None,
             is_active=data.get("is_active", True),
         )
 
@@ -385,7 +387,7 @@ class ProductService:
     @staticmethod
     def update_product(product_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Admin chỉnh sửa thông tin sản phẩm (NT-08-CN-004).
+        Admin chỉnh sửa thông tin sản phẩm (NT-08-CN-004, NT-08-CN-005).
 
         Args:
             product_id: ID sản phẩm cần sửa
@@ -425,6 +427,10 @@ class ProductService:
         product.dimensions = data.get("dimensions", "").strip() if data.get("dimensions") else None
         if "weight_kg" in data:
             product.weight_kg = data["weight_kg"]
+        if "warranty_months" in data and data["warranty_months"] is not None:
+            product.warranty_months = data["warranty_months"]
+        if "warranty_terms" in data:
+            product.warranty_terms = data["warranty_terms"].strip() if data["warranty_terms"] else None
         if "is_active" in data:
             product.is_active = data["is_active"]
 

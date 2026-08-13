@@ -243,8 +243,22 @@ const ProductDetailPage = () => {
                 </div>
                 <div>
                   <span className="text-gray-400 block font-medium mb-0.5">Bảo hành:</span>
-                  <span className="font-semibold text-gray-800">24 tháng chính hãng</span>
+                  <span className="font-semibold text-amber-800">
+                    {product.warranty_months !== undefined && product.warranty_months !== null
+                      ? `${product.warranty_months} tháng chính hãng`
+                      : '12 tháng chính hãng'}
+                  </span>
                 </div>
+              </div>
+
+              {/* Thẻ Quyền lợi & Điều kiện Bảo hành (NT-08-CN-005) */}
+              <div className="p-4 bg-amber-50/70 rounded-2xl border border-amber-100 mb-6 space-y-1.5 animate-fade-in">
+                <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                  <span>🛡️</span> Chính sách & Điều kiện bảo hành ({product.warranty_months || 12} tháng):
+                </div>
+                <p className="text-xs text-amber-800/90 leading-relaxed font-medium">
+                  {product.warranty_terms || 'Bảo hành chính hãng cho các lỗi kỹ thuật và kết cấu khung gỗ từ nhà sản xuất.'}
+                </p>
               </div>
             </div>
 
