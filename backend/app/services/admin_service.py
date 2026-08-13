@@ -292,3 +292,35 @@ class AdminService:
             "summary": summary,
         }
 
+    @staticmethod
+    def toggle_customer_status(customer_id: int, is_active: bool) -> Dict[str, Any]:
+        """
+        Quản trị viên khóa hoặc mở khóa tài khoản khách hàng (NT-12-CN-002).
+
+        Args:
+            customer_id: ID khách hàng cần khóa/mở khóa
+            is_active: Trạng thái mới (True = Hoạt động, False = Khóa)
+
+        Returns:
+            Dict thông tin tài khoản khách hàng sau khi cập nhật.
+
+        Raises:
+            ValueError("CUSTOMER_NOT_FOUND"): Khách hàng không tồn tại trong hệ thống.
+        """
+        user = db.session.query(User).filter(User.id == customer_id).first()
+        if not user:
+            raise ValueError("CUSTOMER_NOT_FOUND")
+
+        user.is_active = bool(is_active)
+        db.session.commit()
+
+        return {
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "phone": user.phone,
+            "role": user.role,
+            "is_active": user.is_active,
+            "updated_at": datetime.utcnow().isoformat(),
+        }
+

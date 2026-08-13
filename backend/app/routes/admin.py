@@ -966,6 +966,46 @@ def get_admin_customers():
     )
 
 
+@admin_bp.route("/customers/<int:customer_id>/status", methods=["PUT"])
+@admin_required()
+def toggle_admin_customer_status(customer_id: int):
+    """
+    Quản trị viên khóa hoặc mở khóa tài khoản khách hàng (NT-12-CN-002).
+    """
+    from flask import request
+    from app.services.admin_service import AdminService
+
+    body = request.get_json() or {}
+    if "is_active" not in body or body["is_active"] is None:
+        return jsonify({
+            "status": "error",
+            "message": "Trường is_active là bắt buộc (true/false).",
+            "code": "MISSING_IS_ACTIVE"
+        }), 400
+
+    is_active = bool(body["is_active"])
+    try:
+        updated_customer = AdminService.toggle_customer_status(
+            customer_id=customer_id,
+            is_active=is_active,
+        )
+        msg = "Khóa tài khoản khách hàng thành công." if not is_active else "Mở khóa tài khoản khách hàng thành công."
+        return _success(
+            data=updated_customer,
+            message=msg,
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "CUSTOMER_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy khách hàng trong hệ thống.",
+                "code": "CUSTOMER_NOT_FOUND"
+            }), 404
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
 
 
 
