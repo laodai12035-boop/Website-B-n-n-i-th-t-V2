@@ -90,6 +90,14 @@ def delete_address_api(client, token, address_id):
     return client.delete(f"/api/v1/addresses/{address_id}", headers=headers)
 
 
+def patch_default_address(client, token, address_id):
+    """Helper gửi request PATCH /api/v1/addresses/<address_id>/default."""
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return client.patch(f"/api/v1/addresses/{address_id}/default", headers=headers)
+
+
 class TestAddAddress:
     """Các test case cho NT-07-CN-001 Thêm địa chỉ giao hàng."""
 
@@ -389,4 +397,97 @@ class TestUpdateAndDeleteAddress:
         assert res.status_code == 403
         body = res.get_json()
         assert body["code"] == "FORBIDDEN_ACCESS"
+
+
+# ============================================================
+# Test Cases cho NT-07-CN-003: Đặt địa chỉ giao hàng mặc định
+# ============================================================
+
+class TestSetDefaultAddress:
+    """Các test case cho NT-07-CN-003 Đặt địa chỉ giao hàng mặc định."""
+
+    def test_tc01_set_as_default_success(self, client, seed_user, app):
+        """TC-01: Gửi PATCH /addresses/:id/default đặt địa chỉ 2 thành mặc định thành công ➔ 200 OK."""
+        with app.app_context():
+            addr1 = Address(
+                user_id=seed_user["id"],
+                recipient_name="Địa chỉ 1",
+                phone="0901111111",
+                province="TP. HCM",
+                district="Quận 1",
+                ward="Phường Bến Nghé",
+                detail_address="100 Lê Duẩn",
+                is_default=True,
+            )
+            addr2 = Address(
+                user_id=seed_user["id"],
+                recipient_name="Địa chỉ 2",
+                phone="0902222222",
+                province="Hà Nội",
+                district="Cầu Giấy",
+                ward="Phường Dịch Vọng",
+                detail_address="200 Cầu Giấy",
+                is_default=False,
+            )
+            db.session.add_all([addr1, addr2])
+            db.session.commit()
+            addr1_id = addr1.id
+            addr2_id = addr2.id
+
+        res = patch_default_address(client, seed_user["token"], addr2_id)
+        assert res.status_code == 200
+
+        body = res.get_json()
+        assert body["status"] == "success"
+        assert body["data"]["is_default"] is True
+
+        # Kiểm tra danh sách địa chỉ: addr2 là default, addr1 không còn default
+        list_res = get_addresses(client, seed_user["token"])
+        addrs = list_res.get_json()["data"]
+        a1 = next(a for a in addrs if a["id"] == addr1_id)
+        a2 = next(a for a in addrs if a["id"] == addr2_id)
+        assert a1["is_default"] is False
+        assert a2["is_default"] is True
+
+    def test_tc01b_set_as_default_other_user_forbidden(self, client, seed_user, app):
+        """TC-01b: Người dùng khác cố đặt địa chỉ không thuộc sở hữu làm mặc định ➔ 403 FORBIDDEN_ACCESS."""
+        with app.app_context():
+            other_user = User(
+                full_name="User Khác 2",
+                email="other2@example.com",
+                phone="0908887766",
+                password_hash=bcrypt.generate_password_hash("Password123@").decode("utf-8"),
+                role="user",
+                is_active=True,
+            )
+            db.session.add(other_user)
+            db.session.commit()
+            other_token = create_access_token(identity=str(other_user.id))
+
+            addr = Address(
+                user_id=seed_user["id"],
+                recipient_name="Địa chỉ user 1",
+                phone="0901111111",
+                province="TP. HCM",
+                district="Quận 1",
+                ward="Bến Nghé",
+                detail_address="1 Lê Lợi",
+                is_default=True,
+            )
+            db.session.add(addr)
+            db.session.commit()
+            addr_id = addr.id
+
+        res = patch_default_address(client, other_token, addr_id)
+        assert res.status_code == 403
+        body = res.get_json()
+        assert body["code"] == "FORBIDDEN_ACCESS"
+
+    def test_tc01c_set_as_default_non_existing_returns_404(self, client, seed_user):
+        """TC-01c: Đặt địa chỉ không tồn tại làm mặc định ➔ 404 NOT_FOUND."""
+        res = patch_default_address(client, seed_user["token"], 999999)
+        assert res.status_code == 404
+        body = res.get_json()
+        assert body["code"] == "ADDRESS_NOT_FOUND"
+
 

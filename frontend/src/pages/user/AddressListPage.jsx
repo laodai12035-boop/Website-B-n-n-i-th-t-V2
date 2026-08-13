@@ -10,12 +10,20 @@ import EditAddressModal from '@/components/address/EditAddressModal'
  * Tuyến đường: /profile/addresses
  */
 const AddressListPage = () => {
-  const { addresses, loading, error, fetchAddresses, removeAddress } = useAddress()
+  const { addresses, loading, error, fetchAddresses, removeAddress, setAsDefault } = useAddress()
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState(null)
   const [deletingAddressId, setDeletingAddressId] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+
+  const handleSetDefault = async (id) => {
+    try {
+      await setAsDefault(id)
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể thiết lập địa chỉ mặc định.')
+    }
+  }
 
   const handleDeleteConfirm = async () => {
     if (!deletingAddressId) return
@@ -115,22 +123,35 @@ const AddressListPage = () => {
                     </div>
                   </div>
 
-                  {/* Actions: Edit & Delete */}
-                  <div className="pt-3 border-t border-gray-100/80 flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setEditingAddress(item)}
-                      className="px-3 py-1.5 bg-gray-100 hover:bg-amber-50 hover:text-amber-800 text-gray-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>✏️</span> Sửa
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeletingAddressId(item.id)}
-                      className="px-3 py-1.5 bg-gray-100 hover:bg-red-50 hover:text-red-700 text-gray-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>🗑️</span> Xóa
-                    </button>
+                  {/* Actions: Set Default, Edit & Delete */}
+                  <div className="pt-3 border-t border-gray-100/80 flex items-center justify-between gap-2">
+                    <div>
+                      {!item.is_default && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetDefault(item.id)}
+                          className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>⭐</span> Đặt mặc định
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingAddress(item)}
+                        className="px-3 py-1.5 bg-gray-100 hover:bg-amber-50 hover:text-amber-800 text-gray-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>✏️</span> Sửa
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingAddressId(item.id)}
+                        className="px-3 py-1.5 bg-gray-100 hover:bg-red-50 hover:text-red-700 text-gray-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>🗑️</span> Xóa
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

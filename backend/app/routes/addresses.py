@@ -201,3 +201,43 @@ def delete_address(address_id: int):
             )
         return _error(message=str(exc), code="BAD_REQUEST", status=400)
 
+
+# ============================================================
+# PATCH /api/v1/addresses/<int:address_id>/default — Đặt làm địa chỉ mặc định (NT-07-CN-003)
+# ============================================================
+@addresses_bp.route("/<int:address_id>/default", methods=["PATCH"])
+@jwt_required()
+def set_default_address(address_id: int):
+    """
+    Đánh dấu một địa chỉ làm địa chỉ giao hàng mặc định (NT-07-CN-003).
+
+    Responses:
+        200: Đặt làm mặc định thành công
+        403: Không có quyền thao tác (FORBIDDEN_ACCESS)
+        404: Địa chỉ không tồn tại (ADDRESS_NOT_FOUND)
+    """
+    user_id = int(get_jwt_identity())
+
+    try:
+        updated = AddressService.set_default_address(user_id=user_id, address_id=address_id)
+        return _success(
+            data=updated,
+            message="Đã đặt làm địa chỉ giao hàng mặc định thành công.",
+            status=200,
+        )
+    except PermissionError:
+        return _error(
+            message="Bạn không có quyền thao tác trên địa chỉ giao hàng này.",
+            code="FORBIDDEN_ACCESS",
+            status=403,
+        )
+    except ValueError as exc:
+        if str(exc) == "ADDRESS_NOT_FOUND":
+            return _error(
+                message="Không tìm thấy địa chỉ giao hàng.",
+                code="ADDRESS_NOT_FOUND",
+                status=404,
+            )
+        return _error(message=str(exc), code="BAD_REQUEST", status=400)
+
+
