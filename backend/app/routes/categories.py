@@ -99,3 +99,96 @@ def create_category():
                 status=400,
             )
         return _error(message=str(exc), code="BAD_REQUEST", status=400)
+
+
+# ============================================================
+# PUT /api/v1/admin/categories/<int:category_id> — Admin sửa danh mục (NT-08-CN-002)
+# ============================================================
+@categories_bp.route("/admin/categories/<int:category_id>", methods=["PUT"])
+@admin_required()
+def update_category(category_id: int):
+    """
+    Quản trị viên chỉnh sửa danh mục sản phẩm (NT-08-CN-002).
+
+    Responses:
+        200: Cập nhật danh mục thành công
+        400: Dữ liệu không hợp lệ (VALIDATION_ERROR / CATEGORY_EXISTS)
+        403: Không có quyền Admin (FORBIDDEN)
+        404: Danh mục không tồn tại (CATEGORY_NOT_FOUND)
+    """
+    json_data = request.get_json(silent=True) or {}
+
+    try:
+        data = category_schema.load(json_data)
+    except ValidationError as exc:
+        return _error(
+            message="Dữ liệu danh mục không hợp lệ.",
+            code="VALIDATION_ERROR",
+            status=400,
+            errors=exc.messages,
+        )
+
+    try:
+        updated = CategoryService.update_category(category_id=category_id, data=data)
+        return _success(
+            data=updated,
+            message="Cập nhật danh mục sản phẩm thành công.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "CATEGORY_NOT_FOUND":
+            return _error(
+                message="Không tìm thấy danh mục sản phẩm.",
+                code="CATEGORY_NOT_FOUND",
+                status=404,
+            )
+        elif err_str == "CATEGORY_EXISTS":
+            return _error(
+                message="Tên danh mục đã tồn tại.",
+                code="CATEGORY_EXISTS",
+                status=400,
+            )
+        return _error(message=err_str, code="BAD_REQUEST", status=400)
+
+
+# ============================================================
+# DELETE /api/v1/admin/categories/<int:category_id> — Admin xóa danh mục (NT-08-CN-002)
+# ============================================================
+@categories_bp.route("/admin/categories/<int:category_id>", methods=["DELETE"])
+@admin_required()
+def delete_category(category_id: int):
+    """
+    Quản trị viên xóa danh mục sản phẩm (NT-08-CN-002).
+    Chỉ cho phép xóa khi danh mục không còn sản phẩm nào.
+
+    Responses:
+        200: Xóa danh mục thành công
+        400: Danh mục còn sản phẩm (CATEGORY_HAS_PRODUCTS)
+        403: Không có quyền Admin (FORBIDDEN)
+        404: Danh mục không tồn tại (CATEGORY_NOT_FOUND)
+    """
+    try:
+        CategoryService.delete_category(category_id=category_id)
+        return _success(
+            data={"id": category_id},
+            message="Xóa danh mục sản phẩm thành công.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "CATEGORY_NOT_FOUND":
+            return _error(
+                message="Không tìm thấy danh mục sản phẩm.",
+                code="CATEGORY_NOT_FOUND",
+                status=404,
+            )
+        elif err_str.startswith("CATEGORY_HAS_PRODUCTS:"):
+            count = err_str.split(":")[1]
+            return _error(
+                message=f"Không thể xóa danh mục này vì còn {count} sản phẩm đang sử dụng. Vui lòng di chuyển hoặc xóa sản phẩm trước.",
+                code="CATEGORY_HAS_PRODUCTS",
+                status=400,
+            )
+        return _error(message=err_str, code="BAD_REQUEST", status=400)
+
