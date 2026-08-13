@@ -102,6 +102,20 @@ const AdminDashboardPage = () => {
             <span className="text-xs text-emerald-600 font-bold mt-1 inline-block">Quản lý danh mục →</span>
           </Link>
 
+          {/* Stat Item 3b: Quản lý Sản phẩm */}
+          <Link to="/admin/products" className="card border-l-4 border-l-amber-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-amber-600 transition-colors">Sản Phẩm Kinh Doanh</span>
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.total_products}</p>
+            <span className="text-xs text-amber-600 font-bold mt-1 inline-block">Quản lý sản phẩm →</span>
+          </Link>
+
           {/* Stat Item 4 */}
           <div className="card border-l-4 border-l-purple-500">
             <div className="flex items-center justify-between mb-2">
