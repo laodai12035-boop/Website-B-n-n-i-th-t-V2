@@ -170,3 +170,37 @@ class AddressService:
         db.session.commit()
         logger.info("Deleted address id=%s for user_id=%s", address_id, user_id)
         return True
+
+    @staticmethod
+    def set_default_address(user_id: int, address_id: int) -> Dict[str, Any]:
+        """
+        Đặt một địa chỉ giao hàng làm địa chỉ mặc định (NT-07-CN-003).
+
+        Args:
+            user_id: ID người dùng từ JWT Token
+            address_id: ID địa chỉ cần đặt làm mặc định
+
+        Returns:
+            Dict thông tin địa chỉ sau khi cập nhật.
+
+        Raises:
+            ValueError("ADDRESS_NOT_FOUND"): Địa chỉ không tồn tại.
+            PermissionError("FORBIDDEN_ACCESS"): Địa chỉ thuộc về người dùng khác.
+        """
+        address = db.session.query(Address).filter(Address.id == address_id).first()
+        if not address:
+            raise ValueError("ADDRESS_NOT_FOUND")
+
+        if address.user_id != user_id:
+            raise PermissionError("FORBIDDEN_ACCESS")
+
+        # Đặt is_default = False cho toàn bộ địa chỉ khác của user
+        db.session.query(Address).filter(Address.user_id == user_id).update(
+            {Address.is_default: False}, synchronize_session=False
+        )
+
+        address.is_default = True
+        db.session.commit()
+
+        logger.info("Set address id=%s as default for user_id=%s", address_id, user_id)
+        return address.to_dict()
