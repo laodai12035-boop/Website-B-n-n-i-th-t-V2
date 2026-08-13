@@ -13,6 +13,7 @@ import AdminInventoryPage from '@/pages/admin/AdminInventoryPage'
 import AdminCombosPage from '@/pages/admin/AdminCombosPage'
 import AdminReviewsPage from '@/pages/admin/AdminReviewsPage'
 import AdminBannersPage from '@/pages/admin/AdminBannersPage'
+import AdminCouponsPage from '@/pages/admin/AdminCouponsPage'
 import ForbiddenPage from '@/pages/error/ForbiddenPage'
 import ProductListPage from '@/pages/product/ProductListPage'
 import ProductDetailPage from '@/pages/product/ProductDetailPage'
@@ -147,6 +148,14 @@ function App() {
                 element={
                   <AdminRoute>
                     <AdminBannersPage />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/coupons"
+                element={
+                  <AdminRoute>
+                    <AdminCouponsPage />
                   </AdminRoute>
                 }
               />

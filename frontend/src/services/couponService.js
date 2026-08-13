@@ -1,26 +1,66 @@
-import api from './api'
+import api from '@/services/api'
 
-export const couponService = {
+/**
+ * couponService — Service gọi API Quản lý Mã giảm giá (NT-11-CN-002, QTN-01).
+ */
+const couponService = {
   /**
-   * Áp dụng mã giảm giá (Tuân thủ QTN-01).
-   * @param {string} couponCode
-   * @param {number} subtotal
-   * @returns {Promise<Object>}
+   * Lấy danh sách mã giảm giá công khai đang hoạt động.
+   * @returns {Promise<Array>}
    */
-  async applyCoupon(couponCode, subtotal) {
-    const response = await api.post('/coupons/apply', {
-      coupon_code: couponCode,
-      subtotal: Number(subtotal),
-    })
+  async getActiveCoupons() {
+    const response = await api.get('/coupons')
     return response.data.data
   },
 
   /**
-   * Lấy danh sách mã giảm giá đang kích hoạt.
+   * Khách hàng áp dụng mã giảm giá.
+   * @param {string} code
+   * @param {number} subtotal
+   * @returns {Promise<Object>}
+   */
+  async applyCoupon(code, subtotal) {
+    const response = await api.post('/coupons/apply', { code, subtotal })
+    return response.data.data
+  },
+
+  /**
+   * Quản trị viên lấy tất cả mã giảm giá.
    * @returns {Promise<Array>}
    */
-  async getActiveCoupons() {
-    const response = await api.get('/coupons/active')
+  async getAdminCoupons() {
+    const response = await api.get('/admin/coupons')
+    return response.data.data
+  },
+
+  /**
+   * Quản trị viên tạo mã giảm giá mới.
+   * @param {Object} couponData
+   * @returns {Promise<Object>}
+   */
+  async createCoupon(couponData) {
+    const response = await api.post('/admin/coupons', couponData)
+    return response.data.data
+  },
+
+  /**
+   * Quản trị viên cập nhật mã giảm giá.
+   * @param {number|string} id
+   * @param {Object} couponData
+   * @returns {Promise<Object>}
+   */
+  async updateCoupon(id, couponData) {
+    const response = await api.put(`/admin/coupons/${id}`, couponData)
+    return response.data.data
+  },
+
+  /**
+   * Quản trị viên xóa mã giảm giá.
+   * @param {number|string} id
+   * @returns {Promise<Object>}
+   */
+  async deleteCoupon(id) {
+    const response = await api.delete(`/admin/coupons/${id}`)
     return response.data.data
   },
 }
