@@ -110,3 +110,94 @@ def create_address():
                 status=400,
             )
         return _error(message=err_str, code="BAD_REQUEST", status=400)
+
+
+# ============================================================
+# PUT /api/v1/addresses/<int:address_id> — Sửa địa chỉ (NT-07-CN-002)
+# ============================================================
+@addresses_bp.route("/<int:address_id>", methods=["PUT"])
+@jwt_required()
+def update_address(address_id: int):
+    """
+    Sửa thông tin địa chỉ giao hàng (NT-07-CN-002).
+
+    Responses:
+        200: Cập nhật địa chỉ thành công
+        400: Dữ liệu không hợp lệ (VALIDATION_ERROR)
+        403: Không có quyền thao tác (FORBIDDEN_ACCESS)
+        404: Địa chỉ không tồn tại (ADDRESS_NOT_FOUND)
+    """
+    user_id = int(get_jwt_identity())
+    json_data = request.get_json(silent=True) or {}
+
+    try:
+        data = address_schema.load(json_data)
+    except ValidationError as exc:
+        return _error(
+            message="Dữ liệu không hợp lệ",
+            code="VALIDATION_ERROR",
+            status=400,
+            errors=exc.messages,
+        )
+
+    try:
+        updated = AddressService.update_address(user_id=user_id, address_id=address_id, data=data)
+        return _success(
+            data=updated,
+            message="Cập nhật thông tin địa chỉ giao hàng thành công.",
+            status=200,
+        )
+    except PermissionError:
+        return _error(
+            message="Bạn không có quyền thao tác trên địa chỉ giao hàng này.",
+            code="FORBIDDEN_ACCESS",
+            status=403,
+        )
+    except ValueError as exc:
+        if str(exc) == "ADDRESS_NOT_FOUND":
+            return _error(
+                message="Không tìm thấy địa chỉ giao hàng.",
+                code="ADDRESS_NOT_FOUND",
+                status=404,
+            )
+        return _error(message=str(exc), code="BAD_REQUEST", status=400)
+
+
+# ============================================================
+# DELETE /api/v1/addresses/<int:address_id> — Xóa địa chỉ (NT-07-CN-002)
+# ============================================================
+@addresses_bp.route("/<int:address_id>", methods=["DELETE"])
+@jwt_required()
+def delete_address(address_id: int):
+    """
+    Xóa địa chỉ giao hàng (NT-07-CN-002).
+
+    Responses:
+        200: Xóa địa chỉ thành công
+        403: Không có quyền xóa địa chỉ của người khác (FORBIDDEN_ACCESS)
+        404: Địa chỉ không tồn tại (ADDRESS_NOT_FOUND)
+    """
+    user_id = int(get_jwt_identity())
+
+    try:
+        AddressService.delete_address(user_id=user_id, address_id=address_id)
+        return _success(
+            data={"id": address_id},
+            message="Xóa địa chỉ giao hàng thành công.",
+            status=200,
+        )
+    except PermissionError:
+        return _error(
+            message="Bạn không có quyền xóa địa chỉ giao hàng này.",
+            code="FORBIDDEN_ACCESS",
+            status=403,
+        )
+    except ValueError as exc:
+        if str(exc) == "ADDRESS_NOT_FOUND":
+            return _error(
+                message="Không tìm thấy địa chỉ giao hàng.",
+                code="ADDRESS_NOT_FOUND",
+                status=404,
+            )
+        return _error(message=str(exc), code="BAD_REQUEST", status=400)
+
