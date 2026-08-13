@@ -128,6 +128,18 @@ const AdminDashboardPage = () => {
             <span className="text-xs text-orange-600 font-bold mt-1 inline-block">Tạo combo ưu đãi →</span>
           </Link>
 
+          {/* Stat Item 3d: Quản lý Kho & Tồn Kho */}
+          <Link to="/admin/inventory" className="card border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Quản Lý Kho & Tồn Kho</span>
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span className="text-lg">📦</span>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">Nhập Kho</p>
+            <span className="text-xs text-emerald-600 font-bold mt-1 inline-block">Xem tồn kho & Nhập hàng →</span>
+          </Link>
+
           {/* Stat Item 4 */}
           <div className="card border-l-4 border-l-purple-500">
             <div className="flex items-center justify-between mb-2">

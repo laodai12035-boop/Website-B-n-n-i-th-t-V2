@@ -4,11 +4,12 @@ import Navbar from '@/components/layout/Navbar'
 import AdminQuickSearch from '@/components/admin/AdminQuickSearch'
 import AddProductModal from '@/components/admin/AddProductModal'
 import EditProductModal from '@/components/admin/EditProductModal'
+import ImportStockModal from '@/components/admin/ImportStockModal'
 import productService from '@/services/productService'
 import FormAlert from '@/components/ui/FormAlert'
 
 /**
- * AdminProductsPage — Trang Quản lý Sản phẩm dành cho Admin (NT-08-CN-003, NT-08-CN-004).
+ * AdminProductsPage — Trang Quản lý Sản phẩm dành cho Admin (NT-08-CN-003, NT-08-CN-004, NT-09-CN-001).
  * Tuyến đường: /admin/products
  */
 const AdminProductsPage = () => {
@@ -19,6 +20,7 @@ const AdminProductsPage = () => {
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editProductItem, setEditProductItem] = useState(null)
+  const [importStockItem, setImportStockItem] = useState(null)
   
   // Confirmation deactivate modal state
   const [deactivateTarget, setDeactivateTarget] = useState(null)
@@ -188,6 +190,13 @@ const AdminProductsPage = () => {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
+                            onClick={() => setImportStockItem(item)}
+                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 border border-emerald-200"
+                          >
+                            <span>📦</span> Nhập kho
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setEditProductItem(item)}
                             className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
                           >
@@ -272,7 +281,13 @@ const AdminProductsPage = () => {
             </div>
           </div>
         </div>
-      )}
+      {/* Modal Nhập kho */}
+      <ImportStockModal
+        isOpen={!!importStockItem}
+        onClose={() => setImportStockItem(null)}
+        initialProduct={importStockItem}
+        onSuccess={() => fetchProducts()}
+      />
     </div>
   )
 }
