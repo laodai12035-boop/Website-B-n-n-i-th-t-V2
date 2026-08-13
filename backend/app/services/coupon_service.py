@@ -44,7 +44,10 @@ class CouponService:
         if not coupon:
             raise ValueError("COUPON_EXPIRED_OR_INVALID")
 
-        # Kiểm tra ngày hết hạn
+        # Kiểm tra thời gian bắt đầu và ngày hết hạn
+        if coupon.start_date and coupon.start_date > now:
+            raise ValueError("COUPON_EXPIRED_OR_INVALID")
+
         if coupon.end_date and coupon.end_date < now:
             raise ValueError("COUPON_EXPIRED_OR_INVALID")
 
