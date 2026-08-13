@@ -197,3 +197,118 @@ class TestAddProduct:
         body = res.get_json()
         assert body["status"] == "success"
         assert "items" in body["data"]
+
+
+def put_admin_product(client, token, product_id, payload):
+    """Helper gửi request PUT /api/v1/admin/products/<id>."""
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return client.put(f"/api/v1/admin/products/{product_id}", data=json.dumps(payload), headers=headers)
+
+
+def delete_admin_product(client, token, product_id):
+    """Helper gửi request DELETE /api/v1/admin/products/<id>."""
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return client.delete(f"/api/v1/admin/products/{product_id}", headers=headers)
+
+
+class TestUpdateAndDeleteProduct:
+    """Các test case cho NT-08-CN-004 Sửa và xóa (ngừng bán) sản phẩm."""
+
+    def test_tc07_admin_update_product_success(self, client, admin_user):
+        """TC-07: Admin sửa thông tin sản phẩm (giá mới 30,000,000) ➔ 200 OK."""
+        # 1. Tạo sản phẩm ban đầu
+        p_res = post_admin_product(
+            client, admin_user["token"], {"name": "Bộ Sofa Gỗ Cũ", "category": "ghe", "price": 25000000.0}
+        )
+        prod_id = p_res.get_json()["data"]["id"]
+
+        # 2. Sửa sản phẩm
+        update_payload = {
+            "name": "Bộ Sofa Gỗ Óc Chó Mới",
+            "category": "ghe",
+            "price": 30000000.0,
+            "discount_price": 27000000.0,
+            "stock": 20,
+            "material": "Gỗ Óc Chó Bắc Mỹ",
+        }
+        res = put_admin_product(client, admin_user["token"], prod_id, update_payload)
+        assert res.status_code == 200
+
+        body = res.get_json()
+        assert body["status"] == "success"
+        assert body["data"]["name"] == "Bộ Sofa Gỗ Óc Chó Mới"
+        assert body["data"]["slug"] == "bo-sofa-go-oc-cho-moi"
+        assert body["data"]["price"] == 30000000.0
+        assert body["data"]["stock"] == 20
+
+    def test_tc08_admin_deactivate_product_success(self, client, admin_user):
+        """TC-08: Admin chuyển sản phẩm sang ngừng bán (is_active = False) ➔ 200 OK."""
+        p_res = post_admin_product(
+            client, admin_user["token"], {"name": "Sản phẩm sắp ngừng bán", "category": "ban", "price": 5000000.0}
+        )
+        prod_id = p_res.get_json()["data"]["id"]
+
+        res = delete_admin_product(client, admin_user["token"], prod_id)
+        assert res.status_code == 200
+
+        body = res.get_json()
+        assert body["status"] == "success"
+        assert body["data"]["is_active"] is False
+
+    def test_tc09_deactivated_product_hidden_from_public_api(self, client, admin_user):
+        """TC-09: Sản phẩm sau khi ngừng bán bị ẩn khỏi Public API GET /products/<id> ➔ 404 PRODUCT_NOT_FOUND."""
+        p_res = post_admin_product(
+            client, admin_user["token"], {"name": "Sản phẩm bị ẩn", "category": "ke", "price": 1200000.0}
+        )
+        prod_id = p_res.get_json()["data"]["id"]
+
+        # Ngừng bán
+        delete_admin_product(client, admin_user["token"], prod_id)
+
+        # Truy cập Public GET /products/<id>
+        public_res = client.get(f"/api/v1/products/{prod_id}")
+        assert public_res.status_code == 404
+        assert public_res.get_json()["code"] == "PRODUCT_NOT_FOUND"
+
+    def test_tc10_update_invalid_price_returns_400(self, client, admin_user):
+        """TC-10: Sửa sản phẩm với giá âm (-50,000) ➔ 400 Bad Request (VALIDATION_ERROR)."""
+        p_res = post_admin_product(
+            client, admin_user["token"], {"name": "Sản phẩm giá chuẩn", "category": "tu", "price": 2000000.0}
+        )
+        prod_id = p_res.get_json()["data"]["id"]
+
+        res = put_admin_product(client, admin_user["token"], prod_id, {"name": "Sản phẩm giá chuẩn", "category": "tu", "price": -50000.0})
+        assert res.status_code == 400
+        assert res.get_json()["code"] == "VALIDATION_ERROR"
+
+    def test_tc11_regular_user_update_delete_forbidden(self, client, regular_user, admin_user):
+        """TC-11: Người dùng thường cố sửa hoặc ngừng bán ➔ 403 FORBIDDEN."""
+        p_res = post_admin_product(
+            client, admin_user["token"], {"name": "Sản phẩm bảo vệ", "category": "ban", "price": 1000000.0}
+        )
+        prod_id = p_res.get_json()["data"]["id"]
+
+        res_put = put_admin_product(client, regular_user["token"], prod_id, {"name": "Sửa lậu", "category": "ban", "price": 2000000.0})
+        assert res_put.status_code == 403
+        assert res_put.get_json()["code"] == "FORBIDDEN"
+
+        res_del = delete_admin_product(client, regular_user["token"], prod_id)
+        assert res_del.status_code == 403
+        assert res_del.get_json()["code"] == "FORBIDDEN"
+
+    def test_tc12_update_delete_non_existing_returns_404(self, client, admin_user):
+        """TC-12: Sửa/xóa sản phẩm với ID không tồn tại ➔ 404 PRODUCT_NOT_FOUND."""
+        non_id = 999999
+
+        res_put = put_admin_product(client, admin_user["token"], non_id, {"name": "Tên mới", "category": "ban", "price": 1000000.0})
+        assert res_put.status_code == 404
+        assert res_put.get_json()["code"] == "PRODUCT_NOT_FOUND"
+
+        res_del = delete_admin_product(client, admin_user["token"], non_id)
+        assert res_del.status_code == 404
+        assert res_del.get_json()["code"] == "PRODUCT_NOT_FOUND"
+
