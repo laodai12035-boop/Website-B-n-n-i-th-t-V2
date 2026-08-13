@@ -151,11 +151,18 @@ const AdminCouponsPage = () => {
   }
 
   const handleToggleActive = async (coupon) => {
+    const newStatus = !coupon.is_active
     try {
-      await couponService.updateCoupon(coupon.id, { is_active: !coupon.is_active })
+      await couponService.updateCoupon(coupon.id, { is_active: newStatus })
       setCoupons((prev) =>
-        prev.map((c) => (c.id === coupon.id ? { ...c, is_active: !c.is_active } : c))
+        prev.map((c) => (c.id === coupon.id ? { ...c, is_active: newStatus } : c))
       )
+      setSuccessMsg(
+        newStatus
+          ? `Kích hoạt lại mã giảm giá "${coupon.code}" thành công!`
+          : `Đã vô hiệu hóa mã giảm giá "${coupon.code}" (NT-11-CN-003). Khách hàng không thể áp dụng mã này.`
+      )
+      setTimeout(() => setSuccessMsg(null), 4000)
     } catch (err) {
       setError(err.response?.data?.message || 'Không thể cập nhật trạng thái mã giảm giá.')
     }
@@ -187,7 +194,7 @@ const AdminCouponsPage = () => {
               <span className="text-gray-900 font-bold">Quản Lý Mã Giảm Giá</span>
             </div>
             <h1 className="text-2xl font-display font-extrabold text-gray-900 flex items-center gap-2">
-              <span>🎟️</span> Quản Lý Mã Giảm Giá & Khuyến Mãi (NT-11-CN-002 - QTN-01)
+              <span>🎟️</span> Quản Lý & Vô Hiệu Hóa Mã Giảm Giá (NT-11-CN-002 / NT-11-CN-003 - QTN-01)
             </h1>
           </div>
 
