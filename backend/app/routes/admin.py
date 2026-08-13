@@ -936,6 +936,36 @@ def delete_admin_coupon(coupon_id: int):
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
 
+# ============================================================
+# CUSTOMERS MANAGEMENT ENDPOINT (NT-12-CN-001)
+# ============================================================
+@admin_bp.route("/customers", methods=["GET"])
+@admin_required()
+def get_admin_customers():
+    """
+    Quản trị viên xem danh sách khách hàng đã đăng ký kèm thông tin tổng số đơn hàng (NT-12-CN-001).
+    """
+    from flask import request
+    from app.services.admin_service import AdminService
+
+    search = request.args.get("search")
+    status = request.args.get("status", "all")
+    page = int(request.args.get("page", 1))
+    limit = int(request.args.get("limit", 20))
+
+    result = AdminService.get_admin_customers(
+        search=search,
+        status=status,
+        page=page,
+        limit=limit,
+    )
+    return _success(
+        data=result,
+        message="Lấy danh sách khách hàng thành công.",
+        status=200,
+    )
+
+
 
 
 

@@ -186,3 +186,109 @@ class AdminService:
             "summary": summary,
         }
 
+    @staticmethod
+    def get_admin_customers(
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> Dict[str, Any]:
+        """
+        Quản trị viên lấy danh sách khách hàng kèm số đơn hàng và tổng chi tiêu (NT-12-CN-001).
+
+        Args:
+            search: Từ khóa tìm kiếm (tên, email, sĐT)
+            status: Lọc trạng thái ('all', 'active', 'inactive')
+            page: Trang hiện tại (1-indexed)
+            limit: Số bản ghi trên 1 trang
+
+        Returns:
+            Dict chứa `customers`, `pagination` và `summary`.
+        """
+        from sqlalchemy import case, func
+
+        base_query = db.session.query(User).filter(User.role == "user")
+
+        summary = {
+            "total_customers": base_query.count(),
+            "active_customers": base_query.filter(User.is_active == True).count(),
+            "inactive_customers": base_query.filter(User.is_active == False).count(),
+        }
+
+        query = base_query
+
+        # 1. Lọc theo trạng thái active/inactive
+        if status and status.strip().lower() != "all":
+            st = status.strip().lower()
+            if st == "active":
+                query = query.filter(User.is_active == True)
+            elif st == "inactive":
+                query = query.filter(User.is_active == False)
+
+        # 2. Tìm kiếm theo từ khóa
+        if search and search.strip():
+            term = f"%{search.strip()}%"
+            query = query.filter(
+                or_(
+                    User.full_name.ilike(term),
+                    User.email.ilike(term),
+                    User.phone.ilike(term),
+                )
+            )
+
+        # 3. Phân trang
+        page = max(1, page)
+        limit = max(1, min(100, limit))
+        total_items = query.count()
+        total_pages = max(1, math.ceil(total_items / limit))
+
+        users = (
+            query.order_by(User.created_at.desc())
+            .offset((page - 1) * limit)
+            .limit(limit)
+            .all()
+        )
+
+        customer_list = []
+        for u in users:
+            # Thống kê tổng số đơn hàng, tổng chi tiêu (trừ đơn bị hủy) và ngày đặt đơn gần nhất
+            orders_stats = (
+                db.session.query(
+                    func.count(Order.id).label("total_orders"),
+                    func.coalesce(
+                        func.sum(case((Order.status != "cancelled", Order.total_amount), else_=0)), 0
+                    ).label("total_spent"),
+                    func.max(Order.created_at).label("last_order_at"),
+                )
+                .filter(Order.user_id == u.id)
+                .first()
+            )
+
+            total_orders = int(orders_stats.total_orders) if orders_stats and orders_stats.total_orders else 0
+            total_spent = float(orders_stats.total_spent) if orders_stats and orders_stats.total_spent else 0.0
+            last_order_at = orders_stats.last_order_at.isoformat() if orders_stats and orders_stats.last_order_at else None
+
+            customer_list.append({
+                "id": u.id,
+                "full_name": u.full_name,
+                "email": u.email,
+                "phone": u.phone,
+                "role": u.role,
+                "is_active": u.is_active,
+                "total_orders": total_orders,
+                "total_spent": total_spent,
+                "last_order_at": last_order_at,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            })
+
+        return {
+            "customers": customer_list,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total_items": total_items,
+                "total_pages": total_pages,
+            },
+            "summary": summary,
+        }
+
