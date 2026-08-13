@@ -69,19 +69,23 @@ def run_auto_migrations(app):
                     db.session.commit()
                     print("[AutoMigrate] Updated table order_items columns successfully.")
 
-            # 5. Cập nhật bảng products nếu thiếu cột weight_kg (QTN-07)
+            # 5. Cập nhật bảng products nếu thiếu cột weight_kg (QTN-07) hoặc warranty_months / warranty_terms (NT-08-CN-005)
             if inspector.has_table("products"):
                 columns = [c["name"] for c in inspector.get_columns("products")]
                 alter_statements = []
 
                 if "weight_kg" not in columns:
                     alter_statements.append("ADD COLUMN weight_kg FLOAT NULL")
+                if "warranty_months" not in columns:
+                    alter_statements.append("ADD COLUMN warranty_months INT DEFAULT 12")
+                if "warranty_terms" not in columns:
+                    alter_statements.append("ADD COLUMN warranty_terms TEXT NULL")
 
                 if alter_statements:
                     sql = f"ALTER TABLE products {', '.join(alter_statements)}"
                     db.session.execute(text(sql))
                     db.session.commit()
-                    print("[AutoMigrate] Updated table products columns (weight_kg) successfully.")
+                    print("[AutoMigrate] Updated table products columns (weight_kg, warranty_months, warranty_terms) successfully.")
 
             # 4. Seed dữ liệu coupons nếu chưa có
             if inspector.has_table("coupons"):
