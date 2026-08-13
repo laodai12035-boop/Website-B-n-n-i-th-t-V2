@@ -14,6 +14,8 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
     dimensions: '',
     material: '',
     weight_kg: '',
+    warranty_months: 12,
+    warranty_terms: '',
     image_url: '',
     description: '',
   })
@@ -71,6 +73,13 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
       errs.category = 'Vui lòng chọn danh mục sản phẩm'
     }
 
+    if (formData.warranty_months !== '') {
+      const wMonths = parseInt(formData.warranty_months, 10)
+      if (isNaN(wMonths) || wMonths < 0) {
+        errs.warranty_months = 'Thời gian bảo hành phải lớn hơn hoặc bằng 0'
+      }
+    }
+
     return errs
   }
 
@@ -95,6 +104,8 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
         dimensions: formData.dimensions.trim() || null,
         material: formData.material.trim() || null,
         weight_kg: formData.weight_kg !== '' ? parseFloat(formData.weight_kg) : null,
+        warranty_months: formData.warranty_months !== '' ? parseInt(formData.warranty_months, 10) : 12,
+        warranty_terms: formData.warranty_terms.trim() || null,
         image_url: formData.image_url.trim() || null,
         description: formData.description.trim() || null,
       }
@@ -109,8 +120,11 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
         dimensions: '',
         material: '',
         weight_kg: '',
+        warranty_months: 12,
+        warranty_terms: '',
         image_url: '',
         description: '',
+      })
       })
       if (onSuccess) onSuccess()
       onClose()
@@ -281,6 +295,39 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.material}
                 onChange={handleChange}
                 placeholder="VD: Gỗ Óc Chó, Da Bò..."
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Bảo hành (NT-08-CN-005) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                Thời gian bảo hành (Tháng)
+              </label>
+              <input
+                type="number"
+                name="warranty_months"
+                min="0"
+                value={formData.warranty_months}
+                onChange={handleChange}
+                placeholder="VD: 12 hoặc 24"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+              />
+              {errors.warranty_months && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.warranty_months}</p>}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                Điều kiện bảo hành áp dụng
+              </label>
+              <input
+                type="text"
+                name="warranty_terms"
+                value={formData.warranty_terms}
+                onChange={handleChange}
+                placeholder="VD: Bảo hành 1 đổi 1 nếu lỗi mối mọt, cong vênh do nhà sản xuất..."
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
               />
             </div>
