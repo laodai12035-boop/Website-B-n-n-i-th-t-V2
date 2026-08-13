@@ -4,6 +4,7 @@ import Navbar from '@/components/layout/Navbar'
 import ProductCard from '@/components/product/ProductCard'
 import SearchBar from '@/components/product/SearchBar'
 import ProductFilters from '@/components/product/ProductFilters'
+import BannerSlider from '@/components/home/BannerSlider'
 import productService from '@/services/productService'
 
 const DEFAULT_CATEGORIES = [
@@ -92,6 +93,8 @@ const ProductListPage = () => {
       <Navbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
+        {/* Banner Hero Slider Quảng Cáo (NT-11-CN-001) */}
+        {!currentSearch && !currentCategory && <BannerSlider />}
 
         {/* Page Header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
