@@ -337,3 +337,47 @@ class ProductService:
         except Exception as exc:
             db.session.rollback()
             logger.error("Error seeding products: %s", exc)
+
+    @staticmethod
+    def create_product(data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Admin thêm sản phẩm mới vào hệ thống (NT-08-CN-003).
+
+        Args:
+            data: Dữ liệu đã validate từ ProductSchema
+
+        Returns:
+            Dict thông tin sản phẩm vừa tạo.
+        """
+        from app.services.category_service import generate_slug
+
+        name_stripped = data["name"].strip()
+        base_slug = generate_slug(name_stripped)
+        slug = base_slug
+        counter = 1
+
+        # Đảm bảo slug unique
+        while db.session.query(Product).filter(Product.slug == slug).first():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+
+        new_product = Product(
+            name=name_stripped,
+            slug=slug,
+            description=data.get("description", "").strip() if data.get("description") else None,
+            price=data["price"],
+            discount_price=data.get("discount_price"),
+            category=data["category"].strip(),
+            stock=data.get("stock", 0),
+            image_url=data.get("image_url", "").strip() if data.get("image_url") else None,
+            material=data.get("material", "").strip() if data.get("material") else None,
+            dimensions=data.get("dimensions", "").strip() if data.get("dimensions") else None,
+            weight_kg=data.get("weight_kg"),
+            is_active=data.get("is_active", True),
+        )
+
+        db.session.add(new_product)
+        db.session.commit()
+
+        logger.info("Admin created new product id=%s name='%s' price=%s", new_product.id, new_product.name, new_product.price)
+        return new_product.to_dict()

@@ -208,4 +208,76 @@ def admin_update_order_status(order_id: int):
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
 
+# ============================================================
+# POST /api/v1/admin/products — Admin thêm sản phẩm mới (NT-08-CN-003)
+# ============================================================
+@admin_bp.route("/products", methods=["POST"])
+@admin_required()
+def create_product():
+    """
+    Quản trị viên thêm sản phẩm mới (NT-08-CN-003).
+
+    Responses:
+        201: Thêm sản phẩm thành công
+        400: Dữ liệu không hợp lệ (VALIDATION_ERROR)
+        401: Chưa đăng nhập
+        403: Không có quyền Admin (FORBIDDEN)
+    """
+    from flask import request
+    from marshmallow import ValidationError
+    from app.schemas.product_schema import product_schema
+    from app.services.product_service import ProductService
+
+    json_data = request.get_json(silent=True) or {}
+
+    try:
+        data = product_schema.load(json_data)
+    except ValidationError as exc:
+        return jsonify({
+            "status": "error",
+            "message": "Dữ liệu sản phẩm không hợp lệ.",
+            "code": "VALIDATION_ERROR",
+            "errors": exc.messages
+        }), 400
+
+    new_product = ProductService.create_product(data=data)
+    return _success(
+        data=new_product,
+        message="Thêm sản phẩm mới thành công.",
+        status=201,
+    )
+
+
+# ============================================================
+# GET /api/v1/admin/products — Admin lấy danh sách sản phẩm
+# ============================================================
+@admin_bp.route("/products", methods=["GET"])
+@admin_required()
+def get_admin_products():
+    """
+    Lấy danh sách tất cả sản phẩm cho trang quản trị Admin.
+    """
+    from flask import request
+    from app.services.product_service import ProductService
+
+    search_query = request.args.get("search", type=str)
+    category = request.args.get("category", type=str)
+    page = request.args.get("page", default=1, type=int)
+    limit = request.args.get("limit", default=20, type=int)
+
+    result = ProductService.search_products(
+        search_query=search_query,
+        category=category,
+        page=page,
+        limit=limit,
+    )
+
+    return _success(
+        data=result,
+        message="Lấy danh sách sản phẩm quản trị thành công",
+        status=200,
+    )
+
+
+
 
