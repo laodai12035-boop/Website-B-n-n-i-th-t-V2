@@ -248,3 +248,35 @@ CREATE TABLE IF NOT EXISTS return_requests (
     INDEX idx_return_requests_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ============================================================
+-- Seed sample users for testing (Password123@)
+-- ============================================================
+INSERT IGNORE INTO users (id, full_name, email, phone, password_hash, role, is_active) VALUES
+(1, 'Nguyễn Văn Anh', 'user@example.com', '0901234567', '$2b$12$KIXs6N5kK8W/Bv8r9c5Jv.dM.k5zD4aL0R2oP7Q9x5B8n9M1K2L3m', 'user', 1),
+(2, 'Trần Thị Bình', 'user2@example.com', '0909876543', '$2b$12$KIXs6N5kK8W/Bv8r9c5Jv.dM.k5zD4aL0R2oP7Q9x5B8n9M1K2L3m', 'user', 1),
+(3, 'Quản Trị Viên (Admin)', 'admin@example.com', '0900000000', '$2b$12$KIXs6N5kK8W/Bv8r9c5Jv.dM.k5zD4aL0R2oP7Q9x5B8n9M1K2L3m', 'admin', 1);
+
+-- ============================================================
+-- Seed sample orders for Epic 6 Testing
+-- ============================================================
+INSERT IGNORE INTO orders (id, order_code, user_id, recipient_name, recipient_phone, shipping_address, note, payment_method, payment_status, status, subtotal, discount_amount, shipping_fee, total_amount, created_at) VALUES
+(1, 'ORD-20260810-1001', 1, 'Nguyễn Văn Anh', '0901234567', '123 Nguyễn Huệ, P. Bến Nghé, Q1, TP.HCM', 'Giao giờ hành chính', 'COD', 'unpaid', 'pending', 28500000.00, 0.00, 120000.00, 28620000.00, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+(2, 'ORD-20260811-1002', 1, 'Nguyễn Văn Anh', '0901234567', '123 Nguyễn Huệ, P. Bến Nghé, Q1, TP.HCM', 'Đã VietQR thanh toán', 'QR_BANK', 'paid', 'confirmed', 10900000.00, 0.00, 50000.00, 10950000.00, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(3, 'ORD-20260811-1003', 2, 'Trần Thị Bình', '0909876543', '456 Lê Lợi, P. 1, Hải Châu, Đà Nẵng', 'Hàng cồng kềnh', 'COD', 'unpaid', 'shipping', 8100000.00, 0.00, 50000.00, 8150000.00, DATE_SUB(NOW(), INTERVAL 36 HOUR)),
+(4, 'ORD-20260805-1004', 1, 'Nguyễn Văn Anh', '0901234567', '123 Nguyễn Huệ, P. Bến Nghé, Q1, TP.HCM', 'Nghiệm thu đủ', 'QR_BANK', 'paid', 'delivered', 12900000.00, 0.00, 50000.00, 12950000.00, DATE_SUB(NOW(), INTERVAL 7 DAY)),
+(5, 'ORD-20260601-1005', 1, 'Nguyễn Văn Anh', '0901234567', '123 Nguyễn Huệ, P. Bến Nghé, Q1, TP.HCM', 'Đã hoàn tất', 'COD', 'paid', 'delivered', 1900000.00, 0.00, 50000.00, 1950000.00, DATE_SUB(NOW(), INTERVAL 70 DAY)),
+(6, 'ORD-20260809-1006', 2, 'Trần Thị Bình', '0909876543', '456 Lê Lợi, Hải Châu, Đà Nẵng', 'Khách đổi ý', 'COD', 'unpaid', 'cancelled', 6800000.00, 0.00, 50000.00, 6850000.00, DATE_SUB(NOW(), INTERVAL 3 DAY));
+
+-- Seed order items
+INSERT IGNORE INTO order_items (id, order_id, product_id, product_name, price, quantity) VALUES
+(1, 1, 1, 'Bộ Sofa Gỗ Óc Chó Cao Cấp', 28500000.00, 1),
+(2, 2, 3, 'Bàn Ăn Gỗ Sồi 6 Ghế', 10900000.00, 1),
+(3, 3, 4, 'Bàn Làm Việc Chân Sắt Tối Giản', 2450000.00, 2),
+(4, 3, 5, 'Kệ Sách Gỗ Khung Kim Loại', 3200000.00, 1),
+(5, 4, 7, 'Tủ Quần Áo 4 Cánh Cửa Lùa', 12900000.00, 1),
+(6, 5, 8, 'Đèn Sàn Trang Trí Đọc Sách Scandinavian', 950000.00, 2),
+(7, 6, 6, 'Kệ Tivi Gỗ Tự Nhiên Modern', 6800000.00, 1);
+
+-- Seed return request (NT-06-CN-004)
+INSERT IGNORE INTO return_requests (id, order_id, user_id, request_type, reason, proof_image_url, status, created_at) VALUES
+(1, 4, 1, 'exchange', 'Nẹp viền cánh tủ bị trầy xước nhẹ trong quá trình vận chuyển.', 'https://images.unsplash.com/photo-1558997519-83ea9252edf8', 'pending', DATE_SUB(NOW(), INTERVAL 2 DAY));

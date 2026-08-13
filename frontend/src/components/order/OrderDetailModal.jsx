@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 import orderService from '@/services/orderService'
 
 /**
  * OrderDetailModal — Modal xem chi tiết đơn hàng (NT-06-CN-001 / NT-06-CN-002).
  */
 const OrderDetailModal = ({ orderId, onClose }) => {
+  const { user } = useAuth()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -204,9 +206,79 @@ const OrderDetailModal = ({ orderId, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/50 flex flex-wrap items-center justify-between gap-3">
           <div>
-            {order && (order.status === 'pending' || order.status === 'confirmed') && (
+            {order && user?.role === 'admin' ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-gray-500">Chuyển trạng thái Admin:</span>
+                {order.status === 'pending' && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await orderService.updateOrderStatus(order.id, 'confirmed', 'Admin xác nhận đơn')
+                        onClose()
+                      } catch (err) {
+                        alert(err.response?.data?.message || 'Không thể chuyển trạng thái.')
+                      }
+                    }}
+                    className="px-3 py-1 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors"
+                  >
+                    🔵 Xác nhận đơn
+                  </button>
+                )}
+                {order.status === 'confirmed' && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await orderService.updateOrderStatus(order.id, 'shipping', 'Admin bàn giao vận chuyển')
+                        onClose()
+                      } catch (err) {
+                        alert(err.response?.data?.message || 'Không thể chuyển trạng thái.')
+                      }
+                    }}
+                    className="px-3 py-1 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors"
+                  >
+                    🚚 Bàn giao vận chuyển
+                  </button>
+                )}
+                {order.status === 'shipping' && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await orderService.updateOrderStatus(order.id, 'delivered', 'Admin xác nhận hoàn thành')
+                        onClose()
+                      } catch (err) {
+                        alert(err.response?.data?.message || 'Không thể chuyển trạng thái.')
+                      }
+                    }}
+                    className="px-3 py-1 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors"
+                  >
+                    ✅ Hoàn thành
+                  </button>
+                )}
+                {(order.status === 'pending' || order.status === 'confirmed') && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (window.confirm(`Xác nhận HỦY đơn ${order.order_code} và hoàn lại tồn kho?`)) {
+                        try {
+                          await orderService.updateOrderStatus(order.id, 'cancelled', 'Admin hủy đơn')
+                          onClose()
+                        } catch (err) {
+                          alert(err.response?.data?.message || 'Không thể hủy đơn.')
+                        }
+                      }
+                    }}
+                    className="px-3 py-1 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 transition-colors"
+                  >
+                    ✖ Hủy đơn
+                  </button>
+                )}
+              </div>
+            ) : order && (order.status === 'pending' || order.status === 'confirmed') ? (
               <button
                 type="button"
                 onClick={async () => {
@@ -224,7 +296,7 @@ const OrderDetailModal = ({ orderId, onClose }) => {
               >
                 <span>✖</span> Hủy đơn hàng
               </button>
-            )}
+            ) : null}
           </div>
 
           <button

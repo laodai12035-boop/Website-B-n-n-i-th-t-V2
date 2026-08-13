@@ -58,6 +58,17 @@ export const orderService = {
     const response = await api.post(`/orders/${orderId}/cancel`, { reason })
     return response.data
   },
+
+  /**
+   * Admin cập nhật trạng thái đơn hàng (NT-06-CN-006, QTN-03).
+   * @param {number|string} orderId
+   * @param {string} status - 'confirmed' | 'shipping' | 'delivered' | 'cancelled'
+   * @param {string} [note]
+   */
+  async updateOrderStatus(orderId, status, note) {
+    const response = await api.put(`/orders/${orderId}/status`, { status, note })
+    return response.data
+  },
 }
 
 export default orderService
