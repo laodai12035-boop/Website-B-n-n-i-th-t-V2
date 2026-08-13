@@ -21,6 +21,14 @@ export const stockService = {
     const response = await api.get('/admin/inventory/receipts', { params })
     return response.data.data
   },
+
+  /**
+   * Lấy danh sách cảnh báo tồn kho thấp (QTN-08).
+   */
+  async getLowStockWarnings() {
+    const response = await api.get('/admin/inventory/low-stock-warnings')
+    return response.data.data
+  },
 }
 
 export default stockService

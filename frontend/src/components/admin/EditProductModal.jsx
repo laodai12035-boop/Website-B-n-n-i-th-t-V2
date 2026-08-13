@@ -11,6 +11,7 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
     price: '',
     discount_price: '',
     stock: 0,
+    min_stock_threshold: 10,
     dimensions: '',
     material: '',
     weight_kg: '',
@@ -33,6 +34,7 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
         price: productItem.price !== undefined ? productItem.price : '',
         discount_price: productItem.discount_price !== null && productItem.discount_price !== undefined ? productItem.discount_price : '',
         stock: productItem.stock !== undefined ? productItem.stock : 0,
+        min_stock_threshold: productItem.min_stock_threshold !== undefined && productItem.min_stock_threshold !== null ? productItem.min_stock_threshold : 10,
         dimensions: productItem.dimensions !== 'Đang cập nhật' ? (productItem.dimensions || '') : '',
         material: productItem.material !== 'Gỗ tự nhiên cao cấp' ? (productItem.material || '') : '',
         weight_kg: productItem.weight_kg !== null && productItem.weight_kg !== undefined ? productItem.weight_kg : '',
@@ -115,6 +117,7 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
         price: parseFloat(formData.price),
         discount_price: formData.discount_price !== '' ? parseFloat(formData.discount_price) : null,
         stock: parseInt(formData.stock, 10) || 0,
+        min_stock_threshold: parseInt(formData.min_stock_threshold, 10) || 10,
         dimensions: formData.dimensions.trim() || null,
         material: formData.material.trim() || null,
         weight_kg: formData.weight_kg !== '' ? parseFloat(formData.weight_kg) : null,
@@ -249,6 +252,21 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
                 min="0"
                 value={formData.stock}
                 onChange={handleChange}
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                Ngưỡng tồn kho tối thiểu (QTN-08)
+              </label>
+              <input
+                type="number"
+                name="min_stock_threshold"
+                min="0"
+                value={formData.min_stock_threshold}
+                onChange={handleChange}
+                placeholder="Mặc định: 10"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
               />
             </div>

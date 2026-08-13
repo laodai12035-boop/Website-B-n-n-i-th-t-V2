@@ -11,6 +11,7 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
     price: '',
     discount_price: '',
     stock: 10,
+    min_stock_threshold: 10,
     dimensions: '',
     material: '',
     weight_kg: '',
@@ -101,6 +102,7 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
         price: parseFloat(formData.price),
         discount_price: formData.discount_price !== '' ? parseFloat(formData.discount_price) : null,
         stock: parseInt(formData.stock, 10) || 0,
+        min_stock_threshold: parseInt(formData.min_stock_threshold, 10) || 10,
         dimensions: formData.dimensions.trim() || null,
         material: formData.material.trim() || null,
         weight_kg: formData.weight_kg !== '' ? parseFloat(formData.weight_kg) : null,
@@ -240,7 +242,7 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
 
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">
-                Số lượng tồn kho
+                Số lượng tồn kho ban đầu
               </label>
               <input
                 type="number"
@@ -248,6 +250,21 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 min="0"
                 value={formData.stock}
                 onChange={handleChange}
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                Ngưỡng tồn kho tối thiểu (QTN-08)
+              </label>
+              <input
+                type="number"
+                name="min_stock_threshold"
+                min="0"
+                value={formData.min_stock_threshold}
+                onChange={handleChange}
+                placeholder="Mặc định: 10"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
               />
             </div>
