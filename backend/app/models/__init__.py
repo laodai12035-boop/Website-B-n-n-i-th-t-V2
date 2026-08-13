@@ -8,5 +8,6 @@ from app.models.coupon import Coupon
 from app.models.combo import Combo, ComboItem
 from app.models.return_request import ReturnRequest
 from app.models.address import Address
+from app.models.category import Category
 
-__all__ = ["User", "Product", "Wishlist", "Order", "OrderItem", "Review", "CartItem", "Coupon", "Combo", "ComboItem", "ReturnRequest", "Address"]
+__all__ = ["User", "Product", "Wishlist", "Order", "OrderItem", "Review", "CartItem", "Coupon", "Combo", "ComboItem", "ReturnRequest", "Address", "Category"]
