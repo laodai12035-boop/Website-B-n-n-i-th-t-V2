@@ -24,7 +24,7 @@ from werkzeug.security import generate_password_hash
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from app import create_app
-from app.extensions import db
+from app.extensions import db, bcrypt
 from app.models.user import User
 from app.models.product import Product
 from app.models.order import Order, OrderItem
@@ -68,7 +68,7 @@ def seed_database():
         for u in users_data:
             existing = db.session.query(User).filter(User.email == u["email"]).first()
             if not existing:
-                pwd_hash = generate_password_hash(u["password"])
+                pwd_hash = bcrypt.generate_password_hash(u["password"]).decode("utf-8")
                 user_obj = User(
                     email=u["email"],
                     full_name=u["full_name"],

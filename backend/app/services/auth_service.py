@@ -119,8 +119,13 @@ class AuthService:
             logger.warning("Login failed: identifier %s not found", email)
             raise ValueError("INVALID_CREDENTIALS")
 
-        # Verify password
-        if not bcrypt.check_password_hash(user.password_hash, password):
+        # Verify password (phòng thủ khi gặp hash không hợp lệ hoặc sai định dạng)
+        try:
+            is_valid = bcrypt.check_password_hash(user.password_hash, password)
+        except Exception:
+            is_valid = False
+
+        if not is_valid:
             logger.warning("Login failed: invalid password for identifier %s", email)
             raise ValueError("INVALID_CREDENTIALS")
 
