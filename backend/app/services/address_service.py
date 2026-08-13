@@ -82,3 +82,91 @@ class AddressService:
 
         logger.info("Created new address id=%s for user_id=%s (is_default=%s)", new_address.id, user_id, set_default)
         return new_address.to_dict()
+
+    @staticmethod
+    def update_address(user_id: int, address_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Sửa thông tin địa chỉ giao hàng (NT-07-CN-002).
+
+        Args:
+            user_id: ID người dùng từ JWT Token
+            address_id: ID địa chỉ cần chỉnh sửa
+            data: Dữ liệu đã validate từ AddressSchema
+
+        Returns:
+            Dict thông tin địa chỉ sau khi cập nhật.
+
+        Raises:
+            ValueError("ADDRESS_NOT_FOUND"): Địa chỉ không tồn tại.
+            PermissionError("FORBIDDEN_ACCESS"): Địa chỉ thuộc về người dùng khác.
+        """
+        address = db.session.query(Address).filter(Address.id == address_id).first()
+        if not address:
+            raise ValueError("ADDRESS_NOT_FOUND")
+
+        if address.user_id != user_id:
+            raise PermissionError("FORBIDDEN_ACCESS")
+
+        set_default = data.get("is_default", address.is_default)
+
+        # Nếu đặt làm mặc định ➔ Bỏ mặc định các địa chỉ khác của user
+        if set_default and not address.is_default:
+            db.session.query(Address).filter(Address.user_id == user_id).update(
+                {Address.is_default: False}, synchronize_session=False
+            )
+
+        address.recipient_name = data["recipient_name"].strip()
+        address.phone = data["phone"].strip()
+        address.province = data["province"].strip()
+        address.district = data["district"].strip()
+        address.ward = data["ward"].strip()
+        address.detail_address = data["detail_address"].strip()
+        address.is_default = set_default
+
+        db.session.commit()
+        logger.info("Updated address id=%s for user_id=%s", address_id, user_id)
+        return address.to_dict()
+
+    @staticmethod
+    def delete_address(user_id: int, address_id: int) -> bool:
+        """
+        Xóa địa chỉ giao hàng (NT-07-CN-002).
+
+        Args:
+            user_id: ID người dùng từ JWT Token
+            address_id: ID địa chỉ cần xóa
+
+        Returns:
+            True nếu xóa thành công.
+
+        Raises:
+            ValueError("ADDRESS_NOT_FOUND"): Địa chỉ không tồn tại.
+            PermissionError("FORBIDDEN_ACCESS"): Địa chỉ thuộc về người dùng khác.
+        """
+        address = db.session.query(Address).filter(Address.id == address_id).first()
+        if not address:
+            raise ValueError("ADDRESS_NOT_FOUND")
+
+        if address.user_id != user_id:
+            raise PermissionError("FORBIDDEN_ACCESS")
+
+        was_default = address.is_default
+
+        db.session.delete(address)
+        db.session.flush()
+
+        # Nếu địa chỉ vừa xóa là mặc định, đôn địa chỉ còn lại gần nhất làm mặc định
+        if was_default:
+            remaining_address = (
+                db.session.query(Address)
+                .filter(Address.user_id == user_id)
+                .order_by(Address.created_at.desc())
+                .first()
+            )
+            if remaining_address:
+                remaining_address.is_default = True
+                logger.info("Promoted address id=%s to default for user_id=%s after deletion", remaining_address.id, user_id)
+
+        db.session.commit()
+        logger.info("Deleted address id=%s for user_id=%s", address_id, user_id)
+        return True

@@ -17,6 +17,25 @@ export const addressService = {
     const response = await api.post('/addresses', data)
     return response.data.data
   },
+
+  /**
+   * Sửa thông tin địa chỉ giao hàng (NT-07-CN-002).
+   * @param {number} id
+   * @param {Object} data
+   */
+  async updateAddress(id, data) {
+    const response = await api.put(`/addresses/${id}`, data)
+    return response.data.data
+  },
+
+  /**
+   * Xóa địa chỉ giao hàng (NT-07-CN-002).
+   * @param {number} id
+   */
+  async deleteAddress(id) {
+    const response = await api.delete(`/addresses/${id}`)
+    return response.data.data
+  },
 }
 
 export default addressService

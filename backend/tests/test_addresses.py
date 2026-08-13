@@ -74,6 +74,22 @@ def get_addresses(client, token):
     return client.get("/api/v1/addresses", headers=headers)
 
 
+def put_address(client, token, address_id, payload):
+    """Helper gửi request PUT /api/v1/addresses/<address_id>."""
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return client.put(f"/api/v1/addresses/{address_id}", data=json.dumps(payload), headers=headers)
+
+
+def delete_address_api(client, token, address_id):
+    """Helper gửi request DELETE /api/v1/addresses/<address_id>."""
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return client.delete(f"/api/v1/addresses/{address_id}", headers=headers)
+
+
 class TestAddAddress:
     """Các test case cho NT-07-CN-001 Thêm địa chỉ giao hàng."""
 
@@ -214,3 +230,163 @@ class TestAddAddress:
         assert body["status"] == "success"
         assert len(body["data"]) == 1
         assert body["data"][0]["recipient_name"] == "Nguyễn Văn Anh"
+
+
+# ============================================================
+# Test Cases cho NT-07-CN-002: Sửa và Xóa địa chỉ giao hàng
+# ============================================================
+
+class TestUpdateAndDeleteAddress:
+    """Các test case cho NT-07-CN-002 Sửa và xóa địa chỉ giao hàng."""
+
+    @pytest.fixture
+    def seed_two_addresses(self, app, seed_user):
+        """Tạo sẵn 2 địa chỉ cho seed_user."""
+        with app.app_context():
+            addr1 = Address(
+                user_id=seed_user["id"],
+                recipient_name="Địa chỉ 1 (Mặc định)",
+                phone="0901111111",
+                province="TP. Hồ Chí Minh",
+                district="Quận 1",
+                ward="Phường Bến Nghé",
+                detail_address="100 Nguyễn Huệ",
+                is_default=True,
+            )
+            addr2 = Address(
+                user_id=seed_user["id"],
+                recipient_name="Địa chỉ 2",
+                phone="0902222222",
+                province="Hà Nội",
+                district="Hoàn Kiếm",
+                ward="Phường Tràng Tiền",
+                detail_address="200 Tràng Tiền",
+                is_default=False,
+            )
+            db.session.add_all([addr1, addr2])
+            db.session.commit()
+            return [addr1.id, addr2.id]
+
+    @pytest.fixture
+    def other_user_token(self, app):
+        """Tạo user thứ 2 để kiểm thử phân quyền 403."""
+        with app.app_context():
+            user2 = User(
+                full_name="User Khác",
+                email="other@example.com",
+                phone="0909998877",
+                password_hash=bcrypt.generate_password_hash("Password123@").decode("utf-8"),
+                role="user",
+                is_active=True,
+            )
+            db.session.add(user2)
+            db.session.commit()
+            return create_access_token(identity=str(user2.id))
+
+    def test_tc01_update_address_success(self, client, seed_user, seed_two_addresses):
+        """TC-01: Sửa thông tin địa chỉ giao hàng thành công ➔ 200 OK."""
+        addr1_id = seed_two_addresses[0]
+        payload = {
+            "recipient_name": "Nguyễn Văn Anh (Đã sửa)",
+            "phone": "0909876543",
+            "province": "TP. Hồ Chí Minh",
+            "district": "Quận 3",
+            "ward": "Phường Võ Thị Sáu",
+            "detail_address": "456 Điện Biên Phủ",
+            "is_default": True,
+        }
+
+        res = put_address(client, seed_user["token"], addr1_id, payload)
+        assert res.status_code == 200
+
+        body = res.get_json()
+        assert body["status"] == "success"
+        assert body["data"]["recipient_name"] == "Nguyễn Văn Anh (Đã sửa)"
+        assert body["data"]["phone"] == "0909876543"
+        assert body["data"]["district"] == "Quận 3"
+
+    def test_tc01b_update_address_set_default(self, client, seed_user, seed_two_addresses):
+        """TC-01b: Chuyển địa chỉ 2 thành mặc định ➔ Địa chỉ 1 tự động mất cờ mặc định."""
+        addr2_id = seed_two_addresses[1]
+        payload = {
+            "recipient_name": "Địa chỉ 2 (Set Default)",
+            "phone": "0902222222",
+            "province": "Hà Nội",
+            "district": "Hoàn Kiếm",
+            "ward": "Phường Tràng Tiền",
+            "detail_address": "200 Tràng Tiền",
+            "is_default": True,  # Chuyển địa chỉ 2 thành mặc định
+        }
+
+        res = put_address(client, seed_user["token"], addr2_id, payload)
+        assert res.status_code == 200
+
+        # Kiểm tra danh sách địa chỉ của user
+        list_res = get_addresses(client, seed_user["token"])
+        addrs = list_res.get_json()["data"]
+
+        # Địa chỉ 2 phải có is_default=True
+        addr2_data = next(a for a in addrs if a["id"] == addr2_id)
+        assert addr2_data["is_default"] is True
+
+        # Địa chỉ 1 phải bị gán is_default=False
+        addr1_id = seed_two_addresses[0]
+        addr1_data = next(a for a in addrs if a["id"] == addr1_id)
+        assert addr1_data["is_default"] is False
+
+    def test_tc01c_update_address_other_user_forbidden(self, client, seed_two_addresses, other_user_token):
+        """TC-01c: Người dùng khác cố sửa địa chỉ ➔ 403 FORBIDDEN_ACCESS."""
+        addr1_id = seed_two_addresses[0]
+        payload = {
+            "recipient_name": "Hacker",
+            "phone": "0901234567",
+            "province": "TP. HCM",
+            "district": "Quận 1",
+            "ward": "Phường Bến Nghé",
+            "detail_address": "Chôm địa chỉ",
+        }
+
+        res = put_address(client, other_user_token, addr1_id, payload)
+        assert res.status_code == 403
+        body = res.get_json()
+        assert body["code"] == "FORBIDDEN_ACCESS"
+
+    def test_tc02_delete_address_success(self, client, seed_user, seed_two_addresses):
+        """TC-02: Xóa một địa chỉ giao hàng thành công ➔ 200 OK."""
+        addr2_id = seed_two_addresses[1]  # Xóa địa chỉ 2 (địa chỉ không mặc định)
+
+        res = delete_address_api(client, seed_user["token"], addr2_id)
+        assert res.status_code == 200
+
+        body = res.get_json()
+        assert body["status"] == "success"
+
+        # Kiểm tra địa chỉ 2 đã bị xóa khỏi DB
+        list_res = get_addresses(client, seed_user["token"])
+        remaining_addrs = list_res.get_json()["data"]
+        assert len(remaining_addrs) == 1
+        assert remaining_addrs[0]["id"] == seed_two_addresses[0]
+
+    def test_tc02b_delete_default_address_promotes_next(self, client, seed_user, seed_two_addresses):
+        """TC-02b: Xóa địa chỉ đang là mặc định ➔ Tự động đôn địa chỉ còn lại làm mặc định mới."""
+        addr1_id = seed_two_addresses[0]  # Địa chỉ 1 đang là mặc định
+
+        res = delete_address_api(client, seed_user["token"], addr1_id)
+        assert res.status_code == 200
+
+        # Kiểm tra địa chỉ 2 còn lại tự động trở thành mặc định (is_default=True)
+        list_res = get_addresses(client, seed_user["token"])
+        remaining_addrs = list_res.get_json()["data"]
+        assert len(remaining_addrs) == 1
+        assert remaining_addrs[0]["id"] == seed_two_addresses[1]
+        assert remaining_addrs[0]["is_default"] is True
+
+    def test_tc02c_delete_address_other_user_forbidden(self, client, seed_two_addresses, other_user_token):
+        """TC-02c: Người dùng khác cố xóa địa chỉ ➔ 403 FORBIDDEN_ACCESS."""
+        addr1_id = seed_two_addresses[0]
+
+        res = delete_address_api(client, other_user_token, addr1_id)
+        assert res.status_code == 403
+        body = res.get_json()
+        assert body["code"] == "FORBIDDEN_ACCESS"
+
