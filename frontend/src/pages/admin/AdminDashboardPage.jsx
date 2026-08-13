@@ -14,6 +14,7 @@ const AdminDashboardPage = () => {
   const { user } = useAuth()
 
   const [stats, setStats] = useState(null)
+  const [lowStockItems, setLowStockItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -23,6 +24,9 @@ const AdminDashboardPage = () => {
       try {
         const response = await api.get('/admin/dashboard')
         setStats(response.data.data.stats)
+
+        const warningRes = await api.get('/admin/inventory/low-stock-warnings')
+        setLowStockItems(warningRes.data.data.items || [])
       } catch (err) {
         const msg = err.response?.data?.message || 'Đã xảy ra lỗi khi nạp dữ liệu quản trị'
         setError(msg)
@@ -140,6 +144,20 @@ const AdminDashboardPage = () => {
             <span className="text-xs text-emerald-600 font-bold mt-1 inline-block">Xem tồn kho & Nhập hàng →</span>
           </Link>
 
+          {/* Stat Item 3e: Cảnh báo Tồn kho Thấp QTN-08 */}
+          <Link to="/admin/inventory" className={`card border-l-4 ${stats?.low_stock_count > 0 ? 'border-l-red-500 bg-red-50/20' : 'border-l-gray-300'} hover:shadow-md transition-shadow group block`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-red-600 transition-colors">Tồn Kho Dưới Ngưỡng</span>
+              <div className={`w-9 h-9 rounded-xl ${stats?.low_stock_count > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} flex items-center justify-center font-bold`}>
+                ⚠️
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : (stats?.low_stock_count || 0)} <span className="text-xs font-normal text-gray-500">sản phẩm</span></p>
+            <span className={`text-xs font-bold mt-1 inline-block ${stats?.low_stock_count > 0 ? 'text-red-600 animate-pulse' : 'text-gray-500'}`}>
+              {stats?.low_stock_count > 0 ? '⚠️ Cần nhập kho ngay →' : 'Tồn kho an toàn →'}
+            </span>
+          </Link>
+
           {/* Stat Item 4 */}
           <div className="card border-l-4 border-l-purple-500">
             <div className="flex items-center justify-between mb-2">
@@ -155,6 +173,40 @@ const AdminDashboardPage = () => {
           </div>
 
         </div>
+
+        {/* Widget Cảnh báo Tồn Kho Thấp QTN-08 */}
+        {lowStockItems.length > 0 && (
+          <div className="card mb-8 border-amber-200 bg-amber-50/30">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚠️</span>
+                <h2 className="text-base font-bold text-amber-900">Danh sách Cảnh báo Tồn kho Thấp (QTN-08)</h2>
+                <span className="px-2.5 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-extrabold">{lowStockItems.length}</span>
+              </div>
+              <Link to="/admin/inventory" className="text-xs font-bold text-amber-800 hover:text-amber-900 underline">
+                Xem tất cả trong kho →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {lowStockItems.slice(0, 6).map((item) => (
+                <div key={item.id} className="p-3.5 bg-white rounded-2xl border border-amber-200 shadow-xs flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img src={item.image_url || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'} alt={item.name} className="w-11 h-11 rounded-xl object-cover border border-gray-200 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-900 truncate">{item.name}</p>
+                      <p className="text-[11px] text-red-600 font-extrabold mt-0.5">
+                        Tồn: <span className="font-mono text-sm">{item.stock}</span> (Min: {item.min_stock_threshold})
+                      </p>
+                    </div>
+                  </div>
+                  <Link to="/admin/inventory" className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] font-bold shrink-0 shadow-xs">
+                    📦 Nhập kho
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Security & Access Logs Card */}
         <div className="card">

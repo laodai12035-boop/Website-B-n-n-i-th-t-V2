@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS products (
     discount_price DECIMAL(10,2) COMMENT 'Giá khuyến mãi',
     category       VARCHAR(50)   NOT NULL COMMENT 'Danh mục (ban, ghe, ke, tu, trang-tri)',
     stock          INT           NOT NULL DEFAULT 0 COMMENT 'Tồn kho',
+    min_stock_threshold INT      NOT NULL DEFAULT 10 COMMENT 'Ngưỡng tồn kho tối thiểu QTN-08',
     image_url      VARCHAR(500)  COMMENT 'URL ảnh đại diện',
     material       VARCHAR(100)  COMMENT 'Chất liệu sản phẩm',
     dimensions     VARCHAR(100)  COMMENT 'Kích thước (Dài x Rộng x Cao) đơn vị cm, VD: 120x60x75',

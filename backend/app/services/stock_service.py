@@ -173,3 +173,39 @@ class StockService:
         order.stock_deducted = False
         return True
 
+    @staticmethod
+    def get_low_stock_products() -> Dict[str, Any]:
+        """
+        Truy vấn các sản phẩm đang có tồn kho dưới ngưỡng tối thiểu (QTN-08).
+
+        Returns:
+            Dict: {
+                "count": tổng số sản phẩm cần nhập thêm,
+                "items": danh sách chi tiết các sản phẩm kèm số lượng thiếu hụt,
+            }
+        """
+        active_products = (
+            db.session.query(Product)
+            .filter(Product.is_active == True)
+            .all()
+        )
+
+        low_stock_items = []
+        for p in active_products:
+            threshold = p.min_stock_threshold if p.min_stock_threshold is not None else 10
+            stock = p.stock or 0
+            if stock < threshold:
+                item_dict = p.to_dict()
+                item_dict["deficit"] = max(0, threshold - stock)
+                item_dict["alert_level"] = "critical" if stock <= 0 else "warning"
+                low_stock_items.append(item_dict)
+
+        # Sắp xếp sản phẩm hết hàng hoặc thiếu nhiều nhất lên đầu
+        low_stock_items.sort(key=lambda x: (x["stock"], -x["deficit"]))
+
+        return {
+            "count": len(low_stock_items),
+            "items": low_stock_items,
+        }
+
+

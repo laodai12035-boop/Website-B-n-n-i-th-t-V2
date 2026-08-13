@@ -44,6 +44,8 @@ def get_dashboard():
     from app.models.order import Order
     from sqlalchemy.sql import func
 
+    from app.services.stock_service import StockService
+
     total_users = db.session.query(User).count()
     total_orders = db.session.query(Order).count()
     total_products = db.session.query(Product).count()
@@ -56,6 +58,7 @@ def get_dashboard():
     )
 
     formatted_revenue = f"{int(total_revenue_val):,}đ".replace(",", ".")
+    low_stock_res = StockService.get_low_stock_products()
 
     dashboard_data = {
         "stats": {
@@ -63,6 +66,7 @@ def get_dashboard():
             "total_orders": total_orders,
             "total_products": total_products,
             "revenue": formatted_revenue,
+            "low_stock_count": low_stock_res["count"],
             "system_status": "Hoạt động bình thường",
         }
     }
@@ -497,6 +501,25 @@ def get_stock_receipts():
         message="Lấy lịch sử phiếu nhập kho thành công.",
         status=200,
     )
+
+
+# ============================================================
+# GET /api/v1/admin/inventory/low-stock-warnings — Cảnh báo tồn kho thấp
+# ============================================================
+@admin_bp.route("/inventory/low-stock-warnings", methods=["GET"])
+@admin_required()
+def get_low_stock_warnings():
+    """
+    Quản trị viên nhận danh sách cảnh báo tồn kho thấp QTN-08.
+    """
+    from app.services.stock_service import StockService
+    result = StockService.get_low_stock_products()
+    return _success(
+        data=result,
+        message="Lấy danh sách cảnh báo tồn kho thấp thành công.",
+        status=200,
+    )
+
 
 
 
