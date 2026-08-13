@@ -15,6 +15,7 @@ const AdminCustomersPage = () => {
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total_items: 0, total_pages: 1 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [successMsg, setSuccessMsg] = useState(null)
 
   // Filter states
   const [search, setSearch] = useState('')
@@ -44,6 +45,29 @@ const AdminCustomersPage = () => {
   useEffect(() => {
     fetchCustomers()
   }, [search, statusFilter, page])
+
+  const handleToggleStatus = async (customer) => {
+    const newStatus = !customer.is_active
+    try {
+      await customerService.updateCustomerStatus(customer.id, newStatus)
+      setCustomers((prev) =>
+        prev.map((c) => (c.id === customer.id ? { ...c, is_active: newStatus } : c))
+      )
+      setSummary((prev) => ({
+        ...prev,
+        active_customers: newStatus ? prev.active_customers + 1 : prev.active_customers - 1,
+        inactive_customers: newStatus ? prev.inactive_customers - 1 : prev.inactive_customers + 1,
+      }))
+      setSuccessMsg(
+        newStatus
+          ? `Mở khóa tài khoản "${customer.full_name || customer.email}" thành công!`
+          : `Khóa tài khoản "${customer.full_name || customer.email}" thành công (NT-12-CN-002)! Tài khoản không thể đăng nhập.`
+      )
+      setTimeout(() => setSuccessMsg(null), 4000)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Không thể cập nhật trạng thái tài khoản.')
+    }
+  }
 
   const formatCurrency = (amount) => {
     if (amount === undefined || amount === null) return '0đ'
@@ -77,7 +101,7 @@ const AdminCustomersPage = () => {
               <span className="text-gray-900 font-bold">Danh Sách Khách Hàng</span>
             </div>
             <h1 className="text-2xl font-display font-extrabold text-gray-900 flex items-center gap-2">
-              <span>👥</span> Quản Lý Danh Sách Khách Hàng (NT-12-CN-001)
+              <span>👥</span> Quản Lý & Khóa Tài Khoản Khách Hàng (NT-12-CN-001 / NT-12-CN-002)
             </h1>
           </div>
 
@@ -89,6 +113,12 @@ const AdminCustomersPage = () => {
         {error && (
           <div className="mb-4">
             <FormAlert type="error" message={error} />
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="mb-4">
+            <FormAlert type="success" message={successMsg} />
           </div>
         )}
 
@@ -200,7 +230,8 @@ const AdminCustomersPage = () => {
                     <th className="py-4 px-4">Tổng Chi Tiêu</th>
                     <th className="py-4 px-4">Đơn Hàng Gần Nhất</th>
                     <th className="py-4 px-4">Ngày Đăng Ký</th>
-                    <th className="py-4 px-6 text-center">Trạng Thái</th>
+                    <th className="py-4 px-4 text-center">Trạng Thái</th>
+                    <th className="py-4 px-6 text-center">Thao Tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-xs">
@@ -249,7 +280,7 @@ const AdminCustomersPage = () => {
                       </td>
 
                       {/* Active Status Badge */}
-                      <td className="py-4 px-6 text-center">
+                      <td className="py-4 px-4 text-center">
                         {c.is_active ? (
                           <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold rounded-full inline-block">
                             Hoạt động
@@ -259,6 +290,21 @@ const AdminCustomersPage = () => {
                             Tạm khóa
                           </span>
                         )}
+                      </td>
+
+                      {/* Actions Column (NT-12-CN-002) */}
+                      <td className="py-4 px-6 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(c)}
+                          className={`px-3 py-1.5 rounded-xl font-bold text-[11px] transition-all cursor-pointer shadow-2xs flex items-center gap-1.5 mx-auto ${
+                            c.is_active
+                              ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+                              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                          }`}
+                        >
+                          <span>{c.is_active ? '🔒 Khóa' : '🔓 Mở khóa'}</span>
+                        </button>
                       </td>
                     </tr>
                   ))}
