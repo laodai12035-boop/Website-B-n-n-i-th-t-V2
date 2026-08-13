@@ -128,3 +128,84 @@ class ComboService:
             "savings": combo_dict["savings"],
             "added_items": added_items,
         }
+
+    @staticmethod
+    def get_all_admin_combos() -> List[Dict[str, Any]]:
+        """Lấy tất cả các combo cho trang quản trị Admin."""
+        combos = db.session.query(Combo).order_by(Combo.id.desc()).all()
+        return [c.to_dict() for c in combos]
+
+    @staticmethod
+    def create_combo(data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Admin tạo combo mới (NT-08-CN-006).
+
+        Args:
+            data: {
+                "name": str,
+                "description": Optional[str],
+                "discount_percent": float,
+                "items": List[Dict[str, int]]
+            }
+
+        Returns:
+            Dict thông tin combo vừa tạo.
+
+        Raises:
+            ValueError:
+                - "INVALID_NAME": Tên combo không được để trống
+                - "INVALID_ITEMS": Danh sách sản phẩm rỗng
+                - "INVALID_DISCOUNT": % giảm giá không hợp lệ
+                - "PRODUCT_INACTIVE_OR_NOT_FOUND": Có sản phẩm ngưng bán hoặc không tồn tại (TC-02)
+        """
+        name = data.get("name", "").strip() if data.get("name") else ""
+        if not name:
+            raise ValueError("INVALID_NAME")
+
+        try:
+            discount_percent = float(data.get("discount_percent", 0.0))
+        except (ValueError, TypeError):
+            raise ValueError("INVALID_DISCOUNT")
+
+        if discount_percent < 0 or discount_percent > 100:
+            raise ValueError("INVALID_DISCOUNT")
+
+        items_input = data.get("items", [])
+        if not items_input or not isinstance(items_input, list):
+            raise ValueError("INVALID_ITEMS")
+
+        validated_items = []
+        for item in items_input:
+            p_id = item.get("product_id")
+            qty = item.get("quantity", 1)
+            if not p_id or qty <= 0:
+                raise ValueError("INVALID_ITEMS")
+
+            product = db.session.query(Product).filter(Product.id == p_id).first()
+            if not product or not product.is_active:
+                raise ValueError("PRODUCT_INACTIVE_OR_NOT_FOUND")
+
+            validated_items.append((p_id, qty))
+
+        # Tạo Combo mới
+        new_combo = Combo(
+            name=name,
+            description=data.get("description", "").strip() if data.get("description") else None,
+            discount_percent=discount_percent,
+            is_active=data.get("is_active", True),
+        )
+        db.session.add(new_combo)
+        db.session.flush()
+
+        # Tạo các ComboItem
+        for p_id, qty in validated_items:
+            combo_item = ComboItem(
+                combo_id=new_combo.id,
+                product_id=p_id,
+                quantity=qty,
+            )
+            db.session.add(combo_item)
+
+        db.session.commit()
+        return new_combo.to_dict()
+
