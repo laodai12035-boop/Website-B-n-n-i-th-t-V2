@@ -381,3 +381,77 @@ class ProductService:
 
         logger.info("Admin created new product id=%s name='%s' price=%s", new_product.id, new_product.name, new_product.price)
         return new_product.to_dict()
+
+    @staticmethod
+    def update_product(product_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Admin chỉnh sửa thông tin sản phẩm (NT-08-CN-004).
+
+        Args:
+            product_id: ID sản phẩm cần sửa
+            data: Dữ liệu đã validate từ ProductSchema
+
+        Returns:
+            Dict thông tin sản phẩm sau khi cập nhật.
+
+        Raises:
+            ValueError("PRODUCT_NOT_FOUND"): Không tìm thấy sản phẩm.
+        """
+        from app.services.category_service import generate_slug
+
+        product = db.session.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise ValueError("PRODUCT_NOT_FOUND")
+
+        new_name = data["name"].strip()
+        # Sinh lại slug nếu đổi tên sản phẩm
+        if new_name.lower() != product.name.lower():
+            base_slug = generate_slug(new_name)
+            slug = base_slug
+            counter = 1
+            while db.session.query(Product).filter(Product.slug == slug, Product.id != product_id).first():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            product.slug = slug
+
+        product.name = new_name
+        product.price = data["price"]
+        product.discount_price = data.get("discount_price")
+        product.category = data["category"].strip()
+        product.stock = data.get("stock", product.stock)
+        product.description = data.get("description", "").strip() if data.get("description") else None
+        product.image_url = data.get("image_url", "").strip() if data.get("image_url") else None
+        product.material = data.get("material", "").strip() if data.get("material") else None
+        product.dimensions = data.get("dimensions", "").strip() if data.get("dimensions") else None
+        if "weight_kg" in data:
+            product.weight_kg = data["weight_kg"]
+        if "is_active" in data:
+            product.is_active = data["is_active"]
+
+        db.session.commit()
+        logger.info("Admin updated product id=%s name='%s' price=%s", product.id, product.name, product.price)
+        return product.to_dict()
+
+    @staticmethod
+    def delete_product(product_id: int) -> bool:
+        """
+        Admin chuyển sản phẩm sang trạng thái Ngừng kinh doanh (is_active = False) (NT-08-CN-004).
+
+        Args:
+            product_id: ID sản phẩm cần chuyển ngừng bán
+
+        Returns:
+            True nếu thành công.
+
+        Raises:
+            ValueError("PRODUCT_NOT_FOUND"): Không tìm thấy sản phẩm.
+        """
+        product = db.session.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise ValueError("PRODUCT_NOT_FOUND")
+
+        product.is_active = False
+        db.session.commit()
+
+        logger.info("Admin deactivated product id=%s name='%s'", product.id, product.name)
+        return True
