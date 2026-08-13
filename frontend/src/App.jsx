@@ -4,6 +4,7 @@ import LoginPage from '@/pages/auth/LoginPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import ProfilePage from '@/pages/user/ProfilePage'
+import AddressListPage from '@/pages/user/AddressListPage'
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage'
 import AdminOrdersPage from '@/pages/admin/AdminOrdersPage'
 import ForbiddenPage from '@/pages/error/ForbiddenPage'
@@ -20,6 +21,7 @@ import AdminRoute from '@/components/auth/AdminRoute'
 import { CompareProvider } from '@/contexts/CompareContext'
 import { WishlistProvider } from '@/contexts/WishlistContext'
 import { CartProvider } from '@/contexts/CartContext'
+import { AddressProvider } from '@/contexts/AddressContext'
 import CartDrawer from '@/components/cart/CartDrawer'
 import CompareDrawer from '@/components/product/CompareDrawer'
 
@@ -28,71 +30,81 @@ function App() {
     <WishlistProvider>
       <CompareProvider>
         <CartProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/403" element={<ForbiddenPage />} />
-            <Route path="/products" element={<ProductListPage />} />
-            <Route path="/products/:id" element={<ProductDetailPage />} />
-            <Route path="/compare" element={<ProductComparePage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
+          <AddressProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/403" element={<ForbiddenPage />} />
+              <Route path="/products" element={<ProductListPage />} />
+              <Route path="/products/:id" element={<ProductDetailPage />} />
+              <Route path="/compare" element={<ProductComparePage />} />
+              <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
 
-            {/* Protected User routes */}
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/orders"
-              element={
-                <ProtectedRoute>
-                  <OrderHistoryPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/orders/:id"
-              element={
-                <ProtectedRoute>
-                  <OrderDetailPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* Protected User routes */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/addresses"
+                element={
+                  <ProtectedRoute>
+                    <AddressListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <ProtectedRoute>
+                    <OrderHistoryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders/:id"
+                element={
+                  <ProtectedRoute>
+                    <OrderDetailPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Protected Admin routes (QTN-09) */}
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminDashboardPage />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/orders"
-              element={
-                <AdminRoute>
-                  <AdminOrdersPage />
-                </AdminRoute>
-              }
-            />
+              {/* Protected Admin routes (QTN-09) */}
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <AdminDashboardPage />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/orders"
+                element={
+                  <AdminRoute>
+                    <AdminOrdersPage />
+                  </AdminRoute>
+                }
+              />
 
-            {/* Default redirect về /products */}
-            <Route path="/" element={<Navigate to="/products" replace />} />
-          </Routes>
+              {/* Default redirect về /products */}
+              <Route path="/" element={<Navigate to="/products" replace />} />
+            </Routes>
 
-          {/* Floating Drawers */}
-          <CompareDrawer />
-          <CartDrawer />
+            {/* Floating Drawers */}
+            <CompareDrawer />
+            <CartDrawer />
+          </AddressProvider>
         </CartProvider>
       </CompareProvider>
     </WishlistProvider>

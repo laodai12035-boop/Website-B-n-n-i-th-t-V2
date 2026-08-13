@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import Navbar from '@/components/layout/Navbar'
 import InputField from '@/components/ui/InputField'
@@ -141,6 +142,12 @@ const ProfilePage = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <Link
+                to="/profile/addresses"
+                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
+              >
+                <span>📍</span> Sổ địa chỉ
+              </Link>
               <span className="px-3 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-800 uppercase tracking-wider">
                 {user?.role}
               </span>
