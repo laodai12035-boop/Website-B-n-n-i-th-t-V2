@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS orders (
     discount_amount  DOUBLE NOT NULL DEFAULT 0.0,
     shipping_fee     DOUBLE NOT NULL DEFAULT 0.0 COMMENT 'Phí vận chuyển QTN-07',
     total_amount     DOUBLE NOT NULL DEFAULT 0.0,
+    stock_deducted   BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Cờ theo dõi trừ kho QTN-03',
     qr_expire_at     DATETIME NULL COMMENT 'QR payment expiry timestamp (NT-05-CN-002)',
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_orders_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
