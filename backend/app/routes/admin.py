@@ -363,6 +363,74 @@ def delete_product(product_id: int):
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
 
+# ============================================================
+# POST /api/v1/admin/combos — Admin tạo combo mới (NT-08-CN-006)
+# ============================================================
+@admin_bp.route("/combos", methods=["POST"])
+@admin_required()
+def create_combo():
+    """
+    Quản trị viên tạo combo/bộ sản phẩm mới (NT-08-CN-006).
+
+    Responses:
+        201: Tạo combo thành công
+        400: Dữ liệu không hợp lệ hoặc chứa sản phẩm ngừng bán/không tồn tại
+        403: Không có quyền Admin (FORBIDDEN)
+    """
+    from flask import request
+    from app.services.combo_service import ComboService
+
+    json_data = request.get_json(silent=True) or {}
+
+    try:
+        new_combo = ComboService.create_combo(data=json_data)
+        return _success(
+            data=new_combo,
+            message="Tạo bộ sản phẩm combo thành công.",
+            status=201,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "PRODUCT_INACTIVE_OR_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không thể tạo combo chứa sản phẩm đã ngừng bán hoặc không tồn tại.",
+                "code": "PRODUCT_INACTIVE_OR_NOT_FOUND"
+            }), 400
+        elif err_str in ("INVALID_NAME", "INVALID_ITEMS", "INVALID_DISCOUNT"):
+            msg_map = {
+                "INVALID_NAME": "Tên combo không được để trống.",
+                "INVALID_ITEMS": "Vui lòng chọn ít nhất 1 sản phẩm hợp lệ cho combo.",
+                "INVALID_DISCOUNT": "Phần trăm giảm giá phải từ 0% đến 100%.",
+            }
+            return jsonify({
+                "status": "error",
+                "message": msg_map.get(err_str, "Dữ liệu combo không hợp lệ."),
+                "code": "VALIDATION_ERROR"
+            }), 400
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+# ============================================================
+# GET /api/v1/admin/combos — Admin lấy danh sách tất cả combo
+# ============================================================
+@admin_bp.route("/combos", methods=["GET"])
+@admin_required()
+def get_admin_combos():
+    """
+    Lấy danh sách tất cả combo cho trang quản trị Admin.
+    """
+    from app.services.combo_service import ComboService
+
+    combos = ComboService.get_all_admin_combos()
+    return _success(
+        data=combos,
+        message="Lấy danh sách combo quản trị thành công.",
+        status=200,
+    )
+
+
+
 
 
 
