@@ -369,6 +369,7 @@ class ProductService:
             discount_price=data.get("discount_price"),
             category=data["category"].strip(),
             stock=data.get("stock", 0),
+            min_stock_threshold=data.get("min_stock_threshold", 10),
             image_url=data.get("image_url", "").strip() if data.get("image_url") else None,
             material=data.get("material", "").strip() if data.get("material") else None,
             dimensions=data.get("dimensions", "").strip() if data.get("dimensions") else None,
@@ -421,6 +422,8 @@ class ProductService:
         product.discount_price = data.get("discount_price")
         product.category = data["category"].strip()
         product.stock = data.get("stock", product.stock)
+        if "min_stock_threshold" in data and data["min_stock_threshold"] is not None:
+            product.min_stock_threshold = data["min_stock_threshold"]
         product.description = data.get("description", "").strip() if data.get("description") else None
         product.image_url = data.get("image_url", "").strip() if data.get("image_url") else None
         product.material = data.get("material", "").strip() if data.get("material") else None

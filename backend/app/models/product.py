@@ -27,6 +27,7 @@ class Product(db.Model):
     discount_price = db.Column(db.Numeric(10, 2), nullable=True, comment="Giá khuyến mãi")
     category = db.Column(db.String(50), nullable=False, index=True, comment="Danh mục: ban, ghe, ke, tu, trang-tri")
     stock = db.Column(db.Integer, nullable=False, default=0, comment="Số lượng tồn kho")
+    min_stock_threshold = db.Column(db.Integer, nullable=False, default=10, comment="Ngưỡng tồn kho tối thiểu QTN-08")
     image_url = db.Column(db.String(500), nullable=True, comment="URL ảnh đại diện sản phẩm")
     material = db.Column(db.String(100), nullable=True, comment="Chất liệu sản phẩm")
     dimensions = db.Column(db.String(100), nullable=True, comment="Kích thước (Dài x Rộng x Cao) đơn vị cm, VD: 120x60x75")
@@ -55,6 +56,7 @@ class Product(db.Model):
             "discount_price": float(self.discount_price) if self.discount_price is not None else None,
             "category": self.category,
             "stock": self.stock,
+            "min_stock_threshold": self.min_stock_threshold if self.min_stock_threshold is not None else 10,
             "image_url": self.image_url,
             "material": self.material or "Gỗ tự nhiên cao cấp",
             "dimensions": self.dimensions or "Đang cập nhật",

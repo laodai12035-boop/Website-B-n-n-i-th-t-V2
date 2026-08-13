@@ -26,6 +26,7 @@ class ProductSchema(Schema):
         error_messages={"required": "Danh mục sản phẩm là bắt buộc"},
     )
     stock = fields.Int(load_default=0, validate=validate.Range(min=0, error="Tồn kho phải lớn hơn hoặc bằng 0"))
+    min_stock_threshold = fields.Int(load_default=10, validate=validate.Range(min=0, error="Ngưỡng tồn kho tối thiểu phải lớn hơn hoặc bằng 0"))
     image_url = fields.Str(allow_none=True)
     material = fields.Str(allow_none=True)
     dimensions = fields.Str(allow_none=True)

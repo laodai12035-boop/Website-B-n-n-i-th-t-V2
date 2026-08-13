@@ -82,6 +82,8 @@ def run_auto_migrations(app):
                     alter_statements.append("ADD COLUMN warranty_months INT DEFAULT 12")
                 if "warranty_terms" not in columns:
                     alter_statements.append("ADD COLUMN warranty_terms TEXT NULL")
+                if "min_stock_threshold" not in columns:
+                    alter_statements.append("ADD COLUMN min_stock_threshold INT NOT NULL DEFAULT 10")
 
                 if alter_statements:
                     sql = f"ALTER TABLE products {', '.join(alter_statements)}"
