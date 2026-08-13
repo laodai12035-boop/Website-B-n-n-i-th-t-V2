@@ -614,6 +614,157 @@ def moderate_review(review_id: int):
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
 
+# ============================================================
+# BANNER MANAGEMENT ENDPOINTS (NT-11-CN-001)
+# ============================================================
+@admin_bp.route("/banners", methods=["GET"])
+@admin_required()
+def get_admin_banners():
+    """
+    Quản trị viên lấy danh sách tất cả các banner quảng cáo (NT-11-CN-001).
+    """
+    from app.services.banner_service import BannerService
+    banners = BannerService.get_all_banners_admin()
+    return _success(
+        data=banners,
+        message="Lấy danh sách tất cả banner thành công.",
+        status=200,
+    )
+
+
+@admin_bp.route("/banners", methods=["POST"])
+@admin_required()
+def create_admin_banner():
+    """
+    Quản trị viên tạo banner quảng cáo mới (NT-11-CN-001).
+    """
+    from flask import request
+    from datetime import datetime
+    from app.services.banner_service import BannerService
+
+    data = request.get_json(silent=True) or {}
+    image_url = data.get("image_url")
+    title = data.get("title", "Banner Quảng Cáo")
+    subtitle = data.get("subtitle")
+    link_url = data.get("link_url")
+    display_order = data.get("display_order", 0)
+    is_active = data.get("is_active", True)
+
+    start_date = None
+    if data.get("start_date"):
+        try:
+            start_date = datetime.fromisoformat(data["start_date"].replace("Z", "+00:00"))
+        except ValueError:
+            pass
+
+    end_date = None
+    if data.get("end_date"):
+        try:
+            end_date = datetime.fromisoformat(data["end_date"].replace("Z", "+00:00"))
+        except ValueError:
+            pass
+
+    try:
+        new_banner = BannerService.create_banner(
+            title=title,
+            image_url=image_url,
+            subtitle=subtitle,
+            link_url=link_url,
+            display_order=display_order,
+            is_active=is_active,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return _success(
+            data=new_banner,
+            message="Thêm banner quảng cáo mới thành công.",
+            status=201,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "MISSING_IMAGE_URL":
+            return jsonify({
+                "status": "error",
+                "message": "Vui lòng chọn/nhập đường dẫn hình ảnh banner.",
+                "code": "MISSING_IMAGE_URL"
+            }), 400
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+@admin_bp.route("/banners/<int:banner_id>", methods=["PUT"])
+@admin_required()
+def update_admin_banner(banner_id: int):
+    """
+    Quản trị viên chỉnh sửa banner (NT-11-CN-001).
+    """
+    from flask import request
+    from datetime import datetime
+    from app.services.banner_service import BannerService
+
+    data = request.get_json(silent=True) or {}
+
+    if "start_date" in data and isinstance(data["start_date"], str):
+        try:
+            data["start_date"] = datetime.fromisoformat(data["start_date"].replace("Z", "+00:00"))
+        except ValueError:
+            data["start_date"] = None
+
+    if "end_date" in data and isinstance(data["end_date"], str):
+        try:
+            data["end_date"] = datetime.fromisoformat(data["end_date"].replace("Z", "+00:00"))
+        except ValueError:
+            data["end_date"] = None
+
+    try:
+        updated = BannerService.update_banner(banner_id=banner_id, data=data)
+        return _success(
+            data=updated,
+            message="Cập nhật thông tin banner thành công.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "BANNER_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy banner quảng cáo.",
+                "code": "BANNER_NOT_FOUND"
+            }), 404
+        if err_str == "MISSING_IMAGE_URL":
+            return jsonify({
+                "status": "error",
+                "message": "Vui lòng chọn/nhập đường dẫn hình ảnh banner.",
+                "code": "MISSING_IMAGE_URL"
+            }), 400
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+@admin_bp.route("/banners/<int:banner_id>", methods=["DELETE"])
+@admin_required()
+def delete_admin_banner(banner_id: int):
+    """
+    Quản trị viên xóa banner (NT-11-CN-001).
+    """
+    from app.services.banner_service import BannerService
+    try:
+        BannerService.delete_banner(banner_id=banner_id)
+        return _success(
+            data={"banner_id": banner_id},
+            message="Xóa banner quảng cáo thành công.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "BANNER_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy banner quảng cáo.",
+                "code": "BANNER_NOT_FOUND"
+            }), 404
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+
 
 
 
