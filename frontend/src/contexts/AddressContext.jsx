@@ -54,6 +54,12 @@ export const AddressProvider = ({ children }) => {
     return res
   }
 
+  const setAsDefault = async (id) => {
+    const res = await addressService.setDefaultAddress(id)
+    await fetchAddresses()
+    return res
+  }
+
   return (
     <AddressContext.Provider
       value={{
@@ -65,6 +71,7 @@ export const AddressProvider = ({ children }) => {
         addAddress,
         updateAddress,
         removeAddress,
+        setAsDefault,
       }}
     >
       {children}

@@ -36,6 +36,15 @@ export const addressService = {
     const response = await api.delete(`/addresses/${id}`)
     return response.data.data
   },
+
+  /**
+   * Đặt địa chỉ làm địa chỉ mặc định (NT-07-CN-003).
+   * @param {number} id
+   */
+  async setDefaultAddress(id) {
+    const response = await api.patch(`/addresses/${id}/default`)
+    return response.data.data
+  },
 }
 
 export default addressService
