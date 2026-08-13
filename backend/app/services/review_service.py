@@ -290,3 +290,85 @@ class ReviewService:
 
         return res_dict
 
+    @staticmethod
+    def get_product_review_stats(search: Optional[str] = None, sort_by: str = "reviews_desc") -> Dict[str, Any]:
+        """
+        Quản trị viên xem báo cáo thống kê đánh giá sản phẩm (NT-10-CN-002).
+
+        Args:
+            search: Từ khóa tìm kiếm tên sản phẩm (tùy chọn)
+            sort_by: Cách sắp xếp ('rating_desc', 'rating_asc', 'reviews_desc', 'reviews_asc')
+
+        Returns:
+            Dict chứa `overview` và danh sách `products`.
+        """
+        # 1. Overview metrics
+        all_reviews = db.session.query(Review).all()
+        total_reviews = len(all_reviews)
+        approved_reviews = sum(1 for r in all_reviews if r.is_approved)
+        hidden_reviews = total_reviews - approved_reviews
+
+        approved_ratings = [r.rating for r in all_reviews if r.is_approved and 1 <= r.rating <= 5]
+        overall_average_rating = round(sum(approved_ratings) / len(approved_ratings), 1) if approved_ratings else 5.0
+
+        star_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        for r in all_reviews:
+            if r.is_approved and 1 <= r.rating <= 5:
+                star_distribution[r.rating] += 1
+
+        # 2. Product-level statistics
+        product_query = db.session.query(Product).filter(Product.is_active == True)
+        if search and search.strip():
+            product_query = product_query.filter(Product.name.ilike(f"%{search.strip()}%"))
+
+        products_list = product_query.all()
+        product_stats = []
+
+        for p in products_list:
+            p_reviews = p.reviews.all()
+            p_total = len(p_reviews)
+            p_approved = sum(1 for r in p_reviews if r.is_approved)
+            p_hidden = p_total - p_approved
+
+            p_approved_ratings = [r.rating for r in p_reviews if r.is_approved and 1 <= r.rating <= 5]
+            avg_rating = round(sum(p_approved_ratings) / len(p_approved_ratings), 1) if p_approved_ratings else p.rating
+
+            high_ratings_count = sum(1 for r in p_reviews if r.is_approved and r.rating in [4, 5])
+            satisfaction_rate = round((high_ratings_count / p_approved * 100), 1) if p_approved > 0 else 0.0
+
+            product_stats.append({
+                "id": p.id,
+                "name": p.name,
+                "slug": p.slug,
+                "image_url": p.image_url,
+                "category": p.category,
+                "average_rating": avg_rating,
+                "rating_count": p_approved,
+                "total_reviews": p_total,
+                "approved_reviews": p_approved,
+                "hidden_reviews": p_hidden,
+                "satisfaction_rate": satisfaction_rate,
+            })
+
+        # Sắp xếp danh sách sản phẩm theo lựa chọn
+        if sort_by == "rating_desc":
+            product_stats.sort(key=lambda x: (x["average_rating"], x["total_reviews"]), reverse=True)
+        elif sort_by == "rating_asc":
+            product_stats.sort(key=lambda x: (x["average_rating"], x["total_reviews"]))
+        elif sort_by == "reviews_asc":
+            product_stats.sort(key=lambda x: x["total_reviews"])
+        else:  # reviews_desc (mặc định)
+            product_stats.sort(key=lambda x: (x["total_reviews"], x["average_rating"]), reverse=True)
+
+        return {
+            "overview": {
+                "total_reviews": total_reviews,
+                "approved_reviews": approved_reviews,
+                "hidden_reviews": hidden_reviews,
+                "overall_average_rating": overall_average_rating,
+                "star_distribution": star_distribution,
+            },
+            "products": product_stats,
+        }
+
+
