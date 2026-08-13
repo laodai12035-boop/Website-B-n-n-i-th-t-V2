@@ -158,6 +158,18 @@ const AdminDashboardPage = () => {
             </span>
           </Link>
 
+          {/* Stat Item 3f: Quản lý Bình luận & Đánh giá */}
+          <Link to="/admin/reviews" className="card border-l-4 border-l-indigo-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-indigo-600 transition-colors">Duyệt & Ẩn Bình Luận</span>
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <span className="text-lg">💬</span>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">Bình Luận</p>
+            <span className="text-xs text-indigo-600 font-bold mt-1 inline-block">Duyệt & Ẩn đánh giá →</span>
+          </Link>
+
           {/* Stat Item 4 */}
           <div className="card border-l-4 border-l-purple-500">
             <div className="flex items-center justify-between mb-2">

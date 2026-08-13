@@ -17,15 +17,27 @@ const reviewService = {
     return response.data.data
   },
 
-  /**
-   * Đăng đánh giá mới cho sản phẩm (Tuân thủ QTN-06).
-   *
-   * @param {number|string} productId
-   * @param {Object} reviewData { rating: number, comment: string }
-   * @returns {Promise<Object>}
-   */
   async createReview(productId, { rating, comment }) {
     const response = await api.post(`/products/${productId}/reviews`, { rating, comment })
+    return response.data.data
+  },
+
+  /**
+   * Admin lấy danh sách các bình luận đánh giá (NT-10-CN-001).
+   * @param {Object} params - { status: 'all'|'approved'|'hidden', product_id, page, limit }
+   */
+  async getAdminReviews(params = {}) {
+    const response = await api.get('/admin/reviews', { params })
+    return response.data.data
+  },
+
+  /**
+   * Admin duyệt (is_approved=true) hoặc ẩn (is_approved=false) bình luận.
+   * @param {number|string} reviewId
+   * @param {boolean} isApproved
+   */
+  async moderateReview(reviewId, isApproved) {
+    const response = await api.put(`/admin/reviews/${reviewId}/moderate`, { is_approved: isApproved })
     return response.data.data
   },
 }
