@@ -521,6 +521,69 @@ def get_low_stock_warnings():
     )
 
 
+# ============================================================
+# GET /api/v1/admin/reviews — Quản lý bình luận đánh giá
+# ============================================================
+@admin_bp.route("/reviews", methods=["GET"])
+@admin_required()
+def get_admin_reviews():
+    """
+    Quản trị viên lấy danh sách tất cả các bình luận đánh giá sản phẩm (NT-10-CN-001).
+    """
+    from flask import request
+    from app.services.review_service import ReviewService
+
+    status_filter = request.args.get("status", "all").strip().lower()
+    product_id_str = request.args.get("product_id")
+    product_id = int(product_id_str) if product_id_str and product_id_str.isdigit() else None
+    page = int(request.args.get("page", 1))
+    limit = int(request.args.get("limit", 20))
+
+    result = ReviewService.get_admin_reviews(
+        status_filter=status_filter,
+        product_id=product_id,
+        page=page,
+        limit=limit,
+    )
+    return _success(
+        data=result,
+        message="Lấy danh sách bình luận đánh giá thành công.",
+        status=200,
+    )
+
+
+# ============================================================
+# PUT /api/v1/admin/reviews/<int:review_id>/moderate — Duyệt/Ẩn bình luận
+# ============================================================
+@admin_bp.route("/reviews/<int:review_id>/moderate", methods=["PUT"])
+@admin_required()
+def moderate_review(review_id: int):
+    """
+    Quản trị viên duyệt (is_approved=True) hoặc ẩn (is_approved=False) bình luận (NT-10-CN-001).
+    """
+    from flask import request
+    from app.services.review_service import ReviewService
+
+    data = request.get_json(silent=True) or {}
+    if "is_approved" not in data and "status" not in data:
+        return _error("MISSING_IS_APPROVED_PARAM", "Vui lòng cung cấp tham số is_approved hoặc status.", 400)
+
+    is_approved = data.get("is_approved")
+    if is_approved is None and "status" in data:
+        is_approved = data["status"] == "approved"
+
+    try:
+        updated_review = ReviewService.moderate_review(review_id=review_id, is_approved=bool(is_approved))
+        msg = "Duyệt hiển thị bình luận thành công." if updated_review["is_approved"] else "Đã ẩn bình luận thành công."
+        return _success(data=updated_review, message=msg, status=200)
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "REVIEW_NOT_FOUND":
+            return _error("REVIEW_NOT_FOUND", "Không tìm thấy bình luận đánh giá.", 404)
+        return _error("BAD_REQUEST", err_str, 400)
+
+
+
 
 
 

@@ -187,3 +187,106 @@ class ReviewService:
             },
             "can_review": can_review,
         }
+
+    @staticmethod
+    def get_admin_reviews(
+        status_filter: Optional[str] = "all",
+        product_id: Optional[int] = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> Dict[str, Any]:
+        """
+        Quản trị viên lấy danh sách tất cả các bình luận đánh giá kèm thông tin sản phẩm và người dùng (NT-10-CN-001).
+
+        Args:
+            status_filter: 'all', 'approved', 'hidden' / 'rejected'
+            product_id: Lọc theo sản phẩm (tùy chọn)
+            page: Số trang
+            limit: Số bản ghi trên mỗi trang
+
+        Returns:
+            Dict chứa danh sách `items` và metadata `pagination`.
+        """
+        query = db.session.query(Review)
+
+        if status_filter == "approved":
+            query = query.filter(Review.is_approved == True)
+        elif status_filter in ["hidden", "rejected", "unapproved"]:
+            query = query.filter(Review.is_approved == False)
+
+        if product_id:
+            query = query.filter(Review.product_id == product_id)
+
+        total_items = query.count()
+        page = max(1, page)
+        limit = max(1, min(100, limit))
+        total_pages = (total_items + limit - 1) // limit if total_items > 0 else 1
+
+        offset = (page - 1) * limit
+        reviews = query.order_by(Review.created_at.desc()).offset(offset).limit(limit).all()
+
+        review_dicts = []
+        for r in reviews:
+            item_dict = r.to_dict()
+            item_dict["product_name"] = r.product.name if r.product else None
+            item_dict["product_image_url"] = r.product.image_url if r.product else None
+            review_dicts.append(item_dict)
+
+        return {
+            "items": review_dicts,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total_items": total_items,
+                "total_pages": total_pages,
+            },
+        }
+
+    @staticmethod
+    def moderate_review(review_id: int, is_approved: bool) -> Dict[str, Any]:
+        """
+        Admin duyệt (`is_approved = True`) hoặc ẩn (`is_approved = False`) bình luận (NT-10-CN-001).
+
+        Args:
+            review_id: ID bình luận cần duyệt/ẩn
+            is_approved: Cờ trạng thái mới
+
+        Returns:
+            Dict thông tin bình luận đã được cập nhật.
+
+        Raises:
+            ValueError("REVIEW_NOT_FOUND"): Bình luận không tồn tại.
+        """
+        review = db.session.query(Review).filter(Review.id == review_id).first()
+        if not review:
+            raise ValueError("REVIEW_NOT_FOUND")
+
+        review.is_approved = bool(is_approved)
+        db.session.flush()
+
+        # Tự động tính toán lại điểm rating trung bình của sản phẩm tương ứng
+        product_id = review.product_id
+        stats = (
+            db.session.query(
+                func.avg(Review.rating).label("avg_rating"),
+                func.count(Review.id).label("total_count"),
+            )
+            .filter(Review.product_id == product_id, Review.is_approved == True)
+            .first()
+        )
+
+        product = db.session.query(Product).filter(Product.id == product_id).first()
+        if product:
+            product.rating = round(float(stats.avg_rating or 5.0), 1) if stats and stats.total_count > 0 else 5.0
+            product.rating_count = int(stats.total_count or 0) if stats else 0
+
+        db.session.commit()
+        logger.info("[NT-10-CN-001] Admin moderated review id=%s (is_approved=%s)", review.id, review.is_approved)
+
+        res_dict = review.to_dict()
+        if product:
+            res_dict["new_product_rating"] = product.rating
+            res_dict["new_product_rating_count"] = product.rating_count
+
+        return res_dict
+
