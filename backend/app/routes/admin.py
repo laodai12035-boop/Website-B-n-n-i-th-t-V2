@@ -591,6 +591,30 @@ def moderate_review(review_id: int):
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
 
+# ============================================================
+# GET /api/v1/admin/reviews/stats — Thống kê đánh giá sản phẩm
+# ============================================================
+@admin_bp.route("/reviews/stats", methods=["GET"])
+@admin_required()
+def get_admin_review_stats():
+    """
+    Quản trị viên xem báo cáo thống kê đánh giá theo từng sản phẩm (NT-10-CN-002).
+    """
+    from flask import request
+    from app.services.review_service import ReviewService
+
+    search = request.args.get("search")
+    sort_by = request.args.get("sort_by", "reviews_desc")
+
+    result = ReviewService.get_product_review_stats(search=search, sort_by=sort_by)
+    return _success(
+        data=result,
+        message="Lấy dữ liệu thống kê đánh giá sản phẩm thành công.",
+        status=200,
+    )
+
+
+
 
 
 
