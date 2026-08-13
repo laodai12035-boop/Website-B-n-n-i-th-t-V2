@@ -31,6 +31,8 @@ class Product(db.Model):
     material = db.Column(db.String(100), nullable=True, comment="Chất liệu sản phẩm")
     dimensions = db.Column(db.String(100), nullable=True, comment="Kích thước (Dài x Rộng x Cao) đơn vị cm, VD: 120x60x75")
     weight_kg = db.Column(db.Float, nullable=True, comment="Trọng lượng thực tế (kg) — QTN-07")
+    warranty_months = db.Column(db.Integer, nullable=True, default=12, comment="Thời hạn bảo hành (tháng), VD: 12, 24")
+    warranty_terms = db.Column(db.Text, nullable=True, comment="Điều kiện bảo hành sản phẩm")
     rating = db.Column(db.Float, nullable=False, default=5.0, comment="Đánh giá trung bình (1-5 sao)")
     rating_count = db.Column(db.Integer, nullable=False, default=0, comment="Tổng số lượt đánh giá")
     is_active = db.Column(db.Boolean, nullable=False, default=True, comment="True = hiển thị")
@@ -57,6 +59,8 @@ class Product(db.Model):
             "material": self.material or "Gỗ tự nhiên cao cấp",
             "dimensions": self.dimensions or "Đang cập nhật",
             "weight_kg": float(self.weight_kg) if self.weight_kg is not None else None,
+            "warranty_months": self.warranty_months if self.warranty_months is not None else 12,
+            "warranty_terms": self.warranty_terms or "Bảo hành chính hãng cho các lỗi kỹ thuật và kết cấu khung gỗ từ nhà sản xuất.",
             "rating": float(self.rating) if self.rating is not None else 5.0,
             "rating_count": self.rating_count or 0,
             "is_active": self.is_active,

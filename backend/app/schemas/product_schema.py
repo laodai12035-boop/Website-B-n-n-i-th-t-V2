@@ -30,6 +30,8 @@ class ProductSchema(Schema):
     material = fields.Str(allow_none=True)
     dimensions = fields.Str(allow_none=True)
     weight_kg = fields.Float(allow_none=True, validate=validate.Range(min=0, error="Trọng lượng phải lớn hơn hoặc bằng 0"))
+    warranty_months = fields.Int(allow_none=True, validate=validate.Range(min=0, error="Thời gian bảo hành phải lớn hơn hoặc bằng 0"))
+    warranty_terms = fields.Str(allow_none=True)
     rating = fields.Float(load_default=5.0)
     rating_count = fields.Int(load_default=0)
     is_active = fields.Bool(load_default=True)
