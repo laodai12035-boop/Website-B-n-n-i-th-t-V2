@@ -27,7 +27,7 @@ def _success(data=None, message="Thành công", status=200):
 @jwt_required()
 def apply_coupon():
     body = request.get_json() or {}
-    coupon_code = body.get("coupon_code", "").strip()
+    coupon_code = (body.get("coupon_code") or body.get("code") or "").strip()
     subtotal = body.get("subtotal")
 
     if not coupon_code:
