@@ -9,6 +9,7 @@ import AdminDashboardPage from '@/pages/admin/AdminDashboardPage'
 import AdminOrdersPage from '@/pages/admin/AdminOrdersPage'
 import AdminCategoriesPage from '@/pages/admin/AdminCategoriesPage'
 import AdminProductsPage from '@/pages/admin/AdminProductsPage'
+import AdminCombosPage from '@/pages/admin/AdminCombosPage'
 import ForbiddenPage from '@/pages/error/ForbiddenPage'
 import ProductListPage from '@/pages/product/ProductListPage'
 import ProductDetailPage from '@/pages/product/ProductDetailPage'
@@ -103,6 +104,14 @@ function App() {
                 element={
                   <AdminRoute>
                     <AdminProductsPage />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/combos"
+                element={
+                  <AdminRoute>
+                    <AdminCombosPage />
                   </AdminRoute>
                 }
               />
