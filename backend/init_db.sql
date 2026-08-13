@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS products (
     material       VARCHAR(100)  COMMENT 'Chất liệu sản phẩm',
     dimensions     VARCHAR(100)  COMMENT 'Kích thước (Dài x Rộng x Cao) đơn vị cm, VD: 120x60x75',
     weight_kg      FLOAT         NULL COMMENT 'Trọng lượng thực tế (kg) - QTN-07',
+    warranty_months INT          NULL DEFAULT 12 COMMENT 'Thời gian bảo hành (tháng)',
+    warranty_terms  TEXT         NULL COMMENT 'Điều kiện bảo hành',
     rating         FLOAT         NOT NULL DEFAULT 5.0 COMMENT 'Đánh giá trung bình',
     rating_count   INT           NOT NULL DEFAULT 0 COMMENT 'Số lượt đánh giá',
     is_active      BOOLEAN       NOT NULL DEFAULT TRUE COMMENT 'Hiển thị',

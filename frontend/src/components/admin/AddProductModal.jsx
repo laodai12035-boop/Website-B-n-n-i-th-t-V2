@@ -125,7 +125,6 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
         image_url: '',
         description: '',
       })
-      })
       if (onSuccess) onSuccess()
       onClose()
     } catch (err) {

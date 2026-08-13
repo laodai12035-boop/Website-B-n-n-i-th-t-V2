@@ -21,6 +21,23 @@ export const comboService = {
     const response = await api.post(`/combos/${comboId}/add-to-cart`)
     return response.data
   },
+
+  /**
+   * Admin lấy tất cả combo.
+   */
+  async getAdminCombos() {
+    const response = await api.get('/admin/combos')
+    return response.data.data
+  },
+
+  /**
+   * Admin tạo combo mới (NT-08-CN-006).
+   * @param {Object} data - { name, description, discount_percent, items: [{product_id, quantity}] }
+   */
+  async createCombo(data) {
+    const response = await api.post('/admin/combos', data)
+    return response.data.data
+  },
 }
 
 export default comboService
