@@ -13,6 +13,17 @@ const customerService = {
     const response = await api.get('/admin/customers', { params })
     return response.data.data
   },
+
+  /**
+   * Quản trị viên khóa hoặc mở khóa tài khoản khách hàng (NT-12-CN-002).
+   * @param {number} customerId
+   * @param {boolean} isActive
+   * @returns {Promise<Object>}
+   */
+  async updateCustomerStatus(customerId, isActive) {
+    const response = await api.put(`/admin/customers/${customerId}/status`, { is_active: isActive })
+    return response.data.data
+  },
 }
 
 export default customerService
