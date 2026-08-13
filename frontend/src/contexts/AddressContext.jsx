@@ -42,6 +42,18 @@ export const AddressProvider = ({ children }) => {
     return newAddress
   }
 
+  const updateAddress = async (id, data) => {
+    const updated = await addressService.updateAddress(id, data)
+    await fetchAddresses()
+    return updated
+  }
+
+  const removeAddress = async (id) => {
+    const res = await addressService.deleteAddress(id)
+    await fetchAddresses()
+    return res
+  }
+
   return (
     <AddressContext.Provider
       value={{
@@ -51,6 +63,8 @@ export const AddressProvider = ({ children }) => {
         error,
         fetchAddresses,
         addAddress,
+        updateAddress,
+        removeAddress,
       }}
     >
       {children}
