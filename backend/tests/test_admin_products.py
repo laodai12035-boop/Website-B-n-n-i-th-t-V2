@@ -312,3 +312,69 @@ class TestUpdateAndDeleteProduct:
         assert res_del.status_code == 404
         assert res_del.get_json()["code"] == "PRODUCT_NOT_FOUND"
 
+
+class TestProductWarranty:
+    """Các test case cho NT-08-CN-005 Khai báo thông tin bảo hành sản phẩm."""
+
+    def test_tc13_admin_declare_product_warranty_success(self, client, admin_user):
+        """TC-13: Admin khai báo thời hạn bảo hành 24 tháng & điều kiện bảo hành ➔ 201 Created."""
+        payload = {
+            "name": "Bàn Gỗ Sồi Thượng Hạng",
+            "category": "ban",
+            "price": 18000000.0,
+            "warranty_months": 24,
+            "warranty_terms": "Bảo hành 1 đổi 1 trong 30 ngày nếu mối mọt, cong vênh do nhà sản xuất",
+        }
+
+        res = post_admin_product(client, admin_user["token"], payload)
+        assert res.status_code == 201
+
+        body = res.get_json()
+        assert body["status"] == "success"
+        assert body["data"]["warranty_months"] == 24
+        assert "Bảo hành 1 đổi 1" in body["data"]["warranty_terms"]
+
+        # Kiểm tra Public API GET /products/<id>
+        prod_id = body["data"]["id"]
+        get_res = client.get(f"/api/v1/products/{prod_id}")
+        assert get_res.status_code == 200
+        p_data = get_res.get_json()["data"]["product"]
+        assert p_data["warranty_months"] == 24
+        assert p_data["warranty_terms"] == "Bảo hành 1 đổi 1 trong 30 ngày nếu mối mọt, cong vênh do nhà sản xuất"
+
+    def test_tc14_admin_update_product_warranty_months(self, client, admin_user):
+        """TC-14: Admin cập nhật thời hạn bảo hành thành 36 tháng ➔ 200 OK."""
+        p_res = post_admin_product(
+            client, admin_user["token"], {"name": "Tủ Gỗ Cao Cấp", "category": "tu", "price": 15000000.0, "warranty_months": 12}
+        )
+        prod_id = p_res.get_json()["data"]["id"]
+
+        update_payload = {
+            "name": "Tủ Gỗ Cao Cấp",
+            "category": "tu",
+            "price": 15000000.0,
+            "warranty_months": 36,
+            "warranty_terms": "Bảo hành 36 tháng khung gỗ tự nhiên",
+        }
+        res = put_admin_product(client, admin_user["token"], prod_id, update_payload)
+        assert res.status_code == 200
+
+        body = res.get_json()
+        assert body["data"]["warranty_months"] == 36
+        assert body["data"]["warranty_terms"] == "Bảo hành 36 tháng khung gỗ tự nhiên"
+
+    def test_tc15_invalid_negative_warranty_months_returns_400(self, client, admin_user):
+        """TC-15: Khai báo thời hạn bảo hành âm (-6 tháng) ➔ 400 Bad Request (VALIDATION_ERROR)."""
+        payload = {
+            "name": "Bàn Trà Lỗi Bảo Hành",
+            "category": "ban",
+            "price": 3000000.0,
+            "warranty_months": -6,
+        }
+
+        res = post_admin_product(client, admin_user["token"], payload)
+        assert res.status_code == 400
+        assert res.get_json()["code"] == "VALIDATION_ERROR"
+        assert "warranty_months" in res.get_json()["errors"]
+
+
