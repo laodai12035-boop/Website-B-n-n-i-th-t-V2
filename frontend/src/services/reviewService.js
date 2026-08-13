@@ -40,6 +40,15 @@ const reviewService = {
     const response = await api.put(`/admin/reviews/${reviewId}/moderate`, { is_approved: isApproved })
     return response.data.data
   },
+
+  /**
+   * Admin xem báo cáo thống kê đánh giá theo từng sản phẩm (NT-10-CN-002).
+   * @param {Object} params - { search: string, sort_by: string }
+   */
+  async getAdminReviewStats(params = {}) {
+    const response = await api.get('/admin/reviews/stats', { params })
+    return response.data.data
+  },
 }
 
 export default reviewService
