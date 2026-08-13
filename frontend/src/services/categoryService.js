@@ -17,6 +17,25 @@ export const categoryService = {
     const response = await api.post('/admin/categories', data)
     return response.data.data
   },
+
+  /**
+   * Admin sửa thông tin danh mục (NT-08-CN-002).
+   * @param {number} id
+   * @param {Object} data
+   */
+  async updateCategory(id, data) {
+    const response = await api.put(`/admin/categories/${id}`, data)
+    return response.data.data
+  },
+
+  /**
+   * Admin xóa danh mục sản phẩm (NT-08-CN-002).
+   * @param {number} id
+   */
+  async deleteCategory(id) {
+    const response = await api.delete(`/admin/categories/${id}`)
+    return response.data.data
+  },
 }
 
 export default categoryService

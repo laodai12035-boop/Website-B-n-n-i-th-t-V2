@@ -116,3 +116,104 @@ class CategoryService:
 
         logger.info("Admin created new category id=%s name='%s'", new_category.id, new_category.name)
         return new_category.to_dict()
+
+    @staticmethod
+    def update_category(category_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Sửa thông tin danh mục sản phẩm dành cho Admin (NT-08-CN-002).
+
+        Args:
+            category_id: ID danh mục cần sửa
+            data: Dữ liệu đã validate từ CategorySchema
+
+        Returns:
+            Dict thông tin danh mục sau khi cập nhật.
+
+        Raises:
+            ValueError("CATEGORY_NOT_FOUND"): Không tìm thấy danh mục.
+            ValueError("CATEGORY_EXISTS"): Tên danh mục mới trùng với danh mục khác.
+        """
+        category = db.session.query(Category).filter(Category.id == category_id).first()
+        if not category:
+            raise ValueError("CATEGORY_NOT_FOUND")
+
+        new_name = data["name"].strip()
+
+        # Kiểm tra trùng tên với danh mục KHÁC (case-insensitive)
+        existing = (
+            db.session.query(Category)
+            .filter(func.lower(Category.name) == new_name.lower(), Category.id != category_id)
+            .first()
+        )
+        if existing:
+            raise ValueError("CATEGORY_EXISTS")
+
+        old_slug = category.slug
+        old_name = category.name
+
+        # Nếu đổi tên, sinh lại slug mới
+        if new_name.lower() != old_name.lower():
+            base_slug = generate_slug(new_name)
+            slug = base_slug
+            counter = 1
+            while db.session.query(Category).filter(Category.slug == slug, Category.id != category_id).first():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            category.slug = slug
+
+            # Tự động cập nhật cột category của Product thuộc danh mục này
+            from app.models.product import Product
+            from sqlalchemy import or_
+            db.session.query(Product).filter(
+                or_(Product.category == old_slug, Product.category == old_name)
+            ).update({Product.category: category.slug}, synchronize_session=False)
+
+        category.name = new_name
+        if "description" in data:
+            category.description = data["description"].strip() if data["description"] else None
+        if "icon" in data:
+            category.icon = data["icon"].strip() if data["icon"] else "📁"
+        if "is_active" in data:
+            category.is_active = data["is_active"]
+
+        db.session.commit()
+        logger.info("Admin updated category id=%s name='%s'", category_id, category.name)
+        return category.to_dict()
+
+    @staticmethod
+    def delete_category(category_id: int) -> bool:
+        """
+        Xóa danh mục sản phẩm dành cho Admin (NT-08-CN-002).
+
+        Args:
+            category_id: ID danh mục cần xóa
+
+        Returns:
+            True nếu xóa thành công.
+
+        Raises:
+            ValueError("CATEGORY_NOT_FOUND"): Không tìm thấy danh mục.
+            ValueError("CATEGORY_HAS_PRODUCTS:X"): Danh mục còn X sản phẩm, không cho xóa.
+        """
+        category = db.session.query(Category).filter(Category.id == category_id).first()
+        if not category:
+            raise ValueError("CATEGORY_NOT_FOUND")
+
+        from app.models.product import Product
+        from sqlalchemy import or_
+
+        # Đếm số lượng sản phẩm đang thuộc danh mục này
+        product_count = (
+            db.session.query(Product)
+            .filter(or_(Product.category == category.slug, Product.category == category.name))
+            .count()
+        )
+
+        if product_count > 0:
+            raise ValueError(f"CATEGORY_HAS_PRODUCTS:{product_count}")
+
+        db.session.delete(category)
+        db.session.commit()
+
+        logger.info("Admin deleted empty category id=%s name='%s'", category_id, category.name)
+        return True

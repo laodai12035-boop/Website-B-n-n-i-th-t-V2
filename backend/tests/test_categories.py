@@ -176,3 +176,119 @@ class TestAddCategory:
         assert body["status"] == "success"
         assert isinstance(body["data"], list)
         assert len(body["data"]) > 0
+
+
+def put_admin_category(client, token, category_id, payload):
+    """Helper gửi request PUT /api/v1/admin/categories/<id>."""
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return client.put(f"/api/v1/admin/categories/{category_id}", data=json.dumps(payload), headers=headers)
+
+
+def delete_admin_category(client, token, category_id):
+    """Helper gửi request DELETE /api/v1/admin/categories/<id>."""
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return client.delete(f"/api/v1/admin/categories/{category_id}", headers=headers)
+
+
+class TestUpdateAndDeleteCategory:
+    """Các test case cho NT-08-CN-002 Sửa và xóa danh mục sản phẩm."""
+
+    def test_tc01_admin_update_category_success(self, client, admin_user):
+        """TC-01: Admin sửa thông tin danh mục hợp lệ ➔ 200 OK."""
+        # 1. Tạo danh mục mới
+        create_res = post_admin_category(client, admin_user["token"], {"name": "Phòng bé yêu", "icon": "🧸"})
+        cat_id = create_res.get_json()["data"]["id"]
+
+        # 2. Cập nhật thông tin mới
+        update_payload = {
+            "name": "Phòng trẻ em cao cấp",
+            "description": "Các món đồ xinh xắn cho bé",
+            "icon": "🎨",
+        }
+        res = put_admin_category(client, admin_user["token"], cat_id, update_payload)
+        assert res.status_code == 200
+
+        body = res.get_json()
+        assert body["status"] == "success"
+        assert body["data"]["name"] == "Phòng trẻ em cao cấp"
+        assert body["data"]["slug"] == "phong-tre-em-cao-cap"
+        assert body["data"]["icon"] == "🎨"
+
+    def test_tc01b_update_duplicate_name_returns_400(self, client, admin_user):
+        """TC-01b: Admin sửa tên danh mục thành tên của danh mục khác đã có ➔ 400 CATEGORY_EXISTS."""
+        # Tạo danh mục A & B
+        cat_a = post_admin_category(client, admin_user["token"], {"name": "Danh mục A"}).get_json()["data"]
+        cat_b = post_admin_category(client, admin_user["token"], {"name": "Danh mục B"}).get_json()["data"]
+
+        # Sửa B thành tên của A
+        res = put_admin_category(client, admin_user["token"], cat_b["id"], {"name": "DANH MỤC A"})
+        assert res.status_code == 400
+
+        body = res.get_json()
+        assert body["code"] == "CATEGORY_EXISTS"
+
+    def test_tc02_delete_empty_category_success(self, client, admin_user):
+        """TC-02: Admin xóa danh mục rỗng (chưa có sản phẩm) ➔ 200 OK."""
+        # Tạo danh mục rỗng
+        cat = post_admin_category(client, admin_user["token"], {"name": "Danh mục sắp xóa"}).get_json()["data"]
+
+        # Xóa danh mục
+        res = delete_admin_category(client, admin_user["token"], cat["id"])
+        assert res.status_code == 200
+
+        body = res.get_json()
+        assert body["status"] == "success"
+
+    def test_tc02b_delete_category_with_products_rejected(self, client, admin_user, app):
+        """TC-02b: Admin xóa danh mục đang có sản phẩm ➔ 400 CATEGORY_HAS_PRODUCTS."""
+        with app.app_context():
+            from app.models.product import Product
+            # Tạo 1 danh mục mới
+            cat = Category(name="Danh mục có hàng", slug="danh-muc-co-hang", is_active=True)
+            db.session.add(cat)
+            db.session.flush()
+
+            # Gắn 1 sản phẩm vào danh mục này
+            p = Product(name="Sản phẩm thử nghiệm", slug="san-pham-thu-nghiem", category=cat.slug, price=100000.0, stock=5)
+            db.session.add(p)
+            db.session.commit()
+            cat_id = cat.id
+
+        # Thử xóa danh mục này qua API
+        res = delete_admin_category(client, admin_user["token"], cat_id)
+        assert res.status_code == 400
+
+        body = res.get_json()
+        assert body["code"] == "CATEGORY_HAS_PRODUCTS"
+        assert "Không thể xóa danh mục này vì còn 1 sản phẩm" in body["message"]
+
+    def test_tc03_regular_user_update_delete_forbidden(self, client, regular_user, admin_user):
+        """TC-03: Người dùng thường cố sửa hoặc xóa danh mục ➔ 403 FORBIDDEN."""
+        cat = post_admin_category(client, admin_user["token"], {"name": "Danh mục cấm"}).get_json()["data"]
+
+        # Sửa
+        res_put = put_admin_category(client, regular_user["token"], cat["id"], {"name": "Sửa lậu"})
+        assert res_put.status_code == 403
+        assert res_put.get_json()["code"] == "FORBIDDEN"
+
+        # Xóa
+        res_del = delete_admin_category(client, regular_user["token"], cat["id"])
+        assert res_del.status_code == 403
+        assert res_del.get_json()["code"] == "FORBIDDEN"
+
+    def test_tc04_update_delete_non_existing_returns_404(self, client, admin_user):
+        """TC-04: Sửa/xóa danh mục với ID không tồn tại ➔ 404 CATEGORY_NOT_FOUND."""
+        non_id = 999999
+
+        res_put = put_admin_category(client, admin_user["token"], non_id, {"name": "Tên mới"})
+        assert res_put.status_code == 404
+        assert res_put.get_json()["code"] == "CATEGORY_NOT_FOUND"
+
+        res_del = delete_admin_category(client, admin_user["token"], non_id)
+        assert res_del.status_code == 404
+        assert res_del.get_json()["code"] == "CATEGORY_NOT_FOUND"
+
