@@ -2,7 +2,7 @@
 schemas/category_schema.py — Marshmallow schema cho validation danh mục sản phẩm (NT-08-CN-001).
 """
 
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, validates, ValidationError
 
 
 class CategorySchema(Schema):
@@ -18,6 +18,11 @@ class CategorySchema(Schema):
     description = fields.Str(required=False, allow_none=True)
     icon = fields.Str(required=False, allow_none=True)
     is_active = fields.Bool(required=False, default=True)
+
+    @validates("name")
+    def validate_name(self, value):
+        if not value or not value.strip():
+            raise ValidationError("Tên danh mục không được để trống hoặc chỉ chứa khoảng trắng.")
 
 
 category_schema = CategorySchema()
