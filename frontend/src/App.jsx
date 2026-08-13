@@ -11,6 +11,7 @@ import AdminCategoriesPage from '@/pages/admin/AdminCategoriesPage'
 import AdminProductsPage from '@/pages/admin/AdminProductsPage'
 import AdminInventoryPage from '@/pages/admin/AdminInventoryPage'
 import AdminCombosPage from '@/pages/admin/AdminCombosPage'
+import AdminReviewsPage from '@/pages/admin/AdminReviewsPage'
 import ForbiddenPage from '@/pages/error/ForbiddenPage'
 import ProductListPage from '@/pages/product/ProductListPage'
 import ProductDetailPage from '@/pages/product/ProductDetailPage'
@@ -129,6 +130,14 @@ function App() {
                 element={
                   <AdminRoute>
                     <AdminOrdersPage />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/reviews"
+                element={
+                  <AdminRoute>
+                    <AdminReviewsPage />
                   </AdminRoute>
                 }
               />
