@@ -257,7 +257,10 @@ class QRPaymentService:
         if order.payment_status == "paid":
             raise ValueError("ALREADY_PAID")
 
+        from app.services.stock_service import StockService
+
         order.payment_status = "paid"
         order.status = "confirmed"
+        StockService.deduct_order_stock(order)
         db.session.commit()
         return order.to_dict()
