@@ -279,5 +279,90 @@ def get_admin_products():
     )
 
 
+# ============================================================
+# PUT /api/v1/admin/products/<int:product_id> — Admin sửa sản phẩm (NT-08-CN-004)
+# ============================================================
+@admin_bp.route("/products/<int:product_id>", methods=["PUT"])
+@admin_required()
+def update_product(product_id: int):
+    """
+    Quản trị viên chỉnh sửa thông tin sản phẩm (NT-08-CN-004).
+
+    Responses:
+        200: Cập nhật sản phẩm thành công
+        400: Dữ liệu không hợp lệ (VALIDATION_ERROR)
+        403: Không có quyền Admin (FORBIDDEN)
+        404: Sản phẩm không tồn tại (PRODUCT_NOT_FOUND)
+    """
+    from flask import request
+    from marshmallow import ValidationError
+    from app.schemas.product_schema import product_schema
+    from app.services.product_service import ProductService
+
+    json_data = request.get_json(silent=True) or {}
+
+    try:
+        data = product_schema.load(json_data)
+    except ValidationError as exc:
+        return jsonify({
+            "status": "error",
+            "message": "Dữ liệu sản phẩm không hợp lệ.",
+            "code": "VALIDATION_ERROR",
+            "errors": exc.messages
+        }), 400
+
+    try:
+        updated = ProductService.update_product(product_id=product_id, data=data)
+        return _success(
+            data=updated,
+            message="Cập nhật thông tin sản phẩm thành công.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "PRODUCT_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy sản phẩm.",
+                "code": "PRODUCT_NOT_FOUND"
+            }), 404
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+# ============================================================
+# DELETE /api/v1/admin/products/<int:product_id> — Admin ngừng bán (NT-08-CN-004)
+# ============================================================
+@admin_bp.route("/products/<int:product_id>", methods=["DELETE"])
+@admin_required()
+def delete_product(product_id: int):
+    """
+    Quản trị viên chuyển sản phẩm sang trạng thái Ngừng kinh doanh (NT-08-CN-004).
+
+    Responses:
+        200: Ngừng bán sản phẩm thành công
+        403: Không có quyền Admin (FORBIDDEN)
+        404: Sản phẩm không tồn tại (PRODUCT_NOT_FOUND)
+    """
+    from app.services.product_service import ProductService
+
+    try:
+        ProductService.delete_product(product_id=product_id)
+        return _success(
+            data={"id": product_id, "is_active": False},
+            message="Đã chuyển sản phẩm sang trạng thái ngừng kinh doanh.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "PRODUCT_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy sản phẩm.",
+                "code": "PRODUCT_NOT_FOUND"
+            }), 404
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
+
 
 
