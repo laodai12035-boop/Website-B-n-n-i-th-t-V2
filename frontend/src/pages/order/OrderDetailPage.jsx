@@ -236,6 +236,7 @@ const OrderDetailPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-600">
                 <div><span>Ngày đặt hàng:</span> <span className="font-semibold text-gray-900">{formatDate(order.created_at)}</span></div>
                 <div><span>Hình thức thanh toán:</span> <span className="font-semibold text-gray-900">{order.payment_method === 'QR_BANK' || order.payment_method === 'qr' ? 'Chuyển khoản QR Ngân hàng' : 'Thanh toán COD'}</span></div>
+              </div>
             </div>
 
             {/* Thẻ Trạng thái Yêu cầu Đổi/Trả & Phản hồi/Lý do từ Admin */}
