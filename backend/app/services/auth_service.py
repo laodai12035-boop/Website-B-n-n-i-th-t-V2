@@ -168,13 +168,16 @@ class AuthService:
             additional_claims={"type": "reset_password"},
         )
 
-        reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
+        from flask import current_app
+        frontend_url = current_app.config.get("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+        reset_link = f"{frontend_url}/reset-password?token={reset_token}"
 
-        # Log mock email reset
-        logger.info(
-            "[MOCK EMAIL] Gửi liên kết đặt lại mật khẩu đến %s | Link: %s (Hạn 15 phút)",
-            user.email,
-            reset_link,
+        # Gửi email chứa liên kết qua Gmail (NT-01-CN-004)
+        from app.utils.email_service import EmailService
+        EmailService.send_reset_password_email(
+            recipient_email=user.email,
+            reset_link=reset_link,
+            user_name=user.full_name,
         )
 
         return reset_token, reset_link
