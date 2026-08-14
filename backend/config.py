@@ -36,8 +36,14 @@ class Config:
         seconds=int(os.environ.get("JWT_REFRESH_TOKEN_EXPIRES", 604800))
     )
 
-    # Email (Mock mode)
-    MAIL_MOCK = os.environ.get("MAIL_MOCK", "true").lower() == "true"
+    # Email (Gmail SMTP)
+    MAIL_SERVER = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+    MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
+    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
+    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", os.environ.get("MAIL_USERNAME", "noithatv2@gmail.com"))
+    MAIL_MOCK = os.environ.get("MAIL_MOCK", "false" if os.environ.get("MAIL_USERNAME") and os.environ.get("MAIL_PASSWORD") else "true").lower() == "true"
 
     # CORS
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")

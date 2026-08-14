@@ -11,13 +11,13 @@ const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [apiError, setApiError] = useState(null)
-  const [successMsg, setSuccessMsg] = useState(null)
+  const [successData, setSuccessData] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setApiError(null)
-    setSuccessMsg(null)
+    setSuccessData(null)
 
     if (!email) {
       setError('Email là bắt buộc')
@@ -30,8 +30,11 @@ const ForgotPasswordPage = () => {
     setLoading(true)
     try {
       const response = await api.post('/auth/forgot-password', { email })
-      const message = response.data.message || 'Liên kết đặt lại mật khẩu đã được gửi đến email của bạn.'
-      setSuccessMsg(message)
+      setSuccessData({
+        message: response.data.message || 'Liên kết đặt lại mật khẩu đã được gửi đến hòm thư Gmail của bạn.',
+        resetLink: response.data.data?.reset_link,
+        recipientEmail: email,
+      })
     } catch (err) {
       const msg = err.response?.data?.message || 'Đã xảy ra lỗi, vui lòng thử lại'
       setApiError(msg)
@@ -41,33 +44,35 @@ const ForgotPasswordPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-wood-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-slide-up">
-
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 flex items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-md animate-fade-in">
         {/* Brand header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-500 shadow-lg mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0121 9z" />
-            </svg>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/20 mb-4 text-2xl">
+            📧
           </div>
-          <h1 className="text-3xl font-display font-bold text-gray-900">Quên mật khẩu</h1>
-          <p className="text-gray-500 text-sm mt-1">Nhập email để nhận liên kết đặt lại mật khẩu</p>
+          <h1 className="text-3xl font-display font-extrabold text-gray-900">Quên mật khẩu</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Nhập email đăng ký để nhận ngay liên kết lấy lại mật khẩu qua Gmail
+          </p>
         </div>
 
         {/* Card */}
-        <div className="card">
-          {successMsg && <div className="mb-4"><FormAlert type="success" message={successMsg} /></div>}
-          {apiError && <div className="mb-4"><FormAlert type="error" message={apiError} /></div>}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-xl shadow-amber-900/5">
+          {apiError && (
+            <div className="mb-6">
+              <FormAlert type="error" message={apiError} />
+            </div>
+          )}
 
-          {!successMsg ? (
-            <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          {!successData ? (
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
               <InputField
                 id="email"
                 name="email"
                 type="email"
-                label="Email đăng ký"
-                placeholder="email@example.com"
+                label="Email tài khoản Gmail của bạn"
+                placeholder="vd: tenban@gmail.com"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value)
@@ -83,28 +88,56 @@ const ForgotPasswordPage = () => {
                 variant="primary"
                 fullWidth
                 loading={loading}
-                className="mt-2"
+                className="py-3 bg-amber-600 hover:bg-amber-700 font-bold rounded-2xl text-sm shadow-md shadow-amber-600/20 cursor-pointer"
               >
-                {loading ? 'Đang gửi yêu cầu...' : 'Gửi liên kết đặt lại mật khẩu'}
+                {loading ? 'Đang gửi email qua Gmail...' : '📩 Gửi liên kết qua Gmail ngay'}
               </Button>
             </form>
           ) : (
-            <div className="text-center pt-2">
-              <p className="text-xs text-gray-500 mb-4">
-                Nếu không thấy email trong hộp thư đến, vui lòng kiểm tra thư mục Spam hoặc thử lại.
-              </p>
+            <div className="text-center space-y-5 py-2">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl shadow-xs border border-emerald-200">
+                ✅
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Đã gửi email thành công!</h3>
+                <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+                  Liên kết đặt lại mật khẩu đã được gửi đến hòm thư Gmail{' '}
+                  <strong className="text-gray-900 font-mono underline">{successData.recipientEmail}</strong>.
+                </p>
+              </div>
+
+              <div className="p-4 bg-amber-50/70 rounded-2xl border border-amber-200 text-left text-xs space-y-2">
+                <p className="font-bold text-amber-900 flex items-center gap-1.5">
+                  <span>💡</span> Hướng dẫn lấy lại mật khẩu:
+                </p>
+                <ol className="list-decimal list-inside text-amber-800 space-y-1">
+                  <li>Mở hòm thư Gmail của bạn (kiểm tra cả mục <strong>Spam/Thư rác</strong> nếu không thấy).</li>
+                  <li>Mở email chủ đề <strong>[Website Nội Thất V2] Hướng dẫn Đặt lại Mật Khẩu</strong>.</li>
+                  <li>Bấm vào nút <strong>🔒 ĐẶT LẠI MẬT KHẨU NGAY</strong> (liên kết có hiệu lực trong 15 phút).</li>
+                </ol>
+              </div>
+
+              {/* Dev mode quick link for test convenience */}
+              {successData.resetLink && (
+                <div className="pt-2">
+                  <a
+                    href={successData.resetLink}
+                    className="inline-block w-full py-2.5 px-4 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-2xl font-bold text-xs transition-colors border border-amber-200"
+                  >
+                    🚀 Mở nhanh form Đặt lại mật khẩu (Dev Link) →
+                  </a>
+                </div>
+              )}
             </div>
           )}
 
-          <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+          <div className="mt-6 pt-5 border-t border-gray-100 text-center">
             <Link
               to="/login"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+              className="text-xs font-bold text-amber-700 hover:text-amber-800 transition-colors inline-flex items-center gap-1"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Quay lại đăng nhập
+              ← Quay lại trang Đăng nhập
             </Link>
           </div>
         </div>
