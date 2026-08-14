@@ -45,6 +45,9 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", os.environ.get("MAIL_USERNAME", "noithatv2@gmail.com"))
     MAIL_MOCK = os.environ.get("MAIL_MOCK", "false" if os.environ.get("MAIL_USERNAME") and os.environ.get("MAIL_PASSWORD") else "true").lower() == "true"
 
+    # Frontend Application URL
+    FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+
     # CORS
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
 
