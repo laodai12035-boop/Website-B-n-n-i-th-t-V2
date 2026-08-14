@@ -90,7 +90,10 @@ const OrderDetailPage = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return ''
-    return new Date(dateStr).toLocaleString('vi-VN', {
+    const str = (typeof dateStr === 'string' && !dateStr.endsWith('Z') && !dateStr.includes('+'))
+      ? dateStr + 'Z'
+      : dateStr
+    return new Date(str).toLocaleString('vi-VN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

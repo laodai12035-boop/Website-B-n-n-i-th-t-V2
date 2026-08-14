@@ -73,7 +73,10 @@ const AdminOrdersPage = () => {
 
   const formatDate = (isoStr) => {
     if (!isoStr) return ''
-    const d = new Date(isoStr)
+    const str = (typeof isoStr === 'string' && !isoStr.endsWith('Z') && !isoStr.includes('+'))
+      ? isoStr + 'Z'
+      : isoStr
+    const d = new Date(str)
     return d.toLocaleString('vi-VN', {
       hour: '2-digit',
       minute: '2-digit',
