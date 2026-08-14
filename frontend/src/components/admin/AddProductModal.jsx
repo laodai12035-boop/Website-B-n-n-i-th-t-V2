@@ -50,6 +50,22 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
     }
   }
 
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước file ảnh vượt quá 5MB. Vui lòng chọn file nhỏ hơn!')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setFormData((prev) => ({ ...prev, image_url: reader.result }))
+    }
+    reader.readAsDataURL(file)
+  }
+
   const validate = () => {
     const errs = {}
     if (!formData.name || !formData.name.trim()) {
@@ -349,19 +365,73 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
           </div>
 
-          {/* Image URL */}
+          {/* Hình ảnh sản phẩm (Upload từ máy tính hoặc Nhập URL) */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              URL Hình ảnh đại diện
+            <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center justify-between">
+              <span>🖼️ Hình ảnh đại diện sản phẩm</span>
+              <span className="text-[10px] text-gray-400 font-normal">Hỗ trợ JPG, PNG, WEBP (Tối đa 5MB)</span>
             </label>
-            <input
-              type="text"
-              name="image_url"
-              value={formData.image_url}
-              onChange={handleChange}
-              placeholder="https://images.unsplash.com/photo-..."
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
-            />
+
+            <div className="space-y-3">
+              {/* Controls: Chọn file từ PC hoặc Nhập URL */}
+              <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
+                <label className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-2xs">
+                  <span>📁</span> Chọn ảnh từ máy tính
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    className="hidden"
+                  />
+                </label>
+
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    name="image_url"
+                    value={formData.image_url}
+                    onChange={handleChange}
+                    placeholder="Hoặc dán URL ảnh từ Web (https://...)"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                  />
+                  {formData.image_url && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, image_url: '' }))}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 font-bold text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Preview Thumbnail Box */}
+              {formData.image_url && (
+                <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200/80 flex items-center gap-3 animate-fade-in">
+                  <img
+                    src={formData.image_url}
+                    alt="Preview"
+                    className="w-14 h-14 object-cover rounded-xl border border-gray-200 bg-white shrink-0"
+                    onError={(e) => {
+                      e.target.onerror = null
+                      e.target.src = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[11px] font-bold text-emerald-700 block">✓ Ảnh sản phẩm đã sẵn sàng</span>
+                    <p className="text-[10px] text-gray-400 truncate font-mono">{formData.image_url.slice(0, 60)}...</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, image_url: '' }))}
+                    className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-[11px] font-bold transition-colors shrink-0"
+                  >
+                    Đổi ảnh khác
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mô tả sản phẩm */}
