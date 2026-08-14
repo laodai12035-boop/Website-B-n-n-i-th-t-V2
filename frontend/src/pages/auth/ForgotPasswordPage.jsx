@@ -118,18 +118,7 @@ const ForgotPasswordPage = () => {
                 </ol>
               </div>
 
-              {/* Dev mode quick link for test convenience */}
-              {successData.resetLink && (
-                <div className="pt-2">
-                  <a
-                    href={successData.resetLink}
-                    className="inline-block w-full py-2.5 px-4 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-2xl font-bold text-xs transition-colors border border-amber-200"
-                  >
-                    🚀 Mở nhanh form Đặt lại mật khẩu (Dev Link) →
-                  </a>
-                </div>
-              )}
-            </div>
+              </div>
           )}
 
           <div className="mt-6 pt-5 border-t border-gray-100 text-center">
