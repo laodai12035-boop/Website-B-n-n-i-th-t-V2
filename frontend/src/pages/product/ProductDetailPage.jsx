@@ -5,6 +5,7 @@ import productService from '@/services/productService'
 import { useCompare } from '@/contexts/CompareContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useCart } from '@/contexts/CartContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 import RelatedProducts from '@/components/product/RelatedProducts'
 import ProductReviews from '@/components/product/ProductReviews'
@@ -20,6 +21,7 @@ const ProductDetailPage = () => {
   const { isComparing, addToCompare, removeFromCompare } = useCompare()
   const { isWishlisted, toggleWishlist } = useWishlist()
   const { addToCart, buyNow } = useCart()
+  const { isAuthenticated } = useAuth()
 
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
