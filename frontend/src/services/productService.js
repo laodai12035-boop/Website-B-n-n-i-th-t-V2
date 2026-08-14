@@ -54,6 +54,10 @@ const productService = {
    * @param {number} limit
    * @returns {Promise<Array>} List of related products
    */
+  async getRelatedProducts(productId, limit = 4) {
+    const response = await api.get(`/products/${productId}/related`, { params: { limit } })
+    return response.data.data.related_products
+  },
   /**
    * Admin tạo sản phẩm mới (NT-08-CN-003).
    * @param {Object} data
