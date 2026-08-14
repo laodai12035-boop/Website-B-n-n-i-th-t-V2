@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAddress } from '@/contexts/AddressContext'
 import AddAddressModal from '@/components/address/AddAddressModal'
+import CouponSelectorModal from '@/components/checkout/CouponSelectorModal'
 import couponService from '@/services/couponService'
 import orderService from '@/services/orderService'
 import shippingService from '@/services/shippingService'
@@ -95,6 +96,22 @@ const CheckoutPage = () => {
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponError, setCouponError] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false)
+
+  const handleSelectCouponFromModal = async (code) => {
+    setCouponCode(code)
+    setCouponError('')
+    setCouponLoading(true)
+    try {
+      const result = await couponService.applyCoupon(code, displaySubtotal)
+      setAppliedCoupon(result)
+    } catch (err) {
+      setCouponError(err.response?.data?.message || 'Không thể áp dụng mã giảm giá này')
+      setAppliedCoupon(null)
+    } finally {
+      setCouponLoading(false)
+    }
+  }
 
   // Restore coupon passed from CartPage
   useEffect(() => {
@@ -626,7 +643,18 @@ const CheckoutPage = () => {
                 </div>
 
                 {/* Coupon Form */}
-                <form onSubmit={handleApplyCoupon} className="space-y-1.5 pt-2 border-t border-gray-100">
+                <form onSubmit={handleApplyCoupon} className="space-y-2 pt-2 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-gray-700">Mã giảm giá / Voucher:</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsCouponModalOpen(true)}
+                      className="text-[11px] font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>🎟️</span> Chọn từ Kho Voucher
+                    </button>
+                  </div>
+
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -638,7 +666,7 @@ const CheckoutPage = () => {
                     <button
                       type="submit"
                       disabled={couponLoading || !couponCode.trim()}
-                      className="px-3.5 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-colors disabled:bg-gray-300"
+                      className="px-3.5 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-colors disabled:bg-gray-300 cursor-pointer"
                     >
                       {couponLoading ? '...' : 'Áp dụng'}
                     </button>
@@ -722,6 +750,15 @@ const CheckoutPage = () => {
         isOpen={isAddAddressModalOpen}
         onClose={() => setIsAddAddressModalOpen(false)}
         onSuccess={() => fetchAddresses()}
+      />
+
+      {/* Modal Chọn Mã Giảm Giá / Voucher Khả Dụng */}
+      <CouponSelectorModal
+        isOpen={isCouponModalOpen}
+        onClose={() => setIsCouponModalOpen(false)}
+        subtotal={displaySubtotal}
+        onSelectCoupon={handleSelectCouponFromModal}
+        currentCouponCode={couponCode}
       />
     </div>
   )

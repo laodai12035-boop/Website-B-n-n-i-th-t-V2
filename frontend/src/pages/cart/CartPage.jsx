@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import { useCart } from '@/contexts/CartContext'
 import couponService from '@/services/couponService'
+import CouponSelectorModal from '@/components/checkout/CouponSelectorModal'
 
 /**
  * CartPage — Trang Giỏ hàng đầy đủ.
@@ -15,6 +16,22 @@ const CartPage = () => {
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponError, setCouponError] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState(null) // { coupon_code, discount_amount, final_total }
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false)
+
+  const handleSelectCouponFromModal = async (code) => {
+    setCouponCode(code)
+    setCouponError('')
+    setCouponLoading(true)
+    try {
+      const result = await couponService.applyCoupon(code, cartTotal)
+      setAppliedCoupon(result)
+    } catch (err) {
+      setCouponError(err.response?.data?.message || 'Không thể áp dụng mã giảm giá này')
+      setAppliedCoupon(null)
+    } finally {
+      setCouponLoading(false)
+    }
+  }
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
@@ -261,10 +278,21 @@ const CartPage = () => {
 
                 {/* Coupon Form */}
                 <form onSubmit={handleApplyCoupon} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-gray-700">Mã giảm giá / Voucher:</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsCouponModalOpen(true)}
+                      className="text-[11px] font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>🎟️</span> Chọn từ Kho Voucher
+                    </button>
+                  </div>
+
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Nhập mã giảm giá (Ví dụ: NOITHAT10)"
+                      placeholder="Mã giảm giá (Ví dụ: NOITHAT10)"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       className="flex-1 px-3.5 py-2.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 uppercase font-semibold"
@@ -272,7 +300,7 @@ const CartPage = () => {
                     <button
                       type="submit"
                       disabled={couponLoading || !couponCode.trim()}
-                      className="px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-colors disabled:bg-gray-300"
+                      className="px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-colors disabled:bg-gray-300 cursor-pointer"
                     >
                       {couponLoading ? '...' : 'Áp dụng'}
                     </button>
@@ -303,6 +331,15 @@ const CartPage = () => {
           </div>
         )}
       </main>
+
+      {/* Modal Chọn Mã Giảm Giá / Voucher Khả Dụng */}
+      <CouponSelectorModal
+        isOpen={isCouponModalOpen}
+        onClose={() => setIsCouponModalOpen(false)}
+        subtotal={cartTotal}
+        onSelectCoupon={handleSelectCouponFromModal}
+        currentCouponCode={couponCode}
+      />
     </div>
   )
 }
