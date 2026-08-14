@@ -293,8 +293,8 @@ const CartPage = () => {
                 </div>
 
                 <button
-                  onClick={() => alert('Chức năng đặt hàng & thanh toán đang được phát triển!')}
-                  className="w-full py-4 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-sm font-bold text-center transition-colors shadow-md active:scale-98"
+                  onClick={() => navigate('/checkout', { state: { appliedCoupon } })}
+                  className="w-full py-4 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-sm font-bold text-center transition-colors shadow-md active:scale-98 cursor-pointer"
                 >
                   Tiến hành thanh toán 🚀
                 </button>

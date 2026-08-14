@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
@@ -17,6 +17,7 @@ const CheckoutPage = () => {
   const { user } = useAuth()
   const { addresses, defaultAddress, fetchAddresses } = useAddress()
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Address Selection States
   const [selectedAddressId, setSelectedAddressId] = useState(null)
@@ -56,6 +57,14 @@ const CheckoutPage = () => {
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponError, setCouponError] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState(null)
+
+  // Restore coupon passed from CartPage
+  useEffect(() => {
+    if (location.state?.appliedCoupon) {
+      setAppliedCoupon(location.state.appliedCoupon)
+      setCouponCode(location.state.appliedCoupon.coupon_code || '')
+    }
+  }, [location.state])
 
   const [submitting, setSubmitting] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState(false)
