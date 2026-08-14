@@ -141,9 +141,9 @@ const AdminQuickSearch = () => {
                     {results.products.map((prod) => (
                       <Link
                         key={prod.id}
-                        to="/products"
+                        to={`/admin/products?search=${encodeURIComponent(prod.name)}`}
                         onClick={() => setIsOpen(false)}
-                        className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-2xl transition-colors group"
+                        className="flex items-center justify-between p-2 hover:bg-amber-50/60 rounded-2xl transition-colors group cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <img
@@ -152,7 +152,7 @@ const AdminQuickSearch = () => {
                             className="w-9 h-9 rounded-xl object-cover border border-gray-100 shrink-0"
                           />
                           <div className="truncate">
-                            <span className="font-bold text-gray-900 group-hover:text-amber-600 block truncate">
+                            <span className="font-bold text-gray-900 group-hover:text-amber-800 block truncate">
                               {prod.name}
                             </span>
                             <span className="text-xs text-gray-400 uppercase">{prod.category}</span>
@@ -176,12 +176,14 @@ const AdminQuickSearch = () => {
                   </div>
                   <div className="space-y-1">
                     {results.orders.map((ord) => (
-                      <div
+                      <Link
                         key={ord.id}
-                        className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-2xl transition-colors"
+                        to={`/admin/orders?search=${encodeURIComponent(ord.id)}`}
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-between p-2 hover:bg-amber-50/60 rounded-2xl transition-colors group cursor-pointer"
                       >
                         <div>
-                          <span className="font-bold font-mono text-gray-900 block">{ord.id}</span>
+                          <span className="font-bold font-mono text-gray-900 group-hover:text-amber-800 block">{ord.id}</span>
                           <span className="text-xs text-gray-500">{ord.customer_name}</span>
                         </div>
                         <div className="text-right">
@@ -190,7 +192,7 @@ const AdminQuickSearch = () => {
                             {ord.status || 'Mới đặt'}
                           </span>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -205,23 +207,25 @@ const AdminQuickSearch = () => {
                   </div>
                   <div className="space-y-1">
                     {results.customers.map((cust) => (
-                      <div
+                      <Link
                         key={cust.id}
-                        className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-2xl transition-colors"
+                        to={`/admin/customers?search=${encodeURIComponent(cust.email || cust.full_name)}`}
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-between p-2 hover:bg-amber-50/60 rounded-2xl transition-colors group cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-xs shrink-0">
                             {cust.full_name?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
                           <div className="truncate">
-                            <span className="font-bold text-gray-900 block truncate">{cust.full_name}</span>
+                            <span className="font-bold text-gray-900 group-hover:text-amber-800 block truncate">{cust.full_name}</span>
                             <span className="text-xs text-gray-500 font-mono block truncate">{cust.email}</span>
                           </div>
                         </div>
                         <span className="text-xs font-mono text-gray-500 shrink-0 ml-2">
                           {cust.phone || 'Chưa cập nhật'}
                         </span>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>

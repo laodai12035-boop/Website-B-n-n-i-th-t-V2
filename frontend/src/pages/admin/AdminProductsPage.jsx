@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import AdminQuickSearch from '@/components/admin/AdminQuickSearch'
 import AddProductModal from '@/components/admin/AddProductModal'
@@ -13,6 +13,9 @@ import FormAlert from '@/components/ui/FormAlert'
  * Tuyến đường: /admin/products
  */
 const AdminProductsPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const searchQuery = searchParams.get('search') || ''
+
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -31,7 +34,11 @@ const AdminProductsPage = () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await productService.getAdminProducts({ limit: 100 })
+      const params = { limit: 100 }
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim()
+      }
+      const data = await productService.getAdminProducts(params)
       setProducts(data.items || [])
     } catch (err) {
       const msg = err.response?.data?.message || 'Không thể nạp danh sách sản phẩm.'
@@ -43,7 +50,7 @@ const AdminProductsPage = () => {
 
   useEffect(() => {
     fetchProducts()
-  }, [])
+  }, [searchQuery])
 
   const handleDeactivateConfirm = async () => {
     if (!deactivateTarget) return
@@ -97,6 +104,24 @@ const AdminProductsPage = () => {
             </button>
           </div>
         </div>
+
+        {searchQuery && (
+          <div className="mb-4 p-3.5 bg-amber-50 rounded-2xl border border-amber-200 flex items-center justify-between shadow-2xs animate-fade-in">
+            <div className="flex items-center gap-2 text-xs text-amber-900">
+              <span className="font-bold">🔍 Kết quả lọc sản phẩm theo từ khóa:</span>
+              <span className="px-2.5 py-0.5 bg-amber-200 text-amber-950 font-bold rounded-lg font-mono">
+                &quot;{searchQuery}&quot;
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSearchParams({})}
+              className="text-xs font-bold text-amber-800 hover:text-amber-950 hover:underline cursor-pointer flex items-center gap-1"
+            >
+              <span>✕</span> Xóa bộ lọc (Xem tất cả)
+            </button>
+          </div>
+        )}
 
         {error && (
           <div className="mb-4">
