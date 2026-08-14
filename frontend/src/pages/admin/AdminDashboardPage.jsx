@@ -118,78 +118,184 @@ const AdminDashboardPage = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           {/* Stat Item 1: Doanh Thu */}
-          <div className="bg-white rounded-3xl p-5 border border-amber-200 shadow-xs border-l-4 border-l-amber-500">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Doanh Thu</span>
-              <div className="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
+          <div className="bg-white rounded-3xl p-4 border border-amber-200 shadow-xs border-l-4 border-l-amber-500">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Doanh Thu</span>
+              <div className="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold">
                 💰
               </div>
             </div>
-            <p className="text-xl font-display font-extrabold text-amber-700 truncate">
+            <p className="text-base font-display font-extrabold text-amber-700 truncate">
               {loading ? '...' : dashboardData?.summary?.revenue_formatted || stats?.revenue || '0đ'}
             </p>
-            <span className="text-[10px] text-amber-600 font-semibold mt-1 inline-block">
+            <span className="text-[10px] text-amber-600 font-semibold mt-0.5 inline-block">
               {timeRange === 'today' ? 'Hôm nay' : timeRange === 'this_week' ? 'Tuần này' : timeRange === 'this_month' ? 'Tháng này' : timeRange === 'this_year' ? 'Năm nay' : 'Tất cả'}
             </span>
           </div>
 
-          {/* Stat Item 2: Tổng Đơn Hàng */}
-          <Link to="/admin/orders" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-blue-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Đơn Hàng</span>
-              <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-bold">
+          {/* Stat Item 2: Đơn Hàng */}
+          <Link to="/admin/orders" className="bg-white rounded-3xl p-4 border border-gray-100 shadow-xs border-l-4 border-l-blue-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Đơn Hàng</span>
+              <div className="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
                 📦
               </div>
             </div>
-            <p className="text-xl font-display font-extrabold text-gray-900">
+            <p className="text-base font-display font-extrabold text-gray-900">
               {loading ? '...' : dashboardData?.summary?.total_orders ?? stats?.total_orders ?? 0} <span className="text-xs font-normal text-gray-500">đơn</span>
             </p>
-            <span className="text-[10px] text-blue-600 font-bold mt-1 inline-block">Quản lý đơn hàng →</span>
+            <span className="text-[10px] text-blue-600 font-bold mt-0.5 inline-block">Quản lý đơn →</span>
           </Link>
 
           {/* Stat Item 3: Đổi / Trả Hàng */}
-          <Link to="/admin/returns" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-rose-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-rose-600 transition-colors">Đổi / Trả Hàng</span>
-              <div className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg font-bold">
+          <Link to="/admin/returns" className="bg-white rounded-3xl p-4 border border-gray-100 shadow-xs border-l-4 border-l-rose-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-rose-600 transition-colors">Đổi / Trả</span>
+              <div className="w-7 h-7 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-sm font-bold">
                 🔄
               </div>
             </div>
-            <p className="text-xl font-display font-extrabold text-gray-900">
+            <p className="text-base font-display font-extrabold text-gray-900">
               Yêu Cầu <span className="text-xs font-normal text-gray-500">xử lý</span>
             </p>
-            <span className="text-[10px] text-rose-600 font-bold mt-1 inline-block">Duyệt đổi/trả →</span>
+            <span className="text-[10px] text-rose-600 font-bold mt-0.5 inline-block">Duyệt đổi trả →</span>
           </Link>
 
-          {/* Stat Item 4: Tổng Khách Hàng */}
-          <Link to="/admin/customers" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Khách Hàng</span>
-              <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
+          {/* Stat Item 4: Danh Mục Sản Phẩm */}
+          <Link to="/admin/categories" className="bg-white rounded-3xl p-4 border border-gray-100 shadow-xs border-l-4 border-l-amber-600 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-amber-700 transition-colors">Danh Mục</span>
+              <div className="w-7 h-7 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-sm font-bold">
+                📁
+              </div>
+            </div>
+            <p className="text-base font-display font-extrabold text-gray-900">
+              {loading ? '...' : categoryAnalytics?.categories?.length ?? '...' } <span className="text-xs font-normal text-gray-500">danh mục</span>
+            </p>
+            <span className="text-[10px] text-amber-700 font-bold mt-0.5 inline-block">Quản lý danh mục →</span>
+          </Link>
+
+          {/* Stat Item 5: Khách Hàng */}
+          <Link to="/admin/customers" className="bg-white rounded-3xl p-4 border border-gray-100 shadow-xs border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Khách Hàng</span>
+              <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
                 👥
               </div>
             </div>
-            <p className="text-xl font-display font-extrabold text-gray-900">
+            <p className="text-base font-display font-extrabold text-gray-900">
               {loading ? '...' : stats?.total_users ?? 0} <span className="text-xs font-normal text-gray-500">user</span>
             </p>
-            <span className="text-[10px] text-emerald-600 font-bold mt-1 inline-block">Quản lý khách hàng →</span>
+            <span className="text-[10px] text-emerald-600 font-bold mt-0.5 inline-block">Quản lý user →</span>
           </Link>
 
-          {/* Stat Item 5: Tổng Sản Phẩm */}
-          <Link to="/admin/products" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-purple-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-purple-600 transition-colors">Sản Phẩm</span>
-              <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold">
+          {/* Stat Item 6: Sản Phẩm */}
+          <Link to="/admin/products" className="bg-white rounded-3xl p-4 border border-gray-100 shadow-xs border-l-4 border-l-purple-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-purple-600 transition-colors">Sản Phẩm</span>
+              <div className="w-7 h-7 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold">
                 🪑
               </div>
             </div>
-            <p className="text-xl font-display font-extrabold text-gray-900">
-              {loading ? '...' : stats?.total_products ?? 0} <span className="text-xs font-normal text-gray-500">mặt hàng</span>
+            <p className="text-base font-display font-extrabold text-gray-900">
+              {loading ? '...' : stats?.total_products ?? 0} <span className="text-xs font-normal text-gray-500">món</span>
             </p>
-            <span className="text-[10px] text-purple-600 font-bold mt-1 inline-block">Quản lý sản phẩm →</span>
+            <span className="text-[10px] text-purple-600 font-bold mt-0.5 inline-block">Quản lý sản phẩm →</span>
           </Link>
+        </div>
+
+        {/* Quick Management Navigation Grid */}
+        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs mb-8">
+          <div className="flex items-center justify-between gap-2 mb-4 border-b border-gray-100 pb-3">
+            <h2 className="text-base font-display font-extrabold text-gray-900 flex items-center gap-2">
+              <span>⚡</span> Bảng Quản Lý Phân Hệ Admin
+            </h2>
+            <span className="text-xs text-amber-800 font-bold bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">10 Chức Năng Quản Trị</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2.5">
+            <Link
+              to="/admin/categories"
+              className="p-3 bg-amber-50/70 hover:bg-amber-100/80 border border-amber-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">📁</div>
+              <div className="text-xs font-extrabold text-amber-950 group-hover:text-amber-700 truncate">Danh Mục</div>
+            </Link>
+
+            <Link
+              to="/admin/products"
+              className="p-3 bg-purple-50/70 hover:bg-purple-100/80 border border-purple-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">🪑</div>
+              <div className="text-xs font-extrabold text-purple-950 group-hover:text-purple-700 truncate">Sản Phẩm</div>
+            </Link>
+
+            <Link
+              to="/admin/orders"
+              className="p-3 bg-blue-50/70 hover:bg-blue-100/80 border border-blue-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">🛒</div>
+              <div className="text-xs font-extrabold text-blue-950 group-hover:text-blue-700 truncate">Đơn Hàng</div>
+            </Link>
+
+            <Link
+              to="/admin/returns"
+              className="p-3 bg-rose-50/70 hover:bg-rose-100/80 border border-rose-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">🔄</div>
+              <div className="text-xs font-extrabold text-rose-950 group-hover:text-rose-700 truncate">Đổi / Trả</div>
+            </Link>
+
+            <Link
+              to="/admin/inventory"
+              className="p-3 bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">📦</div>
+              <div className="text-xs font-extrabold text-emerald-950 group-hover:text-emerald-700 truncate">Kho Hàng</div>
+            </Link>
+
+            <Link
+              to="/admin/combos"
+              className="p-3 bg-indigo-50/70 hover:bg-indigo-100/80 border border-indigo-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">🧩</div>
+              <div className="text-xs font-extrabold text-indigo-950 group-hover:text-indigo-700 truncate">Combo</div>
+            </Link>
+
+            <Link
+              to="/admin/coupons"
+              className="p-3 bg-teal-50/70 hover:bg-teal-100/80 border border-teal-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">🎟️</div>
+              <div className="text-xs font-extrabold text-teal-950 group-hover:text-teal-700 truncate">Mã Giảm Giá</div>
+            </Link>
+
+            <Link
+              to="/admin/banners"
+              className="p-3 bg-cyan-50/70 hover:bg-cyan-100/80 border border-cyan-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">🖼️</div>
+              <div className="text-xs font-extrabold text-cyan-950 group-hover:text-cyan-700 truncate">Banner</div>
+            </Link>
+
+            <Link
+              to="/admin/reviews"
+              className="p-3 bg-yellow-50/70 hover:bg-yellow-100/80 border border-yellow-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">⭐</div>
+              <div className="text-xs font-extrabold text-yellow-950 group-hover:text-yellow-700 truncate">Đánh Giá</div>
+            </Link>
+
+            <Link
+              to="/admin/customers"
+              className="p-3 bg-sky-50/70 hover:bg-sky-100/80 border border-sky-100 rounded-2xl text-center group transition-all shadow-2xs hover:scale-102"
+            >
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform">👥</div>
+              <div className="text-xs font-extrabold text-sky-950 group-hover:text-sky-700 truncate">Khách Hàng</div>
+            </Link>
+          </div>
         </div>
 
         {/* TOP SELLING PRODUCTS WIDGET (NT-13-CN-001) & ORDER STATUS BREAKDOWN */}
