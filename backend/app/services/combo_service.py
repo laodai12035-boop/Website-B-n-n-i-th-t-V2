@@ -80,11 +80,17 @@ class ComboService:
                 insufficient_products.append({"product_id": item.product_id, "reason": "NOT_AVAILABLE"})
                 continue
 
-            if product.stock < item.quantity:
+            cart_item = db.session.query(CartItem).filter_by(
+                user_id=user_id, product_id=product.id
+            ).first()
+            existing_qty = cart_item.quantity if cart_item else 0
+            total_needed = existing_qty + item.quantity
+
+            if product.stock < total_needed:
                 insufficient_products.append({
                     "product_id": product.id,
                     "product_name": product.name,
-                    "requested": item.quantity,
+                    "requested": total_needed,
                     "available": product.stock,
                     "reason": "OUT_OF_STOCK",
                 })

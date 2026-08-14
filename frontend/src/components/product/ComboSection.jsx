@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import comboService from '@/services/comboService'
 import { useCart } from '@/contexts/CartContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
  * ComboSection — Component hiển thị các bộ sản phẩm Combo ưu đãi trên trang chi tiết sản phẩm.
  */
 const ComboSection = ({ productId }) => {
   const { fetchCart } = useCart()
+  const { isAuthenticated } = useAuth()
   const [combos, setCombos] = useState([])
   const [loading, setLoading] = useState(true)
   const [addingComboId, setAddingComboId] = useState(null)
@@ -34,6 +36,11 @@ const ComboSection = ({ productId }) => {
   }
 
   const handleAddCombo = async (comboId) => {
+    if (!isAuthenticated) {
+      setMsg({ type: 'error', text: 'Vui lòng đăng nhập để thêm combo vào giỏ hàng!', comboId })
+      setTimeout(() => setMsg({ type: '', text: '', comboId: null }), 4000)
+      return
+    }
     setAddingComboId(comboId)
     setMsg({ type: '', text: '', comboId: null })
     try {
@@ -42,7 +49,7 @@ const ComboSection = ({ productId }) => {
       setMsg({ type: 'success', text: res.message || 'Đã thêm combo vào giỏ hàng!', comboId })
       setTimeout(() => setMsg({ type: '', text: '', comboId: null }), 4000)
     } catch (err) {
-      const errorText = err.response?.data?.message || 'Không thể thêm combo vào giỏ hàng.'
+      const errorText = err.response?.data?.message || err.response?.data?.msg || 'Không thể thêm combo vào giỏ hàng.'
       setMsg({ type: 'error', text: errorText, comboId })
       setTimeout(() => setMsg({ type: '', text: '', comboId: null }), 5000)
     } finally {
