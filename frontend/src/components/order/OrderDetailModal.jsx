@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import orderService from '@/services/orderService'
+import returnService from '@/services/returnService'
 
 /**
  * OrderDetailModal — Modal xem chi tiết đơn hàng (NT-06-CN-001 / NT-06-CN-002).
@@ -8,6 +9,7 @@ import orderService from '@/services/orderService'
 const OrderDetailModal = ({ orderId, onClose }) => {
   const { user } = useAuth()
   const [order, setOrder] = useState(null)
+  const [returnRequest, setReturnRequest] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -16,9 +18,16 @@ const OrderDetailModal = ({ orderId, onClose }) => {
     const fetchDetail = async () => {
       setLoading(true)
       setError('')
+      setReturnRequest(null)
       try {
         const data = await orderService.getOrderDetail(orderId)
         setOrder(data)
+        try {
+          const retData = await returnService.getReturnRequestByOrder(orderId)
+          setReturnRequest(retData)
+        } catch (e) {
+          // Ignore if no return request
+        }
       } catch (err) {
         const status = err.response?.status
         const msg = err.response?.data?.message
@@ -132,9 +141,46 @@ const OrderDetailModal = ({ orderId, onClose }) => {
                   <div className="text-[11px] font-semibold text-gray-400">Hình thức thanh toán</div>
                   <div className="text-xs font-bold text-gray-800">
                     {order.payment_method === 'QR_BANK' || order.payment_method === 'qr' ? 'Chuyển khoản QR' : 'COD (Tiền mặt)'}
-                  </div>
-                </div>
               </div>
+
+              {/* Thẻ Yêu cầu Đổi/Trả Hàng & Ghi chú Phản hồi / Lý do từ chối từ Admin */}
+              {returnRequest && (
+                <div className={`p-4 rounded-2xl border text-xs space-y-2.5 ${
+                  returnRequest.status === 'pending'
+                    ? 'bg-amber-50/90 border-amber-200 text-amber-900'
+                    : returnRequest.status === 'approved'
+                    ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
+                    : 'bg-rose-50/90 border-rose-200 text-rose-900'
+                }`}>
+                  <div className="flex items-center justify-between font-bold border-b border-current/10 pb-2">
+                    <span className="flex items-center gap-1.5 font-extrabold text-xs">
+                      🔄 Yêu cầu {returnRequest.request_type === 'return' ? 'Trả hàng' : returnRequest.request_type === 'exchange' ? 'Đổi hàng' : 'Bảo hành'}:
+                    </span>
+                    <span className="uppercase text-[10px] px-2 py-0.5 rounded-full font-black bg-white/70">
+                      {returnRequest.status === 'pending' ? '⏳ Chờ Admin duyệt' : returnRequest.status === 'approved' ? '✅ Đã chấp nhận' : '❌ Đã từ chối'}
+                    </span>
+                  </div>
+
+                  <div><span className="font-semibold">Lý do từ khách hàng:</span> "{returnRequest.reason}"</div>
+
+                  {returnRequest.admin_note ? (
+                    <div className={`p-3 rounded-xl border font-medium mt-1 ${
+                      returnRequest.status === 'rejected'
+                        ? 'bg-white border-rose-200 text-rose-900 shadow-2xs'
+                        : 'bg-white border-emerald-200 text-emerald-900 shadow-2xs'
+                    }`}>
+                      <span className="font-bold block mb-0.5 text-xs">
+                        {returnRequest.status === 'rejected' ? '⚠️ Ghi chú lý do từ chối từ Admin:' : '💬 Phản hồi từ Admin:'}
+                      </span>
+                      "{returnRequest.admin_note}"
+                    </div>
+                  ) : returnRequest.status === 'rejected' && (
+                    <div className="p-2.5 rounded-xl bg-white border border-rose-200 text-rose-800 text-xs font-medium">
+                      ⚠️ Yêu cầu đã bị Admin từ chối do không đủ điều kiện quy định.
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Shipping Address */}
               <div className="space-y-2">

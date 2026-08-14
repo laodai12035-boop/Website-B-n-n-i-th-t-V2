@@ -51,14 +51,12 @@ const OrderDetailPage = () => {
         const data = await orderService.getOrderDetail(id)
         setOrder(data)
 
-        // Lấy thông tin yêu cầu đổi/trả nếu đơn hàng ở trạng thái delivered
-        if (data.status === 'delivered') {
-          try {
-            const retData = await returnService.getReturnRequestByOrder(id)
-            setReturnRequest(retData)
-          } catch (e) {
-            // Ignore if no return request
-          }
+        // Lấy thông tin yêu cầu đổi/trả nếu có
+        try {
+          const retData = await returnService.getReturnRequestByOrder(id)
+          setReturnRequest(retData)
+        } catch (e) {
+          // Ignore if no return request
         }
       } catch (err) {
         const status = err.response?.status
@@ -238,8 +236,57 @@ const OrderDetailPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-600">
                 <div><span>Ngày đặt hàng:</span> <span className="font-semibold text-gray-900">{formatDate(order.created_at)}</span></div>
                 <div><span>Hình thức thanh toán:</span> <span className="font-semibold text-gray-900">{order.payment_method === 'QR_BANK' || order.payment_method === 'qr' ? 'Chuyển khoản QR Ngân hàng' : 'Thanh toán COD'}</span></div>
-              </div>
             </div>
+
+            {/* Thẻ Trạng thái Yêu cầu Đổi/Trả & Phản hồi/Lý do từ Admin */}
+            {returnRequest && (
+              <div className={`p-5 rounded-3xl border text-xs space-y-3 animate-fade-in shadow-xs ${
+                returnRequest.status === 'pending'
+                  ? 'bg-amber-50/90 border-amber-200 text-amber-900'
+                  : returnRequest.status === 'approved'
+                  ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
+                  : 'bg-rose-50/90 border-rose-200 text-rose-900'
+              }`}>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/15 pb-3">
+                  <div className="flex items-center gap-2 font-extrabold text-sm">
+                    <span>🔄</span> Yêu cầu {returnRequest.request_type === 'return' ? 'Trả hàng & Hoàn tiền' : returnRequest.request_type === 'exchange' ? 'Đổi sản phẩm' : 'Bảo hành'}:
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${
+                      returnRequest.status === 'pending'
+                        ? 'bg-amber-200/80 text-amber-950'
+                        : returnRequest.status === 'approved'
+                        ? 'bg-emerald-200/80 text-emerald-950'
+                        : 'bg-rose-200/80 text-rose-950'
+                    }`}>
+                      {returnRequest.status === 'pending' ? '⏳ Đang chờ Admin duyệt' : returnRequest.status === 'approved' ? '✅ Đã được chấp nhận' : '❌ Đã bị từ chối'}
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-semibold opacity-75">{formatDate(returnRequest.created_at)}</span>
+                </div>
+
+                <div className="space-y-2">
+                  <div>
+                    <span className="font-bold text-gray-700">Lý do từ phía bạn:</span> <span className="italic font-medium">"{returnRequest.reason}"</span>
+                  </div>
+
+                  {returnRequest.admin_note ? (
+                    <div className={`p-3.5 rounded-2xl border font-medium mt-2 shadow-2xs ${
+                      returnRequest.status === 'rejected'
+                        ? 'bg-white border-rose-200 text-rose-900'
+                        : 'bg-white border-emerald-200 text-emerald-900'
+                    }`}>
+                      <div className="flex items-center gap-1.5 font-bold mb-1 text-xs">
+                        <span>{returnRequest.status === 'rejected' ? '⚠️ Ghi chú lý do từ chối của Admin:' : '💬 Ghi chú phản hồi từ Admin:'}</span>
+                      </div>
+                      <p className="leading-relaxed text-xs font-semibold">"{returnRequest.admin_note}"</p>
+                    </div>
+                  ) : returnRequest.status === 'rejected' && (
+                    <div className="p-3 rounded-2xl bg-white border border-rose-200 text-rose-800 text-xs font-medium mt-2">
+                      ⚠️ Yêu cầu đổi/trả đã bị Admin từ chối do không đủ điều kiện theo quy định.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Order Timeline Stepper */}
             <OrderTimeline status={order.status} />
