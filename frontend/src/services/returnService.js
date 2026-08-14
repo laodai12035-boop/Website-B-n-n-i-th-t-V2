@@ -33,6 +33,24 @@ const returnService = {
     const response = await api.get(`/returns/order/${orderId}`)
     return response.data.data
   },
+
+  /**
+   * Admin: Lấy danh sách tất cả các yêu cầu đổi/trả trong hệ thống.
+   */
+  async getAllReturnRequestsForAdmin() {
+    const response = await api.get('/returns/admin')
+    return response.data.data
+  },
+
+  /**
+   * Admin: Cập nhật trạng thái duyệt/từ chối yêu cầu đổi/trả.
+   * @param {number|string} requestId
+   * @param {Object} data - { status: 'approved'|'rejected', admin_note: string }
+   */
+  async updateReturnRequestStatus(requestId, data) {
+    const response = await api.patch(`/returns/admin/${requestId}`, data)
+    return response.data.data
+  },
 }
 
 export default returnService

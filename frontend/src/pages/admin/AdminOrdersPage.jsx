@@ -140,12 +140,20 @@ const AdminOrdersPage = () => {
             </h1>
           </div>
 
-          <Link
-            to="/admin"
-            className="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-2xl text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5"
-          >
-            ← Về Dashboard
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/admin/returns"
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5"
+            >
+              🔄 Xử lý Đổi/Trả Hàng
+            </Link>
+            <Link
+              to="/admin"
+              className="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-2xl text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5"
+            >
+              ← Về Dashboard
+            </Link>
+          </div>
         </div>
 
         {/* Summary Counter Cards */}

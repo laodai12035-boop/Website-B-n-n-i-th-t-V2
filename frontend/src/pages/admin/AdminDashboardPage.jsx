@@ -118,38 +118,52 @@ const AdminDashboardPage = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           {/* Stat Item 1: Doanh Thu */}
           <div className="bg-white rounded-3xl p-5 border border-amber-200 shadow-xs border-l-4 border-l-amber-500">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Doanh Thu Thực Tế</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Doanh Thu</span>
               <div className="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
                 💰
               </div>
             </div>
-            <p className="text-2xl font-display font-extrabold text-amber-700">
+            <p className="text-xl font-display font-extrabold text-amber-700 truncate">
               {loading ? '...' : dashboardData?.summary?.revenue_formatted || stats?.revenue || '0đ'}
             </p>
-            <span className="text-[11px] text-amber-600 font-semibold mt-1 inline-block">
-              Lọc theo {timeRange === 'today' ? 'hôm nay' : timeRange === 'this_week' ? 'tuần này' : timeRange === 'this_month' ? 'tháng này' : timeRange === 'this_year' ? 'năm nay' : 'toàn thời gian'}
+            <span className="text-[10px] text-amber-600 font-semibold mt-1 inline-block">
+              {timeRange === 'today' ? 'Hôm nay' : timeRange === 'this_week' ? 'Tuần này' : timeRange === 'this_month' ? 'Tháng này' : timeRange === 'this_year' ? 'Năm nay' : 'Tất cả'}
             </span>
           </div>
 
           {/* Stat Item 2: Tổng Đơn Hàng */}
           <Link to="/admin/orders" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-blue-500 hover:shadow-md transition-shadow group block">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Đơn Hàng Mới</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Đơn Hàng</span>
               <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-bold">
                 📦
               </div>
             </div>
-            <p className="text-2xl font-display font-extrabold text-gray-900">
+            <p className="text-xl font-display font-extrabold text-gray-900">
               {loading ? '...' : dashboardData?.summary?.total_orders ?? stats?.total_orders ?? 0} <span className="text-xs font-normal text-gray-500">đơn</span>
             </p>
-            <span className="text-[11px] text-blue-600 font-bold mt-1 inline-block">Quản lý đơn hàng →</span>
+            <span className="text-[10px] text-blue-600 font-bold mt-1 inline-block">Quản lý đơn hàng →</span>
           </Link>
 
-          {/* Stat Item 3: Tổng Khách Hàng */}
+          {/* Stat Item 3: Đổi / Trả Hàng */}
+          <Link to="/admin/returns" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-rose-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-rose-600 transition-colors">Đổi / Trả Hàng</span>
+              <div className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg font-bold">
+                🔄
+              </div>
+            </div>
+            <p className="text-xl font-display font-extrabold text-gray-900">
+              Yêu Cầu <span className="text-xs font-normal text-gray-500">xử lý</span>
+            </p>
+            <span className="text-[10px] text-rose-600 font-bold mt-1 inline-block">Duyệt đổi/trả →</span>
+          </Link>
+
+          {/* Stat Item 4: Tổng Khách Hàng */}
           <Link to="/admin/customers" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow group block">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Khách Hàng</span>
@@ -157,24 +171,24 @@ const AdminDashboardPage = () => {
                 👥
               </div>
             </div>
-            <p className="text-2xl font-display font-extrabold text-gray-900">
-              {loading ? '...' : stats?.total_users ?? 0} <span className="text-xs font-normal text-gray-500">tài khoản</span>
+            <p className="text-xl font-display font-extrabold text-gray-900">
+              {loading ? '...' : stats?.total_users ?? 0} <span className="text-xs font-normal text-gray-500">user</span>
             </p>
-            <span className="text-[11px] text-emerald-600 font-bold mt-1 inline-block">Quản lý khách hàng →</span>
+            <span className="text-[10px] text-emerald-600 font-bold mt-1 inline-block">Quản lý khách hàng →</span>
           </Link>
 
-          {/* Stat Item 4: Tổng Sản Phẩm */}
+          {/* Stat Item 5: Tổng Sản Phẩm */}
           <Link to="/admin/products" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-purple-500 hover:shadow-md transition-shadow group block">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-purple-600 transition-colors">Tổng Sản Phẩm</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-purple-600 transition-colors">Sản Phẩm</span>
               <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold">
                 🪑
               </div>
             </div>
-            <p className="text-2xl font-display font-extrabold text-gray-900">
+            <p className="text-xl font-display font-extrabold text-gray-900">
               {loading ? '...' : stats?.total_products ?? 0} <span className="text-xs font-normal text-gray-500">mặt hàng</span>
             </p>
-            <span className="text-[11px] text-purple-600 font-bold mt-1 inline-block">Quản lý sản phẩm →</span>
+            <span className="text-[10px] text-purple-600 font-bold mt-1 inline-block">Quản lý sản phẩm →</span>
           </Link>
         </div>
 
