@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
  * ComboSection — Component hiển thị các bộ sản phẩm Combo ưu đãi trên trang chi tiết sản phẩm.
  */
 const ComboSection = ({ productId }) => {
-  const { fetchCart } = useCart()
+  const { refreshCart, setIsCartOpen } = useCart()
   const { isAuthenticated } = useAuth()
   const [combos, setCombos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -45,7 +45,8 @@ const ComboSection = ({ productId }) => {
     setMsg({ type: '', text: '', comboId: null })
     try {
       const res = await comboService.addComboToCart(comboId)
-      await fetchCart()
+      if (refreshCart) await refreshCart()
+      if (setIsCartOpen) setIsCartOpen(true)
       setMsg({ type: 'success', text: res.message || 'Đã thêm combo vào giỏ hàng!', comboId })
       setTimeout(() => setMsg({ type: '', text: '', comboId: null }), 4000)
     } catch (err) {
