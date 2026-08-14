@@ -995,6 +995,40 @@ def toggle_admin_customer_status(customer_id: int):
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
 
+# ============================================================
+# GET /api/v1/admin/analytics/categories — Thống kê theo danh mục (NT-13-CN-002)
+# ============================================================
+@admin_bp.route("/analytics/categories", methods=["GET"])
+@admin_required()
+def get_category_analytics():
+    """
+    Lấy thống kê số lượng sản phẩm bán ra và doanh thu theo từng danh mục (NT-13-CN-002).
+
+    Query Parameters:
+        time_range (str): 'today', 'this_week', 'this_month', 'this_year', 'all', 'custom'
+        start_date (str): YYYY-MM-DD
+        end_date (str): YYYY-MM-DD
+    """
+    from flask import request
+    from app.services.admin_service import AdminService
+
+    time_range = request.args.get("time_range", "this_month")
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    data = AdminService.get_category_analytics(
+        time_range=time_range,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    return _success(
+        data=data,
+        message="Lấy thống kê sản phẩm theo danh mục thành công.",
+        status=200,
+    )
+
+
 
 
 

@@ -7,7 +7,7 @@ import AdminQuickSearch from '@/components/admin/AdminQuickSearch'
 import api from '@/services/api'
 
 /**
- * AdminDashboardPage — Trang Bảng Điều Khiển Tổng Quan Quản Trị (NT-13-CN-001).
+ * AdminDashboardPage — Trang Bảng Điều Khiển Tổng Quan & Thống Kê Quản Trị (NT-13-CN-001 & NT-13-CN-002).
  * Chỉ xem được khi đăng nhập bằng tài khoản có role === 'admin'.
  */
 const AdminDashboardPage = () => {
@@ -18,6 +18,7 @@ const AdminDashboardPage = () => {
   const [stats, setStats] = useState(null)
   const [topProducts, setTopProducts] = useState([])
   const [statusCounts, setStatusCounts] = useState({})
+  const [categoryAnalytics, setCategoryAnalytics] = useState(null)
   const [lowStockItems, setLowStockItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -32,6 +33,9 @@ const AdminDashboardPage = () => {
       setStats(resData.stats)
       setTopProducts(resData.top_selling_products || [])
       setStatusCounts(resData.order_status_counts || {})
+
+      const catRes = await api.get('/admin/analytics/categories', { params: { time_range: range } })
+      setCategoryAnalytics(catRes.data.data)
 
       const warningRes = await api.get('/admin/inventory/low-stock-warnings')
       setLowStockItems(warningRes.data.data.items || [])
@@ -65,7 +69,7 @@ const AdminDashboardPage = () => {
                 Khu vực Quản trị (Admin)
               </span>
               <span>/</span>
-              <span className="text-gray-900 font-bold">Bảng Điều Khiển Tổng Quan</span>
+              <span className="text-gray-900 font-bold">Bảng Điều Khiển & Thống Kê Kinh Doanh</span>
             </div>
             <h1 className="text-2xl font-display font-extrabold text-gray-900">
               Chào mừng trở lại, {user?.full_name}!
@@ -83,7 +87,7 @@ const AdminDashboardPage = () => {
           </div>
         )}
 
-        {/* Time Range Filter Bar (NT-13-CN-001) */}
+        {/* Time Range Filter Bar (NT-13-CN-001 & NT-13-CN-002) */}
         <div className="bg-white rounded-3xl p-4 mb-6 border border-gray-100 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
             <span>📅 Lọc thời gian thống kê:</span>
@@ -199,7 +203,7 @@ const AdminDashboardPage = () => {
               ) : topProducts.length === 0 ? (
                 <div className="py-12 text-center text-gray-400 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50 space-y-1">
                   <p className="font-bold text-gray-700 text-sm">Chưa có dữ liệu sản phẩm bán ra</p>
-                  <p className="text-xs text-gray-500">Không tìm thấy đơn hàng nào trong khoảng thời gian này (TC-02)</p>
+                  <p className="text-xs text-gray-500">Không tìm thấy đơn hàng nào trong khoảng thời gian này</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -300,6 +304,74 @@ const AdminDashboardPage = () => {
               </Link>
             </div>
           </div>
+        </div>
+
+        {/* CATEGORY SALES & REVENUE ANALYTICS WIDGET (NT-13-CN-002) */}
+        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🪑</span>
+                <h2 className="text-lg font-display font-extrabold text-gray-900">
+                  Thống Kê Số Lượng Bán & Doanh Thu Theo Danh Mục (NT-13-CN-002)
+                </h2>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Tổng hợp doanh thu thực tế và tổng số sản phẩm đã bán ra cho từng danh mục sản phẩm.
+              </p>
+            </div>
+
+            {categoryAnalytics && (
+              <div className="flex items-center gap-3 bg-amber-50 px-4 py-2 rounded-2xl border border-amber-200">
+                <div className="text-right">
+                  <span className="text-[10px] font-bold text-amber-800 uppercase block">Tổng Doanh Thu Toàn Phân Khúc</span>
+                  <span className="text-sm font-extrabold text-amber-900">{categoryAnalytics.overall_revenue_formatted}</span>
+                </div>
+                <div className="w-px h-6 bg-amber-200"></div>
+                <div>
+                  <span className="text-[10px] font-bold text-amber-800 uppercase block">Tổng Sản Phẩm Bán</span>
+                  <span className="text-sm font-extrabold text-amber-900">{categoryAnalytics.overall_sold} món</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="py-12 text-center text-gray-400 text-xs">
+              <div className="w-6 h-6 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+              Đang tổng hợp báo cáo doanh thu theo danh mục...
+            </div>
+          ) : !categoryAnalytics || categoryAnalytics.categories.length === 0 ? (
+            <div className="py-12 text-center text-gray-400 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+              Chưa có danh mục sản phẩm nào trong hệ thống
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categoryAnalytics.categories.map((cat, idx) => (
+                <div key={cat.category_name || idx} className="p-4 bg-gray-50/80 rounded-2xl border border-gray-100 hover:border-amber-200 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-extrabold text-gray-900">{cat.category_name}</span>
+                    <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 border border-amber-200 rounded-full font-bold text-[11px]">
+                      {cat.total_sold} sản phẩm
+                    </span>
+                  </div>
+
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className="text-base font-extrabold text-amber-700">{cat.revenue_formatted}</span>
+                    <span className="text-xs font-bold text-gray-500">{cat.revenue_percentage}% tổng doanh thu</span>
+                  </div>
+
+                  {/* Progress Bar tỉ lệ doanh thu */}
+                  <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(cat.revenue_percentage, 0)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Widget Cảnh báo Tồn Kho Thấp QTN-08 */}
