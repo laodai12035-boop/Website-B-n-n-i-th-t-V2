@@ -141,6 +141,8 @@ const OrderDetailModal = ({ orderId, onClose }) => {
                   <div className="text-[11px] font-semibold text-gray-400">Hình thức thanh toán</div>
                   <div className="text-xs font-bold text-gray-800">
                     {order.payment_method === 'QR_BANK' || order.payment_method === 'qr' ? 'Chuyển khoản QR' : 'COD (Tiền mặt)'}
+                  </div>
+                </div>
               </div>
 
               {/* Thẻ Yêu cầu Đổi/Trả Hàng & Ghi chú Phản hồi / Lý do từ chối từ Admin */}
