@@ -324,3 +324,153 @@ class AdminService:
             "updated_at": datetime.utcnow().isoformat(),
         }
 
+    @staticmethod
+    def get_dashboard_analytics(
+        time_range: str = "this_month",
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Quản trị viên xem bảng điều khiển tổng quan (NT-13-CN-001).
+
+        Args:
+            time_range: 'today', 'this_week', 'this_month', 'this_year', 'all', 'custom'
+            start_date: ngày bắt đầu YYYY-MM-DD (dành cho custom)
+            end_date: ngày kết thúc YYYY-MM-DD (dành cho custom)
+
+        Returns:
+            Dict chứa `summary`, `order_status_counts`, `top_selling_products`, `time_range`.
+        """
+        from datetime import datetime, timedelta
+        from sqlalchemy import func
+        from app.models.order import OrderItem
+        from app.services.stock_service import StockService
+
+        now = datetime.utcnow()
+        dt_start = None
+        dt_end = None
+
+        tr = (time_range or "this_month").strip().lower()
+
+        if tr == "today":
+            dt_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            dt_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif tr == "this_week":
+            dt_start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+            dt_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif tr == "this_month":
+            dt_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            dt_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif tr == "this_year":
+            dt_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            dt_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif tr == "custom":
+            if start_date and start_date.strip():
+                try:
+                    dt_start = datetime.strptime(start_date.strip(), "%Y-%m-%d")
+                except ValueError:
+                    dt_start = None
+            if end_date and end_date.strip():
+                try:
+                    dt_end = datetime.strptime(end_date.strip(), "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+                except ValueError:
+                    dt_end = None
+
+        # Base Order Query theo time range
+        orders_query = db.session.query(Order)
+        if dt_start:
+            orders_query = orders_query.filter(Order.created_at >= dt_start)
+        if dt_end:
+            orders_query = orders_query.filter(Order.created_at <= dt_end)
+
+        total_orders = orders_query.count()
+
+        # Doanh thu thực tế (chỉ tính các đơn KHÔNG bị hủy status != 'cancelled')
+        rev_query = (
+            db.session.query(func.coalesce(func.sum(Order.total_amount), 0.0))
+            .filter(Order.status != "cancelled")
+        )
+        if dt_start:
+            rev_query = rev_query.filter(Order.created_at >= dt_start)
+        if dt_end:
+            rev_query = rev_query.filter(Order.created_at <= dt_end)
+
+        total_revenue_val = float(rev_query.scalar() or 0.0)
+        formatted_revenue = f"{int(total_revenue_val):,}đ".replace(",", ".")
+
+        # Đếm chi tiết theo từng trạng thái đơn hàng
+        status_counts = {
+            "pending": orders_query.filter(Order.status == "pending").count(),
+            "confirmed": orders_query.filter(Order.status == "confirmed").count(),
+            "shipping": orders_query.filter(Order.status == "shipping").count(),
+            "delivered": orders_query.filter(Order.status == "delivered").count(),
+            "cancelled": orders_query.filter(Order.status == "cancelled").count(),
+        }
+
+        # Thống kê tổng số đối tượng toàn hệ thống
+        total_users = db.session.query(User).filter(User.role == "user").count()
+        total_products = db.session.query(Product).count()
+        low_stock_res = StockService.get_low_stock_products()
+
+        # Top 5 Sản phẩm bán chạy nhất (Bỏ qua đơn bị hủy)
+        top_products_query = (
+            db.session.query(
+                OrderItem.product_id,
+                func.coalesce(Product.name, OrderItem.product_name).label("name"),
+                Product.image_url.label("image_url"),
+                Product.price.label("price"),
+                func.sum(OrderItem.quantity).label("sold_count"),
+                func.sum(OrderItem.quantity * OrderItem.price).label("revenue"),
+            )
+            .join(Order, OrderItem.order_id == Order.id)
+            .outerjoin(Product, OrderItem.product_id == Product.id)
+            .filter(Order.status != "cancelled")
+        )
+
+        if dt_start:
+            top_products_query = top_products_query.filter(Order.created_at >= dt_start)
+        if dt_end:
+            top_products_query = top_products_query.filter(Order.created_at <= dt_end)
+
+        top_products_rows = (
+            top_products_query.group_by(
+                OrderItem.product_id,
+                Product.name,
+                OrderItem.product_name,
+                Product.image_url,
+                Product.price,
+            )
+            .order_by(func.sum(OrderItem.quantity).desc())
+            .limit(5)
+            .all()
+        )
+
+        top_selling_products = [
+            {
+                "product_id": tp.product_id,
+                "name": tp.name or f"Sản phẩm #{tp.product_id}",
+                "image_url": tp.image_url,
+                "price": float(tp.price or 0.0),
+                "sold_count": int(tp.sold_count or 0),
+                "revenue": float(tp.revenue or 0.0),
+                "revenue_formatted": f"{int(tp.revenue or 0):,}đ".replace(",", "."),
+            }
+            for tp in top_products_rows
+        ]
+
+        return {
+            "time_range": tr,
+            "start_date": dt_start.isoformat() if dt_start else None,
+            "end_date": dt_end.isoformat() if dt_end else None,
+            "summary": {
+                "total_revenue": total_revenue_val,
+                "revenue_formatted": formatted_revenue,
+                "total_orders": total_orders,
+                "total_users": total_users,
+                "total_products": total_products,
+                "low_stock_count": low_stock_res["count"],
+            },
+            "order_status_counts": status_counts,
+            "top_selling_products": top_selling_products,
+        }
+

@@ -30,49 +30,38 @@ def _success(data: dict, message: str, status: int = 200):
 @admin_required()
 def get_dashboard():
     """
-    Lấy thông tin thống kê tổng quan hệ thống dành riêng cho Admin (QTN-09).
+    Lấy thông tin thống kê tổng quan hệ thống dành riêng cho Admin (NT-13-CN-001).
 
-    Header:
-        Authorization: Bearer <admin_token>
-
-    Responses:
-        200: Trả về thống kê tổng quan
-        401: Chưa đăng nhập
-        403: Không có quyền Admin (code: FORBIDDEN)
+    Query Parameters:
+        time_range (str): 'today', 'this_week', 'this_month', 'this_year', 'all', 'custom'
+        start_date (str): YYYY-MM-DD
+        end_date (str): YYYY-MM-DD
     """
-    from app.models.product import Product
-    from app.models.order import Order
-    from sqlalchemy.sql import func
+    from flask import request
+    from app.services.admin_service import AdminService
 
-    from app.services.stock_service import StockService
+    time_range = request.args.get("time_range", "this_month")
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
 
-    total_users = db.session.query(User).count()
-    total_orders = db.session.query(Order).count()
-    total_products = db.session.query(Product).count()
-
-    total_revenue_val = (
-        db.session.query(func.sum(Order.total_amount))
-        .filter(Order.payment_status == "paid")
-        .scalar()
-        or 0.0
+    data = AdminService.get_dashboard_analytics(
+        time_range=time_range,
+        start_date=start_date,
+        end_date=end_date,
     )
 
-    formatted_revenue = f"{int(total_revenue_val):,}đ".replace(",", ".")
-    low_stock_res = StockService.get_low_stock_products()
-
-    dashboard_data = {
-        "stats": {
-            "total_users": total_users,
-            "total_orders": total_orders,
-            "total_products": total_products,
-            "revenue": formatted_revenue,
-            "low_stock_count": low_stock_res["count"],
-            "system_status": "Hoạt động bình thường",
-        }
+    # Tương thích ngược với key stats cũ
+    data["stats"] = {
+        "total_users": data["summary"]["total_users"],
+        "total_orders": data["summary"]["total_orders"],
+        "total_products": data["summary"]["total_products"],
+        "revenue": data["summary"]["revenue_formatted"],
+        "low_stock_count": data["summary"]["low_stock_count"],
+        "system_status": "Hoạt động bình thường",
     }
 
     return _success(
-        data=dashboard_data,
+        data=data,
         message="Lấy thông tin dashboard quản trị thành công",
         status=200,
     )
