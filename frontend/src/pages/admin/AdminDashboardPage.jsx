@@ -7,224 +7,304 @@ import AdminQuickSearch from '@/components/admin/AdminQuickSearch'
 import api from '@/services/api'
 
 /**
- * AdminDashboardPage — Trang Tổng quan Quản trị (Admin Only).
+ * AdminDashboardPage — Trang Bảng Điều Khiển Tổng Quan Quản Trị (NT-13-CN-001).
  * Chỉ xem được khi đăng nhập bằng tài khoản có role === 'admin'.
  */
 const AdminDashboardPage = () => {
   const { user } = useAuth()
 
+  const [timeRange, setTimeRange] = useState('this_month')
+  const [dashboardData, setDashboardData] = useState(null)
   const [stats, setStats] = useState(null)
+  const [topProducts, setTopProducts] = useState([])
+  const [statusCounts, setStatusCounts] = useState({})
   const [lowStockItems, setLowStockItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    const fetchDashboardStats = async () => {
-      setLoading(true)
-      try {
-        const response = await api.get('/admin/dashboard')
-        setStats(response.data.data.stats)
+  const fetchDashboardStats = async (range = timeRange) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await api.get('/admin/dashboard', { params: { time_range: range } })
+      const resData = response.data.data
+      setDashboardData(resData)
+      setStats(resData.stats)
+      setTopProducts(resData.top_selling_products || [])
+      setStatusCounts(resData.order_status_counts || {})
 
-        const warningRes = await api.get('/admin/inventory/low-stock-warnings')
-        setLowStockItems(warningRes.data.data.items || [])
-      } catch (err) {
-        const msg = err.response?.data?.message || 'Đã xảy ra lỗi khi nạp dữ liệu quản trị'
-        setError(msg)
-      } finally {
-        setLoading(false)
-      }
+      const warningRes = await api.get('/admin/inventory/low-stock-warnings')
+      setLowStockItems(warningRes.data.data.items || [])
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Đã xảy ra lỗi khi nạp dữ liệu quản trị'
+      setError(msg)
+    } finally {
+      setLoading(false)
     }
+  }
 
-    fetchDashboardStats()
-  }, [])
+  useEffect(() => {
+    fetchDashboardStats(timeRange)
+  }, [timeRange])
+
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '0đ'
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Navbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
-
         {/* Admin Header & Quick Search Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <span className="inline-block px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-xs font-semibold uppercase tracking-wider mb-1">
-              Khu vực Quản trị viên (Admin Area)
-            </span>
-            <h1 className="text-2xl font-display font-bold text-gray-900">
-              Chào mừng, {user?.full_name}!
+            <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-1">
+              <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                Khu vực Quản trị (Admin)
+              </span>
+              <span>/</span>
+              <span className="text-gray-900 font-bold">Bảng Điều Khiển Tổng Quan</span>
+            </div>
+            <h1 className="text-2xl font-display font-extrabold text-gray-900">
+              Chào mừng trở lại, {user?.full_name}!
             </h1>
           </div>
 
-          {/* Quick Search */}
-          <AdminQuickSearch />
+          <div className="flex items-center gap-3">
+            <AdminQuickSearch />
+          </div>
         </div>
 
-        {error && <div className="mb-6"><FormAlert type="error" message={error} /></div>}
+        {error && (
+          <div className="mb-6">
+            <FormAlert type="error" message={error} />
+          </div>
+        )}
+
+        {/* Time Range Filter Bar (NT-13-CN-001) */}
+        <div className="bg-white rounded-3xl p-4 mb-6 border border-gray-100 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
+            <span>📅 Lọc thời gian thống kê:</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-2xl border border-gray-100 w-full sm:w-auto">
+            {[
+              { key: 'today', label: 'Hôm nay' },
+              { key: 'this_week', label: 'Tuần này' },
+              { key: 'this_month', label: 'Tháng này' },
+              { key: 'this_year', label: 'Năm nay' },
+              { key: 'all', label: 'Tất cả' },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setTimeRange(tab.key)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  timeRange === tab.key
+                    ? 'bg-white text-gray-900 shadow-xs'
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-
-          {/* Stat Item 1 */}
-          <div className="card border-l-4 border-l-amber-500">
+          {/* Stat Item 1: Doanh Thu */}
+          <div className="bg-white rounded-3xl p-5 border border-amber-200 shadow-xs border-l-4 border-l-amber-500">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng Người Dùng</span>
-              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Doanh Thu Thực Tế</span>
+              <div className="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
+                💰
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.total_users}</p>
-            <span className="text-xs text-emerald-600 font-medium mt-1 inline-block">↑ Tăng trưởng ổn định</span>
-          </div>
-
-          {/* Stat Item 2 */}
-          <Link to="/admin/orders" className="card border-l-4 border-l-blue-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Tổng Đơn Hàng</span>
-              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.total_orders}</p>
-            <span className="text-xs text-blue-600 font-bold mt-1 inline-block">Quản lý đơn hàng →</span>
-          </Link>
-
-          {/* Stat Item 3: Danh Mục Sản Phẩm */}
-          <Link to="/admin/categories" className="card border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Danh Mục Sản Phẩm</span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.total_products}</p>
-            <span className="text-xs text-emerald-600 font-bold mt-1 inline-block">Quản lý danh mục →</span>
-          </Link>
-
-          {/* Stat Item 3b: Quản lý Sản phẩm */}
-          <Link to="/admin/products" className="card border-l-4 border-l-amber-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-amber-600 transition-colors">Sản Phẩm Kinh Doanh</span>
-              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.total_products}</p>
-            <span className="text-xs text-amber-600 font-bold mt-1 inline-block">Quản lý sản phẩm →</span>
-          </Link>
-
-          {/* Stat Item 3c: Quản lý Combo */}
-          <Link to="/admin/combos" className="card border-l-4 border-l-orange-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-orange-600 transition-colors">Combo & Bộ Sản Phẩm</span>
-              <div className="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                <span className="text-lg">🎁</span>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">Combo</p>
-            <span className="text-xs text-orange-600 font-bold mt-1 inline-block">Tạo combo ưu đãi →</span>
-          </Link>
-
-          {/* Stat Item 3d: Quản lý Kho & Tồn Kho */}
-          <Link to="/admin/inventory" className="card border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Quản Lý Kho & Tồn Kho</span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <span className="text-lg">📦</span>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">Nhập Kho</p>
-            <span className="text-xs text-emerald-600 font-bold mt-1 inline-block">Xem tồn kho & Nhập hàng →</span>
-          </Link>
-
-          {/* Stat Item 3e: Cảnh báo Tồn kho Thấp QTN-08 */}
-          <Link to="/admin/inventory" className={`card border-l-4 ${stats?.low_stock_count > 0 ? 'border-l-red-500 bg-red-50/20' : 'border-l-gray-300'} hover:shadow-md transition-shadow group block`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-red-600 transition-colors">Tồn Kho Dưới Ngưỡng</span>
-              <div className={`w-9 h-9 rounded-xl ${stats?.low_stock_count > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'} flex items-center justify-center font-bold`}>
-                ⚠️
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : (stats?.low_stock_count || 0)} <span className="text-xs font-normal text-gray-500">sản phẩm</span></p>
-            <span className={`text-xs font-bold mt-1 inline-block ${stats?.low_stock_count > 0 ? 'text-red-600 animate-pulse' : 'text-gray-500'}`}>
-              {stats?.low_stock_count > 0 ? '⚠️ Cần nhập kho ngay →' : 'Tồn kho an toàn →'}
+            <p className="text-2xl font-display font-extrabold text-amber-700">
+              {loading ? '...' : dashboardData?.summary?.revenue_formatted || stats?.revenue || '0đ'}
+            </p>
+            <span className="text-[11px] text-amber-600 font-semibold mt-1 inline-block">
+              Lọc theo {timeRange === 'today' ? 'hôm nay' : timeRange === 'this_week' ? 'tuần này' : timeRange === 'this_month' ? 'tháng này' : timeRange === 'this_year' ? 'năm nay' : 'toàn thời gian'}
             </span>
-          </Link>
-
-          {/* Stat Item 3f: Quản lý Bình luận & Đánh giá */}
-          <Link to="/admin/reviews" className="card border-l-4 border-l-indigo-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-indigo-600 transition-colors">Duyệt & Ẩn Bình Luận</span>
-              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <span className="text-lg">💬</span>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">Bình Luận</p>
-            <span className="text-xs text-indigo-600 font-bold mt-1 inline-block">Duyệt & Ẩn đánh giá →</span>
-          </Link>
-
-          {/* Stat Item 3g: Quản lý Banner Quảng Cáo */}
-          <Link to="/admin/banners" className="card border-l-4 border-l-pink-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-pink-600 transition-colors">Banner Quảng Cáo</span>
-              <div className="w-9 h-9 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
-                <span className="text-lg">🖼️</span>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">Banners</p>
-            <span className="text-xs text-pink-600 font-bold mt-1 inline-block">Quản lý banner trang chủ →</span>
-          </Link>
-
-          {/* Stat Item 3h: Quản lý Mã Giảm Giá */}
-          <Link to="/admin/coupons" className="card border-l-4 border-l-amber-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-amber-600 transition-colors">Mã Giảm Giá (QTN-01)</span>
-              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <span className="text-lg">🎟️</span>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">Coupons</p>
-            <span className="text-xs text-amber-600 font-bold mt-1 inline-block">Tạo & quản lý mã ưu đãi →</span>
-          </Link>
-
-          {/* Stat Item 3i: Quản lý Khách Hàng */}
-          <Link to="/admin/customers" className="card border-l-4 border-l-cyan-500 hover:shadow-md transition-shadow group block">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-cyan-600 transition-colors">Khách Hàng</span>
-              <div className="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center">
-                <span className="text-lg">👥</span>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : (stats?.customers || 0)} <span className="text-xs font-normal text-gray-500">tài khoản</span></p>
-            <span className="text-xs text-cyan-600 font-bold mt-1 inline-block">Danh sách & thống kê đơn →</span>
-          </Link>
-
-          {/* Stat Item 4 */}
-          <div className="card border-l-4 border-l-purple-500">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Doanh Thu Tạm Tính</span>
-              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats?.revenue}</p>
-            <span className="text-xs text-purple-600 font-medium mt-1 inline-block">Cập nhật realtime</span>
           </div>
 
+          {/* Stat Item 2: Tổng Đơn Hàng */}
+          <Link to="/admin/orders" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-blue-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Đơn Hàng Mới</span>
+              <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-bold">
+                📦
+              </div>
+            </div>
+            <p className="text-2xl font-display font-extrabold text-gray-900">
+              {loading ? '...' : dashboardData?.summary?.total_orders ?? stats?.total_orders ?? 0} <span className="text-xs font-normal text-gray-500">đơn</span>
+            </p>
+            <span className="text-[11px] text-blue-600 font-bold mt-1 inline-block">Quản lý đơn hàng →</span>
+          </Link>
+
+          {/* Stat Item 3: Tổng Khách Hàng */}
+          <Link to="/admin/customers" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Khách Hàng</span>
+              <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
+                👥
+              </div>
+            </div>
+            <p className="text-2xl font-display font-extrabold text-gray-900">
+              {loading ? '...' : stats?.total_users ?? 0} <span className="text-xs font-normal text-gray-500">tài khoản</span>
+            </p>
+            <span className="text-[11px] text-emerald-600 font-bold mt-1 inline-block">Quản lý khách hàng →</span>
+          </Link>
+
+          {/* Stat Item 4: Tổng Sản Phẩm */}
+          <Link to="/admin/products" className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs border-l-4 border-l-purple-500 hover:shadow-md transition-shadow group block">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-purple-600 transition-colors">Tổng Sản Phẩm</span>
+              <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold">
+                🪑
+              </div>
+            </div>
+            <p className="text-2xl font-display font-extrabold text-gray-900">
+              {loading ? '...' : stats?.total_products ?? 0} <span className="text-xs font-normal text-gray-500">mặt hàng</span>
+            </p>
+            <span className="text-[11px] text-purple-600 font-bold mt-1 inline-block">Quản lý sản phẩm →</span>
+          </Link>
+        </div>
+
+        {/* TOP SELLING PRODUCTS WIDGET (NT-13-CN-001) & ORDER STATUS BREAKDOWN */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Top Selling Products List (2 cols) */}
+          <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-gray-100 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🔥</span>
+                  <h2 className="text-base font-display font-extrabold text-gray-900">
+                    Top 5 Sản Phẩm Bán Chạy Nhất (NT-13-CN-001)
+                  </h2>
+                </div>
+                <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                  {timeRange === 'today' ? 'Hôm nay' : timeRange === 'this_week' ? 'Tuần này' : timeRange === 'this_month' ? 'Tháng này' : timeRange === 'this_year' ? 'Năm nay' : 'Tất cả'}
+                </span>
+              </div>
+
+              {loading ? (
+                <div className="py-12 text-center text-gray-400 text-xs">
+                  <div className="w-6 h-6 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                  Đang nạp bảng xếp hạng sản phẩm bán chạy...
+                </div>
+              ) : topProducts.length === 0 ? (
+                <div className="py-12 text-center text-gray-400 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50 space-y-1">
+                  <p className="font-bold text-gray-700 text-sm">Chưa có dữ liệu sản phẩm bán ra</p>
+                  <p className="text-xs text-gray-500">Không tìm thấy đơn hàng nào trong khoảng thời gian này (TC-02)</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {topProducts.map((p, idx) => (
+                    <div
+                      key={p.product_id || idx}
+                      className="p-3.5 bg-gray-50/70 hover:bg-amber-50/30 rounded-2xl border border-gray-100 transition-colors flex items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className={`w-7 h-7 rounded-xl font-extrabold text-xs flex items-center justify-center shrink-0 ${
+                          idx === 0 ? 'bg-amber-500 text-white shadow-xs' : idx === 1 ? 'bg-gray-300 text-gray-800' : idx === 2 ? 'bg-amber-800 text-amber-100' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          #{idx + 1}
+                        </span>
+                        <img
+                          src={p.image_url || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'}
+                          alt={p.name}
+                          className="w-10 h-10 rounded-xl object-cover border border-gray-200 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-gray-900 truncate">{p.name}</p>
+                          <p className="text-[11px] text-gray-500 font-mono">{formatCurrency(p.price)}</p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 border border-amber-200 rounded-full font-extrabold text-[11px] block mb-0.5">
+                          Đã bán: {p.sold_count}
+                        </span>
+                        <span className="text-xs font-extrabold text-gray-900 block">
+                          {p.revenue_formatted || formatCurrency(p.revenue)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-100 text-right">
+              <Link to="/admin/products" className="text-xs font-bold text-amber-700 hover:text-amber-800">
+                Xem tất cả danh mục sản phẩm →
+              </Link>
+            </div>
+          </div>
+
+          {/* Order Status Breakdown Widget (1 col) */}
+          <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xl">📊</span>
+                <h2 className="text-base font-display font-extrabold text-gray-900">
+                  Phân Loại Đơn Hàng
+                </h2>
+              </div>
+
+              <div className="space-y-3 text-xs font-medium">
+                <div className="flex items-center justify-between p-3 bg-amber-50/60 rounded-2xl border border-amber-100">
+                  <span className="text-amber-800 font-bold">Chờ xác nhận (Pending):</span>
+                  <span className="px-2.5 py-0.5 bg-amber-500 text-white rounded-full font-mono font-extrabold">
+                    {statusCounts.pending || 0}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-blue-50/60 rounded-2xl border border-blue-100">
+                  <span className="text-blue-800 font-bold">Đã xác nhận (Confirmed):</span>
+                  <span className="px-2.5 py-0.5 bg-blue-500 text-white rounded-full font-mono font-extrabold">
+                    {statusCounts.confirmed || 0}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-purple-50/60 rounded-2xl border border-purple-100">
+                  <span className="text-purple-800 font-bold">Đang giao (Shipping):</span>
+                  <span className="px-2.5 py-0.5 bg-purple-500 text-white rounded-full font-mono font-extrabold">
+                    {statusCounts.shipping || 0}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-emerald-50/60 rounded-2xl border border-emerald-100">
+                  <span className="text-emerald-800 font-bold">Đã giao (Delivered):</span>
+                  <span className="px-2.5 py-0.5 bg-emerald-600 text-white rounded-full font-mono font-extrabold">
+                    {statusCounts.delivered || 0}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-rose-50/60 rounded-2xl border border-rose-100">
+                  <span className="text-rose-800 font-bold">Đã hủy (Cancelled):</span>
+                  <span className="px-2.5 py-0.5 bg-rose-500 text-white rounded-full font-mono font-extrabold">
+                    {statusCounts.cancelled || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-100 text-center">
+              <Link to="/admin/orders" className="text-xs font-bold text-blue-600 hover:text-blue-700">
+                Chi tiết lịch sử đơn hàng →
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Widget Cảnh báo Tồn Kho Thấp QTN-08 */}
         {lowStockItems.length > 0 && (
-          <div className="card mb-8 border-amber-200 bg-amber-50/30">
+          <div className="card mb-8 border-amber-200 bg-amber-50/30 rounded-3xl">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-xl">⚠️</span>
@@ -257,7 +337,7 @@ const AdminDashboardPage = () => {
         )}
 
         {/* Security & Access Logs Card */}
-        <div className="card">
+        <div className="card rounded-3xl">
           <h2 className="text-lg font-display font-bold text-gray-900 mb-4">Trạng thái bảo vệ phân quyền (QTN-09)</h2>
           <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
             <svg className="w-6 h-6 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,7 +349,6 @@ const AdminDashboardPage = () => {
             </div>
           </div>
         </div>
-
       </main>
     </div>
   )
