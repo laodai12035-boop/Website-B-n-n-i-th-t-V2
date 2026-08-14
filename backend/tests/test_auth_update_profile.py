@@ -174,3 +174,50 @@ class TestUpdateProfileInvalidData:
         }
         response = put_profile(client, None, payload)
         assert response.status_code == 401
+
+
+class TestUploadAvatarFromLocal:
+    """Kiểm thử tính năng chọn và tải tệp ảnh avatar từ máy tính (NT-01-CN-005)."""
+
+    def test_upload_avatar_file_success(self, client, logged_in_user):
+        """Tải tệp ảnh hợp lệ -> 200 OK + Trả về URL avatar."""
+        import io
+        data = {
+            "avatar": (io.BytesIO(b"fake image data content"), "my_photo.png")
+        }
+        res = client.post(
+            "/api/v1/auth/upload-avatar",
+            data=data,
+            content_type="multipart/form-data",
+            headers={"Authorization": f"Bearer {logged_in_user['token']}"},
+        )
+        assert res.status_code == 200
+        body = res.get_json()
+        assert body["status"] == "success"
+        assert "avatar_url" in body["data"]
+
+    def test_upload_avatar_invalid_file_extension(self, client, logged_in_user):
+        """Tải tệp đuôi .exe không được hỗ trợ -> 400 INVALID_FILE_TYPE."""
+        import io
+        data = {
+            "avatar": (io.BytesIO(b"binary exe content"), "malicious_script.exe")
+        }
+        res = client.post(
+            "/api/v1/auth/upload-avatar",
+            data=data,
+            content_type="multipart/form-data",
+            headers={"Authorization": f"Bearer {logged_in_user['token']}"},
+        )
+        assert res.status_code == 400
+        assert res.get_json()["code"] == "INVALID_FILE_TYPE"
+
+    def test_upload_avatar_no_file(self, client, logged_in_user):
+        """Không gửi tệp avatar -> 400 NO_FILE_PROVIDED."""
+        res = client.post(
+            "/api/v1/auth/upload-avatar",
+            data={},
+            content_type="multipart/form-data",
+            headers={"Authorization": f"Bearer {logged_in_user['token']}"},
+        )
+        assert res.status_code == 400
+        assert res.get_json()["code"] == "NO_FILE_PROVIDED"

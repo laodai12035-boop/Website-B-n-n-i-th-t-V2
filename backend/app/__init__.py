@@ -45,6 +45,16 @@ def create_app(config_name: str = None) -> Flask:
     # --- Đăng ký blueprints ---
     _register_blueprints(app)
 
+    # --- Ensure uploads folder exists & route static uploads ---
+    uploads_dir = os.path.join(app.root_path, "static", "uploads", "avatars")
+    os.makedirs(uploads_dir, exist_ok=True)
+
+    @app.route("/uploads/<path:filename>")
+    def serve_uploads(filename):
+        from flask import send_from_directory
+        uploads_base = os.path.join(app.root_path, "static", "uploads")
+        return send_from_directory(uploads_base, filename)
+
     # --- Tự động migrate schema MySQL (tránh lỗi OperationalError 1054) ---
     from app.auto_migrate import run_auto_migrations
     run_auto_migrations(app)
