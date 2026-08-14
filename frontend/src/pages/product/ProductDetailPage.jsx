@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import productService from '@/services/productService'
 import { useCompare } from '@/contexts/CompareContext'
@@ -16,6 +16,7 @@ import ComboSection from '@/components/product/ComboSection'
  */
 const ProductDetailPage = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { isComparing, addToCompare, removeFromCompare } = useCompare()
   const { isWishlisted, toggleWishlist } = useWishlist()
   const { addToCart, buyNow } = useCart()
