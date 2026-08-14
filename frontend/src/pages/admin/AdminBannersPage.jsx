@@ -70,16 +70,24 @@ const AdminBannersPage = () => {
   const fetchOptions = async () => {
     try {
       const [prods, cats, combos] = await Promise.all([
-        productService.getProducts().catch(() => ({ products: [] })),
+        productService.getProducts({ limit: 100 }).catch(() => ({ items: [] })),
         categoryService.getCategories().catch(() => []),
-        comboService.getCombos().catch(() => []),
+        comboService.getAdminCombos().catch(() => []),
       ])
-      const pArr = prods.products || prods || []
+
+      const pArr = prods?.items || prods?.products || (Array.isArray(prods) ? prods : [])
+      const cArr = Array.isArray(cats) ? cats : cats?.categories || []
+      const cbArr = Array.isArray(combos) ? combos : combos?.combos || []
+
       setProductList(pArr)
-      setCategoryList(cats || [])
-      setComboList(combos || [])
+      setCategoryList(cArr)
+      setComboList(cbArr)
+
+      if (pArr.length > 0) setSelectedProduct(String(pArr[0].id))
+      if (cArr.length > 0) setSelectedCategory(cArr[0].slug || cArr[0].name)
+      if (cbArr.length > 0) setSelectedCombo(String(cbArr[0].id))
     } catch (e) {
-      console.error(e)
+      console.error('fetchOptions error:', e)
     }
   }
 
@@ -136,18 +144,30 @@ const AdminBannersPage = () => {
     setLinkTargetType(type)
     if (type === 'all') {
       setFormData((prev) => ({ ...prev, link_url: '/products' }))
-    } else if (type === 'product' && productList.length > 0) {
-      const pId = selectedProduct || productList[0].id
-      setSelectedProduct(pId)
-      setFormData((prev) => ({ ...prev, link_url: `/products/${pId}` }))
-    } else if (type === 'category' && categoryList.length > 0) {
-      const catSlug = selectedCategory || categoryList[0].slug || categoryList[0].name
-      setSelectedCategory(catSlug)
-      setFormData((prev) => ({ ...prev, link_url: `/products?category=${catSlug}` }))
-    } else if (type === 'combo' && comboList.length > 0) {
-      const cId = selectedCombo || comboList[0].id
-      setSelectedCombo(cId)
-      setFormData((prev) => ({ ...prev, link_url: `/products?combo=${cId}` }))
+    } else if (type === 'product') {
+      const pId = selectedProduct || (productList.length > 0 ? productList[0].id : '')
+      if (pId) {
+        setSelectedProduct(pId)
+        setFormData((prev) => ({ ...prev, link_url: `/products/${pId}` }))
+      } else {
+        setFormData((prev) => ({ ...prev, link_url: '/products' }))
+      }
+    } else if (type === 'category') {
+      const catSlug = selectedCategory || (categoryList.length > 0 ? (categoryList[0].slug || categoryList[0].name) : '')
+      if (catSlug) {
+        setSelectedCategory(catSlug)
+        setFormData((prev) => ({ ...prev, link_url: `/products?category=${catSlug}` }))
+      } else {
+        setFormData((prev) => ({ ...prev, link_url: '/products' }))
+      }
+    } else if (type === 'combo') {
+      const cId = selectedCombo || (comboList.length > 0 ? comboList[0].id : '')
+      if (cId) {
+        setSelectedCombo(cId)
+        setFormData((prev) => ({ ...prev, link_url: `/products?combo=${cId}` }))
+      } else {
+        setFormData((prev) => ({ ...prev, link_url: '/products' }))
+      }
     }
   }
 
@@ -171,7 +191,6 @@ const AdminBannersPage = () => {
 
   const handleOpenModal = (banner = null) => {
     setModalError(null)
-    setLinkTargetType('custom')
     if (banner) {
       setEditingBanner(banner)
       setFormData({
@@ -184,19 +203,48 @@ const AdminBannersPage = () => {
         start_date: banner.start_date ? banner.start_date.substring(0, 16) : '',
         end_date: banner.end_date ? banner.end_date.substring(0, 16) : '',
       })
+
+      if (banner.link_url) {
+        if (banner.link_url.startsWith('/products/')) {
+          const pId = banner.link_url.replace('/products/', '')
+          setLinkTargetType('product')
+          setSelectedProduct(pId)
+        } else if (banner.link_url.includes('category=')) {
+          const cat = banner.link_url.split('category=')[1]
+          setLinkTargetType('category')
+          setSelectedCategory(cat)
+        } else if (banner.link_url.includes('combo=')) {
+          const cb = banner.link_url.split('combo=')[1]
+          setLinkTargetType('combo')
+          setSelectedCombo(cb)
+        } else if (banner.link_url === '/products') {
+          setLinkTargetType('all')
+        } else {
+          setLinkTargetType('custom')
+        }
+      } else {
+        setLinkTargetType('all')
+      }
     } else {
       setEditingBanner(null)
+      const firstPId = productList.length > 0 ? productList[0].id : ''
+      const defaultLink = firstPId ? `/products/${firstPId}` : '/products'
       setFormData({
         title: 'Bộ Sưu Tập Nội Thất Mới 2026',
         subtitle: 'Giảm giá lên đến 20% cho tất cả đơn hàng trọn bộ',
         image_url: sampleImages[0].url,
-        link_url: '/products',
+        link_url: defaultLink,
         display_order: banners.length + 1,
         is_active: true,
         start_date: '',
         end_date: '',
       })
-      setLinkTargetType('all')
+      if (firstPId) {
+        setLinkTargetType('product')
+        setSelectedProduct(firstPId)
+      } else {
+        setLinkTargetType('all')
+      }
     }
     setIsModalOpen(true)
   }
@@ -638,54 +686,62 @@ const AdminBannersPage = () => {
                 {/* Sub-selectors depending on target type */}
                 {linkTargetType === 'product' && (
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 mb-1">Chọn sản phẩm đích:</label>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1">Chọn sản phẩm đích:</label>
                     <select
-                      value={selectedProduct}
+                      value={String(selectedProduct)}
                       onChange={handleProductSelect}
-                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-amber-500 outline-none text-xs"
+                      className="w-full px-3.5 py-2.5 bg-white border border-amber-300 shadow-2xs rounded-xl font-bold focus:ring-2 focus:ring-amber-500 outline-none text-xs text-gray-900 cursor-pointer"
                     >
-                      {productList.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} — {p.price_formatted || `${p.price}đ`}
-                        </option>
-                      ))}
+                      {productList.length === 0 ? (
+                        <option value="">(Chưa có sản phẩm nào trong hệ thống)</option>
+                      ) : (
+                        productList.map((p) => (
+                          <option key={p.id} value={String(p.id)}>
+                            🪑 {p.name} — {p.price_formatted || (p.price ? `${Number(p.price).toLocaleString('vi-VN')}đ` : '0đ')}
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
                 )}
 
                 {linkTargetType === 'category' && (
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 mb-1">Chọn danh mục đích:</label>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1">Chọn danh mục đích:</label>
                     <select
-                      value={selectedCategory}
+                      value={String(selectedCategory)}
                       onChange={handleCategorySelect}
-                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-amber-500 outline-none text-xs"
+                      className="w-full px-3.5 py-2.5 bg-white border border-amber-300 shadow-2xs rounded-xl font-bold focus:ring-2 focus:ring-amber-500 outline-none text-xs text-gray-900 cursor-pointer"
                     >
-                      {categoryList.map((c) => (
-                        <option key={c.id || c.slug} value={c.slug || c.name}>
-                          📁 {c.name}
-                        </option>
-                      ))}
+                      {categoryList.length === 0 ? (
+                        <option value="">(Chưa có danh mục nào)</option>
+                      ) : (
+                        categoryList.map((c) => (
+                          <option key={c.id || c.slug} value={c.slug || c.name}>
+                            📁 {c.name}
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
                 )}
 
                 {linkTargetType === 'combo' && (
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 mb-1">Chọn Combo khuyến mãi đích:</label>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1">Chọn Combo khuyến mãi đích:</label>
                     <select
-                      value={selectedCombo}
+                      value={String(selectedCombo)}
                       onChange={handleComboSelect}
-                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-amber-500 outline-none text-xs"
+                      className="w-full px-3.5 py-2.5 bg-white border border-amber-300 shadow-2xs rounded-xl font-bold focus:ring-2 focus:ring-amber-500 outline-none text-xs text-gray-900 cursor-pointer"
                     >
                       {comboList.length > 0 ? (
                         comboList.map((cb) => (
-                          <option key={cb.id} value={cb.id}>
+                          <option key={cb.id} value={String(cb.id)}>
                             🧩 {cb.name} ({cb.discount_percent}% OFF)
                           </option>
                         ))
                       ) : (
-                        <option value="1">🧩 Combo Nội Thất Tiết Kiệm</option>
+                        <option value="1">🧩 Combo Bộ Nội Thất Tiết Kiệm (Mẫu)</option>
                       )}
                     </select>
                   </div>
