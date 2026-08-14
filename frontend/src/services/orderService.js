@@ -66,7 +66,7 @@ export const orderService = {
    * @param {string} [note]
    */
   async updateOrderStatus(orderId, status, note) {
-    const response = await api.put(`/orders/${orderId}/status`, { status, note })
+    const response = await api.put(`/admin/orders/${orderId}/status`, { status, note })
     return response.data
   },
 }
