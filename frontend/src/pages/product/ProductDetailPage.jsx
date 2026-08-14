@@ -45,17 +45,10 @@ const ProductDetailPage = () => {
     }
   }
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = () => {
     if (!product) return
-    setCartError('')
-    try {
-      await buyNow(product, quantity)
-      navigate('/checkout')
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Không thể thực hiện Mua ngay'
-      setCartError(msg)
-      setTimeout(() => setCartError(''), 4000)
-    }
+    if (product.stock <= 0) return
+    navigate('/checkout', { state: { buyNowItem: { product, quantity } } })
   }
 
   const formatCurrency = (val) => {

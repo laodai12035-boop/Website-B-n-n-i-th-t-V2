@@ -68,15 +68,10 @@ class QRPaymentService:
         shipping_address: str,
         note: Optional[str] = None,
         coupon_code: Optional[str] = None,
+        buy_now_item: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Tạo đơn hàng Thanh toán QR ngân hàng.
-
-        Returns:
-            Dict chứa chi tiết đơn hàng, qr_url, bank_info, qr_expire_at.
-
-        Raises:
-            ValueError: MISSING_SHIPPING_INFO | CART_EMPTY | EXCEED_STOCK | QTN-01 errors
         """
         # 1. Kiểm tra thông tin nhận hàng
         if not recipient_name or not recipient_name.strip():
@@ -86,41 +81,60 @@ class QRPaymentService:
         if not shipping_address or not shipping_address.strip():
             raise ValueError("MISSING_SHIPPING_ADDRESS")
 
-        # 2. Lấy giỏ hàng
-        cart_items = db.session.query(CartItem).filter(CartItem.user_id == user_id).all()
-        if not cart_items:
-            raise ValueError("CART_EMPTY")
-
-        # 3. Kiểm tra tồn kho QTN-02
+        # 2. Lấy giỏ hàng hoặc buy_now_item
         subtotal = 0.0
         order_item_configs = []
+        is_buy_now = False
 
-        for item in cart_items:
-            product = (
-                db.session.query(Product)
-                .filter(Product.id == item.product_id, Product.is_active == True)
-                .first()
-            )
+        if buy_now_item and isinstance(buy_now_item, dict) and buy_now_item.get("product_id"):
+            p_id = int(buy_now_item["product_id"])
+            qty = int(buy_now_item.get("quantity", 1))
+            product = db.session.query(Product).filter(Product.id == p_id, Product.is_active == True).first()
             if not product:
-                raise ValueError(f"PRODUCT_NOT_AVAILABLE:{item.product_id}")
-            if item.quantity > product.stock:
+                raise ValueError(f"PRODUCT_NOT_AVAILABLE:{p_id}")
+            if qty > product.stock:
                 raise ValueError(f"EXCEED_STOCK:{product.name}:{product.stock}")
 
-            item_price = float(
-                product.discount_price
-                if product.discount_price and product.discount_price > 0
-                else product.price
-            )
-            item_subtotal = round(item_price * item.quantity, 2)
-            subtotal += item_subtotal
+            item_price = float(product.discount_price if (product.discount_price and float(product.discount_price) > 0 and float(product.discount_price) < float(product.price)) else product.price)
+            item_subtotal = round(item_price * qty, 2)
+            subtotal = item_subtotal
+
             order_item_configs.append({
                 "product": product,
                 "product_id": product.id,
                 "product_name": product.name,
-                "quantity": item.quantity,
+                "quantity": qty,
                 "price": item_price,
                 "subtotal": item_subtotal,
             })
+            is_buy_now = True
+        else:
+            cart_items = db.session.query(CartItem).filter(CartItem.user_id == user_id).all()
+            if not cart_items:
+                raise ValueError("CART_EMPTY")
+
+            for item in cart_items:
+                product = (
+                    db.session.query(Product)
+                    .filter(Product.id == item.product_id, Product.is_active == True)
+                    .first()
+                )
+                if not product:
+                    raise ValueError(f"PRODUCT_NOT_AVAILABLE:{item.product_id}")
+                if item.quantity > product.stock:
+                    raise ValueError(f"EXCEED_STOCK:{product.name}:{product.stock}")
+
+                item_price = float(item.to_dict()["price"])
+                item_subtotal = round(item_price * item.quantity, 2)
+                subtotal += item_subtotal
+                order_item_configs.append({
+                    "product": product,
+                    "product_id": product.id,
+                    "product_name": product.name,
+                    "quantity": item.quantity,
+                    "price": item_price,
+                    "subtotal": item_subtotal,
+                })
 
         subtotal = round(subtotal, 2)
 
@@ -176,8 +190,8 @@ class QRPaymentService:
             db.session.add(order_item)
             cfg["product"].stock -= cfg["quantity"]
 
-        # Xóa giỏ hàng
-        db.session.query(CartItem).filter(CartItem.user_id == user_id).delete()
+        if not is_buy_now:
+            db.session.query(CartItem).filter(CartItem.user_id == user_id).delete()
         db.session.commit()
 
         # 7. Sinh QR URL

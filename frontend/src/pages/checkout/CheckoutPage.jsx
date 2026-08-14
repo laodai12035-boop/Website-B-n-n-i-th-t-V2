@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import { useCart } from '@/contexts/CartContext'
@@ -13,11 +13,49 @@ import shippingService from '@/services/shippingService'
  * CheckoutPage — Trang Thanh toán đặt hàng (Express Checkout / Standard Checkout).
  */
 const CheckoutPage = () => {
-  const { items, cartTotal, clearCart, fetchCart } = useCart()
+  const { items, cartTotal, fetchCart } = useCart()
   const { user } = useAuth()
-  const { addresses, defaultAddress, fetchAddresses } = useAddress()
+  const { addresses, defaultAddress } = useAddress()
   const navigate = useNavigate()
   const location = useLocation()
+
+  const buyNowItem = location.state?.buyNowItem
+
+  const displayItems = useMemo(() => {
+    if (buyNowItem?.product) {
+      const p = buyNowItem.product
+      const price = parseFloat(
+        p.discount_price && parseFloat(p.discount_price) > 0 && parseFloat(p.discount_price) < parseFloat(p.price)
+          ? p.discount_price
+          : p.price
+      )
+      const qty = buyNowItem.quantity || 1
+      return [
+        {
+          id: 'buynow-' + p.id,
+          product_id: p.id,
+          quantity: qty,
+          price: price,
+          subtotal: price * qty,
+          product: p,
+        },
+      ]
+    }
+    return items
+  }, [buyNowItem, items])
+
+  const displaySubtotal = useMemo(() => {
+    if (buyNowItem?.product) {
+      const p = buyNowItem.product
+      const price = parseFloat(
+        p.discount_price && parseFloat(p.discount_price) > 0 && parseFloat(p.discount_price) < parseFloat(p.price)
+          ? p.discount_price
+          : p.price
+      )
+      return price * (buyNowItem.quantity || 1)
+    }
+    return cartTotal
+  }, [buyNowItem, cartTotal])
 
   // Address Selection States
   const [selectedAddressId, setSelectedAddressId] = useState(null)
@@ -80,8 +118,8 @@ const CheckoutPage = () => {
   const countdownRef = useRef(null)
 
   // Shipping fee states (QTN-07)
-  const [shippingFee, setShippingFee] = useState(null)       // null = chưa tính
-  const [shippingZone, setShippingZone] = useState(null)     // 'inner_city' | 'province'
+  const [shippingFee, setShippingFee] = useState(null)
+  const [shippingZone, setShippingZone] = useState(null)
   const [shippingWarning, setShippingWarning] = useState(false)
   const [shippingLoading, setShippingLoading] = useState(false)
   const shippingDebounceRef = useRef(null)
@@ -102,7 +140,7 @@ const CheckoutPage = () => {
         setShippingZone(res.zone)
         setShippingWarning(res.missing_data_warning)
       } catch {
-        setShippingFee(120000) // fallback default
+        setShippingFee(120000)
       } finally {
         setShippingLoading(false)
       }
@@ -121,7 +159,7 @@ const CheckoutPage = () => {
 
     setCouponLoading(true)
     try {
-      const res = await couponService.applyCoupon(couponCode, cartTotal)
+      const res = await couponService.applyCoupon(couponCode, displaySubtotal)
       setAppliedCoupon(res)
       setCouponError('')
     } catch (err) {
@@ -150,18 +188,16 @@ const CheckoutPage = () => {
         shipping_address: address.trim(),
         note: note.trim(),
         coupon_code: appliedCoupon ? appliedCoupon.coupon_code : null,
+        buy_now_item: buyNowItem ? { product_id: buyNowItem.product.id, quantity: buyNowItem.quantity || 1 } : null,
       }
 
       if (paymentMethod === 'qr') {
-        // QR Bank Payment flow
         const result = await orderService.createQrOrder(orderPayload)
         setQrOrderInfo(result)
-        // Start countdown
         const expireAt = new Date(result.qr_expire_at + 'Z')
         const secondsLeft = Math.max(0, Math.floor((expireAt - Date.now()) / 1000))
         setQrSecondsLeft(secondsLeft)
-        if (fetchCart) await fetchCart()
-        // Start polling every 5s
+        if (fetchCart && !buyNowItem) await fetchCart()
         pollingRef.current = setInterval(async () => {
           try {
             const status = await orderService.getQrStatus(result.id)
@@ -172,7 +208,6 @@ const CheckoutPage = () => {
             }
           } catch {}
         }, 5000)
-        // Countdown timer
         countdownRef.current = setInterval(() => {
           setQrSecondsLeft(s => {
             if (s <= 1) {
@@ -185,10 +220,9 @@ const CheckoutPage = () => {
           })
         }, 1000)
       } else {
-        // COD flow
         const createdOrder = await orderService.createCodOrder(orderPayload)
         setCreatedOrderInfo(createdOrder)
-        if (fetchCart) await fetchCart()
+        if (fetchCart && !buyNowItem) await fetchCart()
         setOrderSuccess(true)
       }
     } catch (err) {
@@ -552,11 +586,11 @@ const CheckoutPage = () => {
             <div className="lg:col-span-5">
               <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-6 sticky top-24">
                 <h3 className="text-base font-display font-bold text-gray-900 pb-3 border-b border-gray-100">
-                  Sản phẩm đặt mua ({items.length})
+                  Sản phẩm đặt mua ({displayItems.length})
                 </h3>
 
                 <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                  {items.map((item) => (
+                  {displayItems.map((item) => (
                     <div key={item.id || item.product_id} className="flex gap-3 items-center">
                       <img
                         src={item.product?.image_url || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'}
@@ -577,7 +611,7 @@ const CheckoutPage = () => {
                 <div className="pt-4 border-t border-gray-100 space-y-2 text-xs">
                   <div className="flex justify-between text-gray-600">
                     <span>Tạm tính:</span>
-                    <span className="font-bold text-gray-900">{formatCurrency(cartTotal)}</span>
+                    <span className="font-bold text-gray-900">{formatCurrency(displaySubtotal)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>Phí vận chuyển:</span>
@@ -620,7 +654,7 @@ const CheckoutPage = () => {
                   {/* Tạm tính */}
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Tạm tính:</span>
-                    <span className="font-semibold text-gray-800">{formatCurrency(appliedCoupon ? appliedCoupon.final_total : cartTotal)}</span>
+                    <span className="font-semibold text-gray-800">{formatCurrency(appliedCoupon ? appliedCoupon.final_total : displaySubtotal)}</span>
                   </div>
 
                   {/* Phí vận chuyển QTN-07 */}
@@ -664,7 +698,7 @@ const CheckoutPage = () => {
                     <span className="text-sm font-bold text-gray-900">Tổng thanh toán:</span>
                     <span className="text-xl font-extrabold text-amber-800 font-display">
                       {formatCurrency(
-                        (appliedCoupon ? appliedCoupon.final_total : cartTotal) + (shippingFee || 0)
+                        (appliedCoupon ? appliedCoupon.final_total : displaySubtotal) + (shippingFee || 0)
                       )}
                     </span>
                   </div>
