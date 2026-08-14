@@ -424,5 +424,81 @@ def update_profile():
     )
 
 
+# ============================================================
+# POST /api/v1/auth/upload-avatar — Tải ảnh đại diện từ máy tính (NT-01-CN-005)
+# ============================================================
+@auth_bp.route("/upload-avatar", methods=["POST"])
+@jwt_required()
+def upload_avatar():
+    """
+    Tải tệp ảnh đại diện avatar từ máy tính cá nhân.
+
+    Header:
+        Authorization: Bearer <token>
+    Form-Data:
+        avatar: File (png, jpg, jpeg, webp, gif)
+
+    Responses:
+        200: Tải ảnh thành công, trả về avatar_url
+        400: Tệp không hợp lệ hoặc dung lượng vượt 5MB
+    """
+    import os
+    import time
+    from flask import current_app
+
+    current_user_id = get_jwt_identity()
+
+    if "avatar" not in request.files:
+        return _error(
+            message="Vui lòng chọn tệp ảnh đại diện để tải lên.",
+            code="NO_FILE_PROVIDED",
+            status=400,
+        )
+
+    file = request.files["avatar"]
+    if not file or not file.filename:
+        return _error(
+            message="Tệp ảnh không hợp lệ hoặc rỗng.",
+            code="EMPTY_FILE",
+            status=400,
+        )
+
+    # Validate file extension
+    allowed_extensions = {"png", "jpg", "jpeg", "webp", "gif"}
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if ext not in allowed_extensions:
+        return _error(
+            message="Định dạng tệp không được hỗ trợ. Vui lòng chọn tệp PNG, JPG, JPEG, WEBP hoặc GIF.",
+            code="INVALID_FILE_TYPE",
+            status=400,
+        )
+
+    # Validate file size (Max 5MB)
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+    if file_size > 5 * 1024 * 1024:
+        return _error(
+            message="Dung lượng tệp ảnh quá lớn. Vui lòng chọn tệp dưới 5MB.",
+            code="FILE_TOO_LARGE",
+            status=400,
+        )
+
+    # Generate unique filename
+    filename = f"avatar_u{current_user_id}_{int(time.time())}.{ext}"
+    upload_folder = os.path.join(current_app.root_path, "static", "uploads", "avatars")
+    os.makedirs(upload_folder, exist_ok=True)
+    file_path = os.path.join(upload_folder, filename)
+    file.save(file_path)
+
+    avatar_url = f"http://localhost:5000/uploads/avatars/{filename}"
+
+    return _success(
+        data={"avatar_url": avatar_url, "filename": filename},
+        message="Tải ảnh đại diện thành công.",
+        status=200,
+    )
+
+
 
 
