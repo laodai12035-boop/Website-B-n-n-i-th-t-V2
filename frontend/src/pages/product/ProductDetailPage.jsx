@@ -47,6 +47,11 @@ const ProductDetailPage = () => {
 
   const handleBuyNow = () => {
     if (!product) return
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để thực hiện Mua ngay!')
+      navigate('/login')
+      return
+    }
     if (product.stock <= 0) return
     navigate('/checkout', { state: { buyNowItem: { product, quantity } } })
   }

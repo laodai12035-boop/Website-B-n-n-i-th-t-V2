@@ -406,7 +406,7 @@ const CheckoutPage = () => {
 
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-gray-900 mb-6">Thanh toán đơn hàng</h1>
 
-        {items.length === 0 ? (
+        {displayItems.length === 0 ? (
           <div className="bg-white rounded-3xl border border-gray-100 p-8 text-center max-w-md mx-auto my-8 shadow-sm">
             <span className="text-4xl block mb-3">🛒</span>
             <p className="text-gray-500 text-xs font-medium mb-4">Bạn chưa chọn sản phẩm nào để thanh toán</p>
