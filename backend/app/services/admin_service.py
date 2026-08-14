@@ -474,3 +474,116 @@ class AdminService:
             "top_selling_products": top_selling_products,
         }
 
+    @staticmethod
+    def get_category_analytics(
+        time_range: str = "this_month",
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Xem thống kê sản phẩm theo danh mục (NT-13-CN-002).
+
+        Args:
+            time_range: 'today', 'this_week', 'this_month', 'this_year', 'all', 'custom'
+            start_date: YYYY-MM-DD
+            end_date: YYYY-MM-DD
+
+        Returns:
+            Dict thông kê số lượng bán và doanh thu theo danh mục sản phẩm.
+        """
+        from datetime import datetime, timedelta
+        from sqlalchemy import func
+        from app.models.order import OrderItem
+        from app.models.category import Category
+
+        now = datetime.utcnow()
+        dt_start = None
+        dt_end = None
+
+        tr = (time_range or "this_month").strip().lower()
+
+        if tr == "today":
+            dt_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            dt_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif tr == "this_week":
+            dt_start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+            dt_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif tr == "this_month":
+            dt_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            dt_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif tr == "this_year":
+            dt_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            dt_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif tr == "custom":
+            if start_date and start_date.strip():
+                try:
+                    dt_start = datetime.strptime(start_date.strip(), "%Y-%m-%d")
+                except ValueError:
+                    dt_start = None
+            if end_date and end_date.strip():
+                try:
+                    dt_end = datetime.strptime(end_date.strip(), "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+                except ValueError:
+                    dt_end = None
+
+        # Query thống kê số bán và doanh thu group theo Product.category
+        sales_query = (
+            db.session.query(
+                Product.category.label("category_name"),
+                func.sum(OrderItem.quantity).label("total_sold"),
+                func.sum(OrderItem.quantity * OrderItem.price).label("total_revenue"),
+            )
+            .join(OrderItem, OrderItem.product_id == Product.id)
+            .join(Order, OrderItem.order_id == Order.id)
+            .filter(Order.status != "cancelled")
+        )
+
+        if dt_start:
+            sales_query = sales_query.filter(Order.created_at >= dt_start)
+        if dt_end:
+            sales_query = sales_query.filter(Order.created_at <= dt_end)
+
+        sales_rows = sales_query.group_by(Product.category).all()
+        sales_dict = {
+            r.category_name: {
+                "total_sold": int(r.total_sold or 0),
+                "total_revenue": float(r.total_revenue or 0.0),
+            }
+            for r in sales_rows if r.category_name
+        }
+
+        # Thu thập danh sách tất cả các danh mục để bao quát cả danh mục chưa bán được sản phẩm nào (TC-02)
+        all_categories = db.session.query(Category.name).filter(Category.is_active == True).all()
+        category_names = set([c.name for c in all_categories] + list(sales_dict.keys()))
+
+        overall_revenue = sum(data["total_revenue"] for data in sales_dict.values())
+        overall_sold = sum(data["total_sold"] for data in sales_dict.values())
+
+        categories_result = []
+        for cat_name in sorted(category_names):
+            data = sales_dict.get(cat_name, {"total_sold": 0, "total_revenue": 0.0})
+            rev = data["total_revenue"]
+            sold = data["total_sold"]
+            pct = round((rev / overall_revenue) * 100, 1) if overall_revenue > 0 else 0.0
+
+            categories_result.append({
+                "category_name": cat_name,
+                "total_sold": sold,
+                "total_revenue": rev,
+                "revenue_formatted": f"{int(rev):,}đ".replace(",", "."),
+                "revenue_percentage": pct,
+            })
+
+        # Sắp xếp danh mục theo doanh thu giảm dần
+        categories_result.sort(key=lambda x: x["total_revenue"], reverse=True)
+
+        return {
+            "time_range": tr,
+            "start_date": dt_start.isoformat() if dt_start else None,
+            "end_date": dt_end.isoformat() if dt_end else None,
+            "overall_revenue": overall_revenue,
+            "overall_revenue_formatted": f"{int(overall_revenue):,}đ".replace(",", "."),
+            "overall_sold": overall_sold,
+            "categories": categories_result,
+        }
+
