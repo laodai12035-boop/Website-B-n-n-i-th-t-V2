@@ -14,6 +14,7 @@ const OrderDetailPage = () => {
   const { id } = useParams()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [errorInfo, setErrorInfo] = useState(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelReason, setCancelReason] = useState('Thay đổi nhu cầu mua hàng')
   const [cancelling, setCancelling] = useState(false)
