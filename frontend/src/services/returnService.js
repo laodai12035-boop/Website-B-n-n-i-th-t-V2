@@ -54,11 +54,17 @@ const returnService = {
   /**
    * Admin: Cập nhật trạng thái duyệt/từ chối yêu cầu đổi/trả.
    * @param {number|string} requestId
-   * @param {Object} data - { status: 'approved'|'rejected', admin_note: string }
+   * @param {Object|string} data - { status: 'approved'|'rejected', admin_note: string } hoặc string status
+   * @param {string} [note] - admin_note khi truyền tham số vị trí
    */
-  async updateReturnRequestStatus(requestId, data) {
-    const response = await api.patch(`/returns/admin/${requestId}`, data)
+  async updateReturnRequestStatus(requestId, data, note) {
+    const payload = typeof data === 'string' ? { status: data, admin_note: note } : data
+    const response = await api.patch(`/returns/admin/${requestId}`, payload)
     return response.data.data
+  },
+
+  async updateReturnStatus(requestId, status, admin_note) {
+    return this.updateReturnRequestStatus(requestId, status, admin_note)
   },
 }
 
