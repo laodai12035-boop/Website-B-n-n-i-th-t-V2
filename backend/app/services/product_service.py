@@ -137,6 +137,9 @@ class ProductService:
             query = query.order_by(effective_price.desc())
         elif sort == "rating_desc":
             query = query.order_by(Product.rating.desc(), Product.rating_count.desc())
+        elif sort == "discount" or sort == "discount_desc":
+            discount_diff = Product.price - db.func.coalesce(Product.discount_price, Product.price)
+            query = query.filter(Product.discount_price.isnot(None), Product.discount_price < Product.price).order_by(discount_diff.desc())
         else:
             # 'newest' hoặc mặc định
             query = query.order_by(Product.created_at.desc())

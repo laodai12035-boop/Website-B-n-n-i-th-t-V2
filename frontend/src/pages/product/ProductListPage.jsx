@@ -93,8 +93,32 @@ const ProductListPage = () => {
     <div className="min-h-screen bg-stone-50 flex flex-col">
       <Navbar />
 
+      {/* Banner Flash Sale / Giảm giá đặc biệt */}
+      {(currentSort === 'discount' || currentCategory === 'khuyen-mai') && (
+        <div className="bg-stone-900 text-white border-b border-amber-800 p-6 sm:p-8 animate-fade-in">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 text-center md:text-left">
+              <span className="px-3 py-1 bg-amber-800 text-white font-bold text-[10px] uppercase tracking-widest rounded-none inline-block">
+                CHƯƠNG TRÌNH TRI ÂN KHÁCH HÀNG 2026
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-heading font-bold uppercase tracking-wider text-amber-400">
+                🔥 FLASH SALE & GIẢM GIÁ ĐẶC BIỆT
+              </h2>
+              <p className="text-xs text-stone-300 max-w-xl font-sans leading-relaxed">
+                Ưu đãi đặc biệt giảm giá trực tiếp từ 10% đến 30% cho các sản phẩm nội thất phòng khách, phòng ăn & phòng ngủ cao cấp. Áp dụng đồng thời với mã giảm giá khi thanh toán!
+              </p>
+            </div>
+            <div className="bg-amber-950/80 p-4 border border-amber-800/80 text-center shrink-0 min-w-[220px]">
+              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">MÃ KHUYẾN MÃI HOT</span>
+              <span className="text-lg font-mono font-bold text-white block my-1">GIAM200K</span>
+              <span className="text-[10px] text-stone-300 block">Giảm 200.000đ đơn từ 2.000.000đ</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Banner Hero Slider Quảng Cáo tràn viền chuẩn nhaxinh.com */}
-      {!currentSearch && !currentCategory && <BannerSlider />}
+      {!currentSearch && !currentCategory && currentSort !== 'discount' && <BannerSlider />}
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
         {/* Page Header */}
@@ -103,6 +127,8 @@ const ProductListPage = () => {
             <h1 className="text-3xl font-heading font-bold text-stone-900 tracking-tight">
               {currentSearch ? (
                 <>Kết quả tìm kiếm cho: <span className="text-amber-800">"{currentSearch}"</span></>
+              ) : currentSort === 'discount' || currentCategory === 'khuyen-mai' ? (
+                <>Sản phẩm <span className="text-amber-800">Giảm giá Đặc biệt</span></>
               ) : currentCategory ? (
                 <>Danh mục: <span className="text-amber-800">{activeCategoryObj?.name || currentCategory}</span></>
               ) : (

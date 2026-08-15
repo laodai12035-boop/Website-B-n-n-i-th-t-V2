@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 
 const SORT_OPTIONS = [
   { id: 'newest', label: 'Mới nhất' },
+  { id: 'discount', label: '🔥 Giảm giá nhiều nhất' },
   { id: 'price_asc', label: 'Giá: Thấp đến Cao' },
   { id: 'price_desc', label: 'Giá: Cao đến Thấp' },
   { id: 'rating_desc', label: 'Đánh giá cao nhất' },

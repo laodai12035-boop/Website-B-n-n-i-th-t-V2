@@ -153,7 +153,7 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in font-sans">
       <div className="relative w-full max-w-lg bg-white rounded-none shadow-2xl border border-stone-200/80 overflow-hidden animate-slide-up">
-        
+
         {/* Header */}
         <div className="px-6 py-4 bg-stone-900 text-white flex items-center justify-between">
           <h2 className="text-sm font-heading font-bold uppercase tracking-wider">
@@ -188,7 +188,7 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
               disabled={locating}
               className="px-3.5 py-2 bg-amber-800 hover:bg-stone-900 text-white font-bold text-[11px] uppercase tracking-wider rounded-none transition-colors shrink-0 cursor-pointer disabled:opacity-50 shadow-2xs"
             >
-              {locating ? 'ĐANG ĐỊNH VỊ...' : '📍 ĐỊNH VỊ GPS'}
+              {locating ? 'ĐANG ĐỊNH VỊ...' : 'ĐỊNH VỊ GPS'}
             </button>
           </div>
 
