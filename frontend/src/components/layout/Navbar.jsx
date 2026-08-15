@@ -8,7 +8,8 @@ import productService from '@/services/productService'
 
 /**
  * Navbar — Thanh điều hướng chuẩn phong cách Nhà Xinh (Nội thất cao cấp).
- * Nạp danh mục sản phẩm ĐỘNG từ Database (API getCategories).
+ * 1. Nạp danh mục sản phẩm ĐỘNG từ Database (API getCategories).
+ * 2. Ẩn thanh trượt xấu xí của trình duyệt, thay bằng 2 Mũi tên cuộn 2 đầu (‹ và ›) bấm cuộn mượt mà.
  */
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
@@ -19,6 +20,12 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categories, setCategories] = useState([])
+
+  // Category scroll bar state & ref
+  const navRef = useRef(null)
+  const [showLeftArrow, setShowLeftArrow] = useState(false)
+  const [showRightArrow, setShowRightArrow] = useState(false)
+
   const dropdownRef = useRef(null)
 
   // Nạp danh mục động từ Database
@@ -63,6 +70,35 @@ const Navbar = () => {
   ]
 
   const activeCategories = categories.length > 0 ? categories : defaultCategories
+
+  // Kiểm tra vị trí cuộn để ẩn/hiện 2 mũi tên 2 đầu
+  const checkScroll = () => {
+    if (!navRef.current) return
+    const { scrollLeft, scrollWidth, clientWidth } = navRef.current
+    setShowLeftArrow(scrollLeft > 10)
+    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10)
+  }
+
+  useEffect(() => {
+    const el = navRef.current
+    if (el) {
+      el.addEventListener('scroll', checkScroll)
+      // Check ban đầu
+      checkScroll()
+      // Tự động re-check sau khi render categories
+      const timer = setTimeout(checkScroll, 300)
+      return () => {
+        el.removeEventListener('scroll', checkScroll)
+        clearTimeout(timer)
+      }
+    }
+  }, [activeCategories])
+
+  const scrollNav = (direction) => {
+    if (!navRef.current) return
+    const scrollAmount = direction === 'left' ? -260 : 260
+    navRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-xs font-sans">
@@ -239,10 +275,28 @@ const Navbar = () => {
 
       </div>
 
-      {/* 3. DYNAMIC CATEGORY NAVIGATION MENU (Nạp động từ DB) */}
-      <div className="hidden lg:block bg-white border-b border-stone-200">
-        <div className="max-w-7xl mx-auto px-8">
-          <nav className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wider text-stone-800 overflow-x-auto scrollbar-none gap-4">
+      {/* 3. DYNAMIC CATEGORY NAVIGATION MENU WITH 2 ARROWS (CUỘN MƯỢT MÀ, KHÔNG DÙNG THANH TRƯỢT XẤU XÍ) */}
+      <div className="hidden lg:block bg-white border-b border-stone-200 relative">
+        <div className="max-w-7xl mx-auto px-4 relative flex items-center">
+          
+          {/* Mũi tên Cuộn Trái (‹) */}
+          {showLeftArrow && (
+            <button
+              type="button"
+              onClick={() => scrollNav('left')}
+              className="absolute left-2 z-10 w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
+              title="Cuộn sang trái"
+            >
+              ‹
+            </button>
+          )}
+
+          {/* Nav Container — Ẩn thanh trượt ngang mặc định */}
+          <nav
+            ref={navRef}
+            className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wider text-stone-800 overflow-x-auto scrollbar-none gap-6 px-6 py-0 w-full select-none"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
             <Link to="/" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
               TRANG CHỦ
             </Link>
@@ -266,6 +320,19 @@ const Navbar = () => {
               TẤT CẢ SẢN PHẨM
             </Link>
           </nav>
+
+          {/* Mũi tên Cuộn Phải (›) */}
+          {showRightArrow && (
+            <button
+              type="button"
+              onClick={() => scrollNav('right')}
+              className="absolute right-2 z-10 w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
+              title="Cuộn sang phải"
+            >
+              ›
+            </button>
+          )}
+
         </div>
       </div>
 

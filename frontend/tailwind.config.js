@@ -43,10 +43,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Hanken Grotesk"', 'sans-serif'],
-        heading: ['"Playfair Display"', 'Georgia', 'serif'],
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        sans: ['Hanken Grotesk', 'system-ui', '-apple-system', 'sans-serif'],
+        heading: ['Playfair Display', 'Georgia', 'serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
+        display: ['Playfair Display', 'Georgia', 'serif'],
       },
       boxShadow: {
         'card': '0 4px 24px -4px rgba(0,0,0,0.06)',
