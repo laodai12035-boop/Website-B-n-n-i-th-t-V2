@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
 import ProductCard from '@/components/product/ProductCard'
 import SearchBar from '@/components/product/SearchBar'
 import ProductFilters from '@/components/product/ProductFilters'
@@ -89,7 +90,7 @@ const ProductListPage = () => {
   const activeCategoryObj = categories.find((c) => c.id === currentCategory)
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-stone-50 flex flex-col">
       <Navbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
@@ -97,19 +98,19 @@ const ProductListPage = () => {
         {!currentSearch && !currentCategory && <BannerSlider />}
 
         {/* Page Header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold text-gray-900">
+            <h1 className="text-3xl font-serif font-bold text-stone-900 tracking-tight">
               {currentSearch ? (
-                <>Kết quả tìm kiếm cho: <span className="text-primary-600 font-extrabold">"{currentSearch}"</span></>
+                <>Kết quả tìm kiếm cho: <span className="text-amber-800">"{currentSearch}"</span></>
               ) : currentCategory ? (
-                <>Danh mục: <span className="text-primary-600 font-extrabold">{activeCategoryObj?.name || currentCategory}</span></>
+                <>Danh mục: <span className="text-amber-800">{activeCategoryObj?.name || currentCategory}</span></>
               ) : (
-                'Danh sách Sản phẩm Nội thất'
+                'Tuyệt tác Nội Thất Cao Cấp'
               )}
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Khám phá các sản phẩm nội thất cao cấp cho không gian sống của bạn
+            <p className="text-sm text-stone-500 mt-1.5 font-sans">
+              Khám phá các sản phẩm nội thất sang trọng & độc bản cho không gian sống của bạn
             </p>
           </div>
 
@@ -119,7 +120,7 @@ const ProductListPage = () => {
         </div>
 
         {/* Categories Bar */}
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-3 mb-4 scrollbar-none">
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-4 mb-6 scrollbar-none">
           {categories.map((cat) => {
             const isActive = currentCategory === cat.id
             return (
@@ -127,17 +128,17 @@ const ProductListPage = () => {
                 key={cat.id}
                 type="button"
                 onClick={() => handleCategorySelect(cat.id)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                className={`px-5 py-2.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                   isActive
-                    ? 'bg-primary-600 text-white shadow-sm'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    ? 'bg-stone-900 text-white shadow-md'
+                    : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200/80 shadow-xs'
                 }`}
               >
                 <span>{cat.name}</span>
                 {cat.count !== undefined && (
                   <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
+                      isActive ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-500'
                     }`}
                   >
                     {cat.count}
@@ -196,6 +197,8 @@ const ProductListPage = () => {
         )}
 
       </main>
+
+      <Footer />
     </div>
   )
 }

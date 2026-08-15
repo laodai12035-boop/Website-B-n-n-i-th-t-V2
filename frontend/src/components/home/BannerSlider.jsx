@@ -27,7 +27,7 @@ const DEFAULT_BANNERS = [
 ]
 
 /**
- * BannerSlider — Component Slider Banner Quảng Cáo trên Trang Chủ (NT-11-CN-001).
+ * BannerSlider — Component Hero Banner Quảng Cáo phong cách Editorial Luxury.
  */
 const BannerSlider = () => {
   const [banners, setBanners] = useState(DEFAULT_BANNERS)
@@ -47,12 +47,12 @@ const BannerSlider = () => {
     fetchBanners()
   }, [])
 
-  // Auto slide every 5 seconds
+  // Auto slide every 6 seconds
   useEffect(() => {
     if (banners.length <= 1) return
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length)
-    }, 5000)
+    }, 6000)
 
     return () => clearInterval(timer)
   }, [banners.length])
@@ -67,16 +67,14 @@ const BannerSlider = () => {
 
   if (banners.length === 0) return null
 
-  const currentBanner = banners[currentIndex]
-
   return (
-    <div className="relative w-full mb-8 rounded-3xl overflow-hidden shadow-lg bg-gray-900 group">
+    <div className="relative w-full mb-10 rounded-3xl overflow-hidden shadow-2xl bg-stone-900 group">
       {/* Slider Image with Overlay */}
-      <div className="relative h-64 sm:h-80 md:h-96 w-full overflow-hidden">
+      <div className="relative h-72 sm:h-96 md:h-[440px] w-full overflow-hidden">
         {banners.map((banner, index) => (
           <div
             key={banner.id || index}
-            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+            className={`absolute inset-0 transition-all duration-1000 ease-out ${
               index === currentIndex ? 'opacity-100 z-10 scale-100' : 'opacity-0 z-0 scale-105 pointer-events-none'
             }`}
           >
@@ -85,28 +83,30 @@ const BannerSlider = () => {
               alt={banner.title}
               className="w-full h-full object-cover transform duration-1000"
             />
-            {/* Dark Overlay for Text Readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent flex items-center">
-              <div className="max-w-2xl px-6 sm:px-12 md:px-16 text-white space-y-3 animate-fade-in">
-                <span className="inline-block px-3 py-1 bg-amber-500/90 text-white rounded-full text-xs font-bold uppercase tracking-wider shadow-xs">
-                  🔥 Ưu Đãi Nổi Bật
+            {/* Dark Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-stone-950/85 via-stone-900/60 to-transparent flex items-center">
+              <div className="max-w-2xl px-8 sm:px-14 md:px-20 text-white space-y-4 animate-fade-in">
+                <span className="inline-block px-3.5 py-1 bg-amber-700/90 backdrop-blur-md text-amber-100 rounded-full text-xs font-semibold uppercase tracking-widest border border-amber-600/30">
+                  Bộ Sưu Tập Mới 2026
                 </span>
-                <h2 className="text-xl sm:text-3xl md:text-4xl font-display font-extrabold leading-tight text-white drop-shadow-md">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-serif font-bold leading-tight text-white tracking-tight drop-shadow-md">
                   {banner.title}
                 </h2>
                 {banner.subtitle && (
-                  <p className="text-xs sm:text-sm text-gray-200 line-clamp-2 max-w-xl font-medium">
+                  <p className="text-xs sm:text-sm md:text-base text-stone-300 line-clamp-2 max-w-xl font-normal leading-relaxed">
                     {banner.subtitle}
                   </p>
                 )}
                 {banner.link_url && (
-                  <div className="pt-2">
+                  <div className="pt-3">
                     <Link
                       to={banner.link_url}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-bold text-xs shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                      className="btn-gold text-xs sm:text-sm px-6 py-3 rounded-xl inline-flex items-center gap-2.5 font-medium tracking-wide shadow-luxury hover:scale-105"
                     >
                       <span>Khám Phá Ngay</span>
-                      <span>→</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
                     </Link>
                   </div>
                 )}
@@ -116,13 +116,13 @@ const BannerSlider = () => {
         ))}
       </div>
 
-      {/* Navigation Controls (Only if > 1 banner) */}
+      {/* Navigation Controls */}
       {banners.length > 1 && (
         <>
           <button
             type="button"
             onClick={handlePrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white flex items-center justify-center text-lg font-bold transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+            className="absolute left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-stone-900/40 hover:bg-stone-900/80 backdrop-blur-md text-white border border-white/20 flex items-center justify-center text-sm font-bold transition-all opacity-0 group-hover:opacity-100 cursor-pointer hover:scale-110"
             aria-label="Previous Banner"
           >
             ❮
@@ -131,21 +131,21 @@ const BannerSlider = () => {
           <button
             type="button"
             onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white flex items-center justify-center text-lg font-bold transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+            className="absolute right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-stone-900/40 hover:bg-stone-900/80 backdrop-blur-md text-white border border-white/20 flex items-center justify-center text-sm font-bold transition-all opacity-0 group-hover:opacity-100 cursor-pointer hover:scale-110"
             aria-label="Next Banner"
           >
             ❯
           </button>
 
           {/* Dots Indicator */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5">
             {banners.map((_, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => setCurrentIndex(idx)}
-                className={`h-2 rounded-full transition-all cursor-pointer ${
-                  idx === currentIndex ? 'w-8 bg-amber-500' : 'w-2 bg-white/50 hover:bg-white'
+                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  idx === currentIndex ? 'w-9 bg-amber-600' : 'w-2.5 bg-white/40 hover:bg-white'
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
