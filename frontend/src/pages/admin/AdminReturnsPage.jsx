@@ -424,15 +424,39 @@ const AdminReturnsPage = () => {
 
       {/* Modal Preview Ảnh Minh Chứng */}
       {previewImage && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
-          <div className="relative max-w-2xl max-h-[85vh] bg-white p-2 rounded-none overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-            <img src={previewImage} alt="Proof" className="max-w-full max-h-[75vh] object-contain rounded-none mx-auto" />
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-4 right-4 text-white bg-black/60 hover:bg-black p-2 font-bold text-xs"
-            >
-              ✕ ĐÓNG
-            </button>
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in font-sans"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-w-3xl w-full bg-stone-900 border border-stone-800 rounded-none shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-stone-950 border-b border-stone-800">
+              <span className="text-xs font-bold text-stone-200 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Ảnh Minh Chứng Đổi / Trả Hàng
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="px-3 py-1 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border border-stone-700"
+              >
+                ✕ Đóng
+              </button>
+            </div>
+
+            {/* Modal Image Body */}
+            <div className="p-4 flex items-center justify-center bg-stone-900/90 min-h-[300px] max-h-[80vh] overflow-auto">
+              <img
+                src={previewImage}
+                alt="Ảnh minh chứng"
+                className="max-w-full max-h-[75vh] object-contain shadow-lg border border-stone-800 bg-black/40"
+              />
+            </div>
           </div>
         </div>
       )}

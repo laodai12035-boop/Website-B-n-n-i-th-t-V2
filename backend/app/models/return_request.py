@@ -5,6 +5,7 @@ Bảng return_requests lưu vết các yêu cầu đổi trả hoặc bảo hàn
 """
 
 from datetime import datetime
+from sqlalchemy.dialects import mysql
 from app.extensions import db
 
 
@@ -40,9 +41,9 @@ class ReturnRequest(db.Model):
         comment="Lý do chi tiết khách hàng đưa ra",
     )
     proof_image_url = db.Column(
-        db.Text,
+        db.Text().with_variant(mysql.LONGTEXT, "mysql"),
         nullable=True,
-        comment="URL hình ảnh minh chứng lỗi/sản phẩm",
+        comment="URL hoặc Base64 hình ảnh minh chứng lỗi/sản phẩm",
     )
     status = db.Column(
         db.String(20),
