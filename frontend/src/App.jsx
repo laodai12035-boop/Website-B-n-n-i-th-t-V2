@@ -27,168 +27,192 @@ import OrderHistoryPage from '@/pages/order/OrderHistoryPage'
 import OrderDetailPage from '@/pages/order/OrderDetailPage'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AdminRoute from '@/components/auth/AdminRoute'
+import AdminLayout from '@/components/layout/AdminLayout'
 import { CompareProvider } from '@/contexts/CompareContext'
-import { WishlistProvider } from '@/contexts/WishlistContext'
-import { CartProvider } from '@/contexts/CartContext'
-import { AddressProvider } from '@/contexts/AddressContext'
+
 import CartDrawer from '@/components/cart/CartDrawer'
 import CompareDrawer from '@/components/product/CompareDrawer'
 
 function App() {
   return (
-    <WishlistProvider>
-      <CompareProvider>
-        <CartProvider>
-          <AddressProvider>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/403" element={<ForbiddenPage />} />
-              <Route path="/products" element={<ProductListPage />} />
-              <Route path="/products/:id" element={<ProductDetailPage />} />
-              <Route path="/compare" element={<ProductComparePage />} />
-              <Route path="/wishlist" element={<WishlistPage />} />
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
+    <CompareProvider>
+      <Routes>
+        {/* Public auth routes */}
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/403" element={<ForbiddenPage />} />
 
-              {/* Protected User routes */}
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile/addresses"
-                element={
-                  <ProtectedRoute>
-                    <AddressListPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders"
-                element={
-                  <ProtectedRoute>
-                    <OrderHistoryPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders/:id"
-                element={
-                  <ProtectedRoute>
-                    <OrderDetailPage />
-                  </ProtectedRoute>
-                }
-              />
+        {/* Public product & shopping routes */}
+        <Route path="/products" element={<ProductListPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/compare" element={<ProductComparePage />} />
+        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/cart" element={<CartPage />} />
 
-              {/* Protected Admin routes (QTN-09) */}
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <AdminDashboardPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/categories"
-                element={
-                  <AdminRoute>
-                    <AdminCategoriesPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/products"
-                element={
-                  <AdminRoute>
-                    <AdminProductsPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/inventory"
-                element={
-                  <AdminRoute>
-                    <AdminInventoryPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/combos"
-                element={
-                  <AdminRoute>
-                    <AdminCombosPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/orders"
-                element={
-                  <AdminRoute>
-                    <AdminOrdersPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/returns"
-                element={
-                  <AdminRoute>
-                    <AdminReturnsPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/reviews"
-                element={
-                  <AdminRoute>
-                    <AdminReviewsPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/banners"
-                element={
-                  <AdminRoute>
-                    <AdminBannersPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/coupons"
-                element={
-                  <AdminRoute>
-                    <AdminCouponsPage />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/customers"
-                element={
-                  <AdminRoute>
-                    <AdminCustomersPage />
-                  </AdminRoute>
-                }
-              />
+        {/* Protected Customer routes */}
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/addresses"
+          element={
+            <ProtectedRoute>
+              <AddressListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <OrderHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders/:id"
+          element={
+            <ProtectedRoute>
+              <OrderDetailPage />
+            </ProtectedRoute>
+          }
+        />
 
-              {/* Default redirect về /products */}
-              <Route path="/" element={<Navigate to="/products" replace />} />
-            </Routes>
+        {/* Protected Admin routes with AdminLayout Sidebar */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminDashboardPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/categories"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminCategoriesPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/products"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminProductsPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/inventory"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminInventoryPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/combos"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminCombosPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/orders"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminOrdersPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/returns"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminReturnsPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/reviews"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminReviewsPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/banners"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminBannersPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/coupons"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminCouponsPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/customers"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminCustomersPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
 
-            {/* Floating Drawers */}
-            <CompareDrawer />
-            <CartDrawer />
-          </AddressProvider>
-        </CartProvider>
-      </CompareProvider>
-    </WishlistProvider>
+        {/* Default redirect về /products */}
+        <Route path="/" element={<Navigate to="/products" replace />} />
+      </Routes>
+
+      {/* Floating Drawers & Modals */}
+      <CartDrawer />
+      <CompareDrawer />
+    </CompareProvider>
   )
 }
 

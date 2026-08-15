@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import Navbar from '@/components/layout/Navbar'
-import AdminQuickSearch from '@/components/admin/AdminQuickSearch'
 import customerService from '@/services/customerService'
 import FormAlert from '@/components/ui/FormAlert'
 
 /**
- * AdminCustomersPage — Trang Xem & Quản lý Danh sách Khách hàng (NT-12-CN-001).
- * Tuyến đường: /admin/customers
+ * AdminCustomersPage — Trang Xem & Quản lý Danh sách Khách hàng (nhaxinh.com style).
+ * Góc cạnh vuông vức (rounded-none), KHÔNG SỬ DỤNG ICON.
  */
 const AdminCustomersPage = () => {
   const [customers, setCustomers] = useState([])
@@ -61,7 +59,7 @@ const AdminCustomersPage = () => {
       setSuccessMsg(
         newStatus
           ? `Mở khóa tài khoản "${customer.full_name || customer.email}" thành công!`
-          : `Khóa tài khoản "${customer.full_name || customer.email}" thành công (NT-12-CN-002)! Tài khoản không thể đăng nhập.`
+          : `Khóa tài khoản "${customer.full_name || customer.email}" thành công!`
       )
       setTimeout(() => setSuccessMsg(null), 4000)
     } catch (err) {
@@ -86,267 +84,237 @@ const AdminCustomersPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      <Navbar />
+    <div className="space-y-6 font-sans animate-fade-in">
+      
+      {/* Header */}
+      <div className="bg-white rounded-none border border-stone-200/80 p-6 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span className="text-[10px] font-bold text-amber-800 uppercase tracking-widest bg-amber-100 px-2.5 py-0.5 rounded-none border border-amber-200 inline-block mb-1">
+            Phân hệ Quản trị
+          </span>
+          <h1 className="text-2xl font-heading font-bold text-stone-900 uppercase tracking-wider">
+            QUẢN LÝ KHÁCH HÀNG ({summary.total_customers})
+          </h1>
+          <p className="text-xs text-stone-500 mt-0.5">
+            Xem danh sách tài khoản thành viên, tổng lịch sử tích lũy chi tiêu và quản lý quyền truy cập
+          </p>
+        </div>
+      </div>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      {error && <FormAlert type="error" message={error} />}
+      {successMsg && <FormAlert type="success" message={successMsg} />}
+
+      {/* KPI Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-none p-5 border border-stone-200/80 shadow-2xs flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-1">
-              <Link to="/admin" className="hover:text-amber-600 transition-colors">
-                Quản trị
-              </Link>
-              <span>/</span>
-              <span className="text-gray-900 font-bold">Danh Sách Khách Hàng</span>
-            </div>
-            <h1 className="text-2xl font-display font-extrabold text-gray-900 flex items-center gap-2">
-              <span>👥</span> Quản Lý & Khóa Tài Khoản Khách Hàng (NT-12-CN-001 / NT-12-CN-002)
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <AdminQuickSearch />
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">TỔNG KHÁCH HÀNG</span>
+            <p className="text-2xl font-bold font-mono text-stone-900 mt-1">
+              {summary.total_customers} <span className="text-xs font-normal text-stone-500">tài khoản</span>
+            </p>
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4">
-            <FormAlert type="error" message={error} />
-          </div>
-        )}
-
-        {successMsg && (
-          <div className="mb-4">
-            <FormAlert type="success" message={successMsg} />
-          </div>
-        )}
-
-        {/* KPI Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs flex items-center justify-between">
-            <div>
-              <span className="text-xs font-bold text-gray-400 uppercase">Tổng Khách Hàng</span>
-              <p className="text-2xl font-display font-extrabold text-gray-900 mt-1">
-                {summary.total_customers} <span className="text-xs font-normal text-gray-500">tài khoản</span>
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
-              👥
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs flex items-center justify-between">
-            <div>
-              <span className="text-xs font-bold text-gray-400 uppercase">Khách Hàng Hoạt Động</span>
-              <p className="text-2xl font-display font-extrabold text-emerald-600 mt-1">
-                {summary.active_customers} <span className="text-xs font-normal text-gray-500">tài khoản</span>
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
-              ✅
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs flex items-center justify-between">
-            <div>
-              <span className="text-xs font-bold text-gray-400 uppercase">Tài Khoản Tạm Khóa</span>
-              <p className="text-2xl font-display font-extrabold text-gray-500 mt-1">
-                {summary.inactive_customers} <span className="text-xs font-normal text-gray-500">tài khoản</span>
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-500 flex items-center justify-center text-xl font-bold">
-              🔒
-            </div>
+        <div className="bg-white rounded-none p-5 border border-stone-200/80 shadow-2xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">KHÁCH HÀNG HOẠT ĐỘNG</span>
+            <p className="text-2xl font-bold font-mono text-emerald-800 mt-1">
+              {summary.active_customers} <span className="text-xs font-normal text-stone-500">tài khoản</span>
+            </p>
           </div>
         </div>
 
-        {/* Toolbar Filter */}
-        <div className="bg-white rounded-3xl p-4 mb-6 border border-gray-100 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Search Box */}
-          <div className="relative w-full sm:w-80">
-            <input
-              type="text"
-              placeholder="Tìm theo tên, email, SĐT..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
+        <div className="bg-white rounded-none p-5 border border-stone-200/80 shadow-2xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">TÀI KHOẢN TẠM KHÓA</span>
+            <p className="text-2xl font-bold font-mono text-stone-500 mt-1">
+              {summary.inactive_customers} <span className="text-xs font-normal text-stone-500">tài khoản</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Toolbar Filter */}
+      <div className="bg-white rounded-none border border-stone-200/80 p-5 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Search Box */}
+        <div className="w-full sm:w-80">
+          <input
+            type="text"
+            placeholder="Tìm theo tên, email, SĐT..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setPage(1)
+            }}
+            className="w-full px-3.5 py-2 text-xs border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-stone-50 text-stone-900"
+          />
+        </div>
+
+        {/* Status Tabs */}
+        <div className="flex items-center gap-1 bg-stone-100 p-1 border border-stone-200 rounded-none w-full sm:w-auto overflow-x-auto scrollbar-none">
+          {[
+            { key: 'all', label: 'TẤT CẢ' },
+            { key: 'active', label: 'ĐANG HOẠT ĐỘNG' },
+            { key: 'inactive', label: 'TẠM KHÓA' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => {
+                setStatusFilter(tab.key)
                 setPage(1)
               }}
-              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all outline-none"
-            />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-          </div>
-
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-2xl border border-gray-100 w-full sm:w-auto">
-            {[
-              { key: 'all', label: 'Tất cả' },
-              { key: 'active', label: 'Đang hoạt động' },
-              { key: 'inactive', label: 'Tạm khóa' },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => {
-                  setStatusFilter(tab.key)
-                  setPage(1)
-                }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  statusFilter === tab.key
-                    ? 'bg-white text-gray-900 shadow-xs'
-                    : 'text-gray-500 hover:text-gray-800'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+              className={`px-3.5 py-1.5 rounded-none text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                statusFilter === tab.key
+                  ? 'bg-stone-900 text-white shadow-2xs'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Customers Table */}
-        {loading ? (
-          <div className="py-16 text-center text-gray-400 text-xs space-y-3">
-            <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="font-semibold">Đang nạp danh sách khách hàng...</p>
-          </div>
-        ) : customers.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center text-gray-400 border border-gray-100 shadow-xs space-y-2">
-            <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto font-bold">
-              👥
-            </div>
-            <p className="font-bold text-gray-800 text-base">Không tìm thấy khách hàng nào</p>
-            <p className="text-xs text-gray-500">Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc trạng thái</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50/80 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                    <th className="py-4 px-6">Khách Hàng</th>
-                    <th className="py-4 px-4">Số Điện Thoại</th>
-                    <th className="py-4 px-4">Tổng Đơn Hàng</th>
-                    <th className="py-4 px-4">Tổng Chi Tiêu</th>
-                    <th className="py-4 px-4">Đơn Hàng Gần Nhất</th>
-                    <th className="py-4 px-4">Ngày Đăng Ký</th>
-                    <th className="py-4 px-4 text-center">Trạng Thái</th>
-                    <th className="py-4 px-6 text-center">Thao Tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 text-xs">
-                  {customers.map((c) => (
-                    <tr key={c.id} className="hover:bg-amber-50/30 transition-colors group">
-                      {/* Name & Email */}
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-800 font-extrabold flex items-center justify-center text-sm shrink-0 border border-amber-200">
-                            {c.full_name ? c.full_name.charAt(0).toUpperCase() : 'U'}
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-900 group-hover:text-amber-600 transition-colors">
-                              {c.full_name || 'Khách hàng chưa đặt tên'}
-                            </p>
-                            <p className="text-[11px] font-mono text-gray-400">{c.email}</p>
-                          </div>
+      {/* Customers Table */}
+      {loading ? (
+        <div className="py-16 text-center text-stone-400 text-xs space-y-3 bg-white rounded-none border border-stone-200/80">
+          <div className="w-8 h-8 border-2 border-amber-800 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="font-semibold">Đang nạp danh sách khách hàng...</p>
+        </div>
+      ) : customers.length === 0 ? (
+        <div className="bg-white rounded-none p-12 text-center text-stone-400 border border-stone-200/80 shadow-2xs space-y-2">
+          <p className="font-heading font-bold text-stone-900 text-base uppercase tracking-wider">Không tìm thấy khách hàng nào</p>
+          <p className="text-xs text-stone-500">Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc trạng thái</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-none border border-stone-200/80 shadow-2xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-stone-50 border-b border-stone-200/80 text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+                  <th className="py-3.5 px-4">Khách Hàng</th>
+                  <th className="py-3.5 px-4">Số Điện Thoại</th>
+                  <th className="py-3.5 px-4">Tổng Đơn Hàng</th>
+                  <th className="py-3.5 px-4">Tổng Chi Tiêu</th>
+                  <th className="py-3.5 px-4">Đơn Hàng Gần Nhất</th>
+                  <th className="py-3.5 px-4">Ngày Đăng Ký</th>
+                  <th className="py-3.5 px-4 text-center">Trạng Thái</th>
+                  <th className="py-3.5 px-4 text-center">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100 text-xs">
+                {customers.map((c) => (
+                  <tr key={c.id} className="hover:bg-stone-50 transition-colors">
+                    {/* Name & Email */}
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-none bg-stone-100 text-amber-800 font-bold flex items-center justify-center text-xs shrink-0 border border-stone-200 font-heading">
+                          {c.full_name ? c.full_name.charAt(0).toUpperCase() : 'U'}
                         </div>
-                      </td>
+                        <div>
+                          <p className="font-bold text-stone-900">
+                            {c.full_name || 'Khách hàng chưa đặt tên'}
+                          </p>
+                          <p className="text-[11px] font-mono text-stone-400">{c.email}</p>
+                        </div>
+                      </div>
+                    </td>
 
-                      {/* Phone */}
-                      <td className="py-4 px-4 font-mono font-medium text-gray-700">
-                        {c.phone || 'Chưa cập nhật'}
-                      </td>
+                    {/* Phone */}
+                    <td className="py-3.5 px-4 font-mono font-semibold text-stone-800">
+                      {c.phone || 'Chưa cập nhật'}
+                    </td>
 
-                      {/* Total Orders */}
-                      <td className="py-4 px-4">
-                        <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-extrabold text-[11px]">
-                          {c.total_orders} đơn
+                    {/* Total Orders */}
+                    <td className="py-3.5 px-4 font-mono font-bold">
+                      <span className="px-2.5 py-0.5 bg-stone-100 text-stone-900 border border-stone-200 rounded-none text-[11px]">
+                        {c.total_orders} đơn
+                      </span>
+                    </td>
+
+                    {/* Total Spent */}
+                    <td className="py-3.5 px-4 font-bold text-amber-800 font-mono">
+                      {formatCurrency(c.total_spent)}
+                    </td>
+
+                    {/* Last Order At */}
+                    <td className="py-3.5 px-4 text-stone-500 font-mono text-[11px]">
+                      {formatDate(c.last_order_at)}
+                    </td>
+
+                    {/* Created At */}
+                    <td className="py-3.5 px-4 text-stone-400 font-mono text-[11px]">
+                      {c.created_at ? new Date(c.created_at).toLocaleDateString('vi-VN') : '---'}
+                    </td>
+
+                    {/* Active Status Badge */}
+                    <td className="py-3.5 px-4 text-center">
+                      {c.is_active ? (
+                        <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-900 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider rounded-none inline-block">
+                          HOẠT ĐỘNG
                         </span>
-                      </td>
+                      ) : (
+                        <span className="px-2.5 py-0.5 bg-stone-100 text-stone-500 border border-stone-200 text-[10px] font-bold uppercase tracking-wider rounded-none inline-block">
+                          TẠM KHÓA
+                        </span>
+                      )}
+                    </td>
 
-                      {/* Total Spent */}
-                      <td className="py-4 px-4 font-bold text-gray-900">
-                        {formatCurrency(c.total_spent)}
-                      </td>
+                    {/* Actions Column */}
+                    <td className="py-3.5 px-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(c)}
+                        className={`px-3 py-1.5 rounded-none font-bold text-[11px] uppercase tracking-wider transition-colors cursor-pointer border ${
+                          c.is_active
+                            ? 'bg-red-50 text-red-700 hover:bg-red-100 border-red-200'
+                            : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100 border-emerald-200'
+                        }`}
+                      >
+                        {c.is_active ? 'KHÓA' : 'MỞ KHÓA'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-                      {/* Last Order At */}
-                      <td className="py-4 px-4 text-gray-500 font-medium">
-                        {formatDate(c.last_order_at)}
-                      </td>
+          {/* Pagination Controls */}
+          {pagination.total_pages > 1 && (
+            <div className="p-4 border-t border-stone-200/80 flex items-center justify-between text-xs bg-stone-50/50">
+              <span className="text-stone-500 font-medium">
+                Hiển thị {(page - 1) * pagination.limit + 1} - {Math.min(page * pagination.limit, pagination.total_items)} trên tổng số {pagination.total_items} khách hàng
+              </span>
 
-                      {/* Created At */}
-                      <td className="py-4 px-4 text-gray-400 font-medium">
-                        {c.created_at ? new Date(c.created_at).toLocaleDateString('vi-VN') : '---'}
-                      </td>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  className="px-3.5 py-1.5 bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 rounded-none font-bold uppercase tracking-wider disabled:opacity-40 transition-colors cursor-pointer"
+                >
+                  ← TRANG TRƯỚC
+                </button>
 
-                      {/* Active Status Badge */}
-                      <td className="py-4 px-4 text-center">
-                        {c.is_active ? (
-                          <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold rounded-full inline-block">
-                            Hoạt động
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 bg-gray-100 text-gray-500 border border-gray-200 text-[10px] font-bold rounded-full inline-block">
-                            Tạm khóa
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Actions Column (NT-12-CN-002) */}
-                      <td className="py-4 px-6 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(c)}
-                          className={`px-3 py-1.5 rounded-xl font-bold text-[11px] transition-all cursor-pointer shadow-2xs flex items-center gap-1.5 mx-auto ${
-                            c.is_active
-                              ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
-                              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
-                          }`}
-                        >
-                          <span>{c.is_active ? '🔒 Khóa' : '🔓 Mở khóa'}</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination Controls */}
-            {pagination.total_pages > 1 && (
-              <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs">
-                <span className="text-gray-400 font-medium">
-                  Hiển thị {(page - 1) * pagination.limit + 1} - {Math.min(page * pagination.limit, pagination.total_items)} trên tổng số {pagination.total_items} khách hàng
+                <span className="font-bold text-stone-900 font-mono px-2">
+                  TRANG {page} / {pagination.total_pages}
                 </span>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={page <= 1}
-                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                    className="px-3 py-1.5 rounded-xl border border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
-                  >
-                    ❮ Trước
-                  </button>
-
-                  <span className="font-bold text-gray-700 px-2">
-                    Trang {page} / {pagination.total_pages}
-                  </span>
-
-                  <button
-                    type="button"
-                    disabled={page >= pagination.total_pages}
-                    onClick={() => setPage((prev) => Math.min(pagination.total_pages, prev + 1))}
-                    className="px-3 py-1.5 rounded-xl border border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
-                  >
-                    Sau ❯
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  disabled={page >= pagination.total_pages}
+                  onClick={() => setPage((prev) => Math.min(pagination.total_pages, prev + 1))}
+                  className="px-3.5 py-1.5 bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 rounded-none font-bold uppercase tracking-wider disabled:opacity-40 transition-colors cursor-pointer"
+                >
+                  TRANG SAU →
+                </button>
               </div>
-            )}
-          </div>
-        )}
-      </main>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
