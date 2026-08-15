@@ -120,7 +120,7 @@ const ProductListPage = () => {
         </div>
 
         {/* Categories Bar */}
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-4 mb-6 scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
           {categories.map((cat) => {
             const isActive = currentCategory === cat.id
             return (
@@ -130,15 +130,15 @@ const ProductListPage = () => {
                 onClick={() => handleCategorySelect(cat.id)}
                 className={`px-5 py-2.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                   isActive
-                    ? 'bg-stone-900 text-white shadow-md'
-                    : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200/80 shadow-xs'
+                    ? 'bg-amber-800 text-white shadow-sm font-semibold'
+                    : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200/80'
                 }`}
               >
                 <span>{cat.name}</span>
                 {cat.count !== undefined && (
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
-                      isActive ? 'bg-amber-700 text-white' : 'bg-stone-100 text-stone-500'
+                      isActive ? 'bg-amber-950/40 text-white' : 'bg-stone-100 text-stone-500'
                     }`}
                   >
                     {cat.count}
@@ -154,18 +154,18 @@ const ProductListPage = () => {
 
         {/* Content Area */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 animate-pulse h-72">
-                <div className="bg-gray-200 h-40 rounded-xl mb-4" />
-                <div className="bg-gray-200 h-4 w-3/4 rounded mb-2" />
-                <div className="bg-gray-200 h-4 w-1/2 rounded" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 border border-stone-200/80 animate-pulse h-80">
+                <div className="bg-stone-200 h-48 rounded-xl mb-4" />
+                <div className="bg-stone-200 h-4 w-3/4 rounded mb-2" />
+                <div className="bg-stone-200 h-4 w-1/2 rounded" />
               </div>
             ))}
           </div>
         ) : products.length > 0 ? (
-          /* Product Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          /* Product Grid: 375px (1 col), 768px (2 cols), 1024px+ (3-4 cols) */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((prod) => (
               <ProductCard key={prod.id} product={prod} />
             ))}

@@ -16,7 +16,7 @@ const PRICE_PRESETS = [
 ]
 
 /**
- * ProductFilters — Bộ lọc giá & Dropdown sắp xếp tiêu chí.
+ * ProductFilters — Bộ lọc khoảng giá & Dropdown sắp xếp đồng bộ chuẩn MASTER.md.
  */
 const ProductFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -55,11 +55,6 @@ const ProductFilters = () => {
     updateFilters({ min_price: preset.min, max_price: preset.max })
   }
 
-  const handleApplyCustomPrice = (e) => {
-    e.preventDefault()
-    updateFilters({ min_price: minPriceInput, max_price: maxPriceInput })
-  }
-
   const handleResetFilters = () => {
     setMinPriceInput('')
     setMaxPriceInput('')
@@ -73,16 +68,16 @@ const ProductFilters = () => {
   const hasActiveFilters = currentMinPrice || currentMaxPrice || (currentSort && currentSort !== 'newest')
 
   return (
-    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div className="bg-white rounded-2xl p-4 border border-stone-200/80 shadow-xs mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
 
-      {/* Left: Price Presets & Inputs */}
+      {/* Left: Price Presets (Đồng bộ style 100% với Category Tabs) */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0">
+        <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider shrink-0">
           Khoảng giá:
         </span>
 
         {/* Price Preset Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
           {PRICE_PRESETS.map((preset, idx) => {
             const isSelected = currentMinPrice === preset.min && currentMaxPrice === preset.max
             return (
@@ -90,10 +85,10 @@ const ProductFilters = () => {
                 key={idx}
                 type="button"
                 onClick={() => handlePresetSelect(preset)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
                   isSelected
-                    ? 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    ? 'bg-amber-800 text-white shadow-sm font-semibold'
+                    : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200/80'
                 }`}
               >
                 {preset.label}
@@ -106,16 +101,16 @@ const ProductFilters = () => {
       {/* Right: Sort Selector & Reset */}
       <div className="flex items-center gap-3 shrink-0">
 
-        {/* Sort Selector */}
+        {/* Sort Selector Dropdown */}
         <div className="flex items-center gap-2">
-          <label htmlFor="sort_select" className="text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0">
+          <label htmlFor="sort_select" className="text-xs font-semibold text-stone-500 uppercase tracking-wider shrink-0">
             Sắp xếp:
           </label>
           <select
             id="sort_select"
             value={currentSort}
             onChange={handleSortChange}
-            className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-xs font-semibold text-gray-800 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="px-3.5 py-2 bg-white text-xs font-medium text-stone-800 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 cursor-pointer shadow-2xs"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.id} value={opt.id}>
@@ -130,7 +125,7 @@ const ProductFilters = () => {
           <button
             type="button"
             onClick={handleResetFilters}
-            className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg border border-red-200 transition-colors"
+            className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-xl border border-red-200 transition-colors cursor-pointer"
           >
             Xóa bộ lọc
           </button>
