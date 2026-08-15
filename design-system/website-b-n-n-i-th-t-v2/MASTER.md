@@ -39,14 +39,14 @@
 
 ### Typography
 
-- **Heading Font:** Cormorant Garamond Italic / Playfair Display Italic (serif italic) — Dùng cho tiêu đề bộ sưu tập, hero banner, các câu slogan bay bổng nghệ thuật kiểu nhaxinh.com
+- **Heading Font:** Playfair Display (Google Font, serif - hỗ trợ tiếng Việt tốt) — Dùng cho tiêu đề cảm xúc/thương hiệu, tên bộ sưu tập (dùng kèm class `italic`), hero banner, section title
 - **Body Font:** Hanken Grotesk (Google Font, sans-serif) — Dùng mặc định cho toàn bộ body text, menu, button, tên sản phẩm, mô tả
 - **Mood:** luxury, poetic, elegant, refined, high-end
-- **Google Fonts:** [Cormorant Garamond + Playfair Display + Hanken Grotesk](https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap)
+- **Google Fonts:** [Playfair Display + Hanken Grotesk](https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
 ```
 
 ### Spacing Variables
