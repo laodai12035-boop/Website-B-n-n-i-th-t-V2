@@ -39,7 +39,7 @@ const AdminOrdersPage = () => {
 
       const res = await api.get('/admin/orders', { params })
       const resData = res.data.data
-      setOrders(resData.items || [])
+      setOrders(resData.orders || resData.items || [])
       setPagination(resData.pagination || { page: 1, limit: 15, total_items: 0, total_pages: 1 })
       if (resData.summary) {
         setSummary(resData.summary)
