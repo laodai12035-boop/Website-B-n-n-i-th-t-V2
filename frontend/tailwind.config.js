@@ -43,7 +43,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Hanken Grotesk', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Be Vietnam Pro"', 'Inter', 'Hanken Grotesk', 'system-ui', '-apple-system', 'sans-serif'],
+        admin: ['Inter', '"Be Vietnam Pro"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         heading: ['Playfair Display', 'Georgia', 'serif'],
         serif: ['Playfair Display', 'Georgia', 'serif'],
         display: ['Playfair Display', 'Georgia', 'serif'],

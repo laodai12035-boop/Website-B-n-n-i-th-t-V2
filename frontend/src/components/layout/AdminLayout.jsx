@@ -38,7 +38,7 @@ const AdminLayout = ({ children }) => {
   const currentActiveItem = navItems.find((item) => isCurrentActive(item)) || navItems[0]
 
   return (
-    <div className="min-h-screen bg-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-stone-100 flex flex-col font-admin text-stone-900 antialiased">
       <div className="flex-1 flex flex-col lg:flex-row">
 
         {/* 1. Mobile Sidebar Overlay Backdrop */}
