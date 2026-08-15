@@ -189,13 +189,13 @@ const ProductDetailPage = () => {
         {/* Product Details Main Container (Vuông vức sắc nét) */}
         <div className="bg-white rounded-none border border-stone-200/80 shadow-2xs p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-10 mb-10">
 
-          {/* Left Column: Image Gallery Display (Ảnh chính 4:5 + Strip Thumbnails) */}
+          {/* Left Column: Image Gallery Display (Ảnh chính 4:5 Studio Fit + Strip Thumbnails) */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="relative aspect-[4/5] rounded-none overflow-hidden bg-stone-100 border border-stone-200/80">
+            <div className="relative aspect-[4/5] rounded-none overflow-hidden bg-[#F7F7F5] border border-stone-200/80 flex items-center justify-center p-4 sm:p-6">
               <img
                 src={activeMainImg}
                 alt={product.name}
-                className="w-full h-full object-cover transition-all duration-300"
+                className="w-full h-full object-contain mix-blend-multiply transition-all duration-300 drop-shadow-sm"
                 onError={(e) => {
                   e.target.onerror = null
                   e.target.src = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'
@@ -228,11 +228,11 @@ const ProductDetailPage = () => {
                       key={idx}
                       type="button"
                       onClick={() => setSelectedImage(img)}
-                      className={`w-20 h-20 rounded-none overflow-hidden border-2 transition-all cursor-pointer shrink-0 bg-stone-100 ${
+                      className={`w-20 h-20 rounded-none overflow-hidden border-2 transition-all cursor-pointer shrink-0 bg-[#F7F7F5] flex items-center justify-center p-1.5 ${
                         isSelected ? 'border-amber-800 scale-105 shadow-2xs' : 'border-stone-200/80 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-contain mix-blend-multiply" />
                     </button>
                   )
                 })}
