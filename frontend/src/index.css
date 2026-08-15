@@ -70,7 +70,8 @@
 
   /* Custom Glassmorphism & Liquid Glass Utility */
   .glass-panel {
-    @apply bg-white/80 backdrop-blur-md border border-stone-200/60 shadow-glass;
+    @apply bg-white/80 backdrop-blur-md border border-stone-200/60;
+    box-shadow: 0 8px 32px 0 rgba(28, 25, 23, 0.08);
   }
 
   .glass-dark {
@@ -82,9 +83,13 @@
            px-6 py-3 rounded-xl
            bg-amber-700 text-white font-medium text-sm tracking-wide
            transition-all duration-300 ease-out
-           hover:bg-amber-800 hover:shadow-luxury hover:-translate-y-0.5
+           hover:bg-amber-800 hover:-translate-y-0.5
            active:translate-y-0 active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
+  }
+
+  .btn-gold:hover {
+    box-shadow: 0 16px 32px -8px rgba(161, 98, 7, 0.35);
   }
 
   /* Form label */
