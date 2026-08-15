@@ -39,14 +39,14 @@
 
 ### Typography
 
-- **Heading Font:** Cormorant
-- **Body Font:** Montserrat
-- **Mood:** luxury, high-end, fashion, elegant, refined, premium
-- **Google Fonts:** [Cormorant + Montserrat](https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap)
+- **Heading Font:** Cormorant Garamond Italic / Playfair Display Italic (serif italic) — Dùng cho tiêu đề bộ sưu tập, hero banner, các câu slogan bay bổng nghệ thuật kiểu nhaxinh.com
+- **Body Font:** Hanken Grotesk (Google Font, sans-serif) — Dùng mặc định cho toàn bộ body text, menu, button, tên sản phẩm, mô tả
+- **Mood:** luxury, poetic, elegant, refined, high-end
+- **Google Fonts:** [Cormorant Garamond + Playfair Display + Hanken Grotesk](https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
 ```
 
 ### Spacing Variables

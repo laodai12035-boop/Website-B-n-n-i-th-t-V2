@@ -43,9 +43,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Montserrat', 'Inter', 'system-ui', 'sans-serif'],
-        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
-        display: ['Cormorant Garamond', 'Georgia', 'serif'],
+        sans: ['"Hanken Grotesk"', 'sans-serif'],
+        heading: ['"Cormorant Garamond"', '"Playfair Display"', 'Georgia', 'serif'],
+        serif: ['"Cormorant Garamond"', '"Playfair Display"', 'Georgia', 'serif'],
+        display: ['"Cormorant Garamond"', '"Playfair Display"', 'Georgia', 'serif'],
       },
       boxShadow: {
         'card': '0 4px 24px -4px rgba(0,0,0,0.06)',
