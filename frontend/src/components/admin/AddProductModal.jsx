@@ -3,8 +3,17 @@ import productService from '@/services/productService'
 import categoryService from '@/services/categoryService'
 import FormAlert from '@/components/ui/FormAlert'
 
+/**
+ * AddProductModal — Modal Thêm sản phẩm mới phong cách Nhà Xinh (nhaxinh.com).
+ * Góc cạnh vuông vức (rounded-none), chữ thuần tối giản (NO EMOJIS), hỗ trợ 5 ảnh sản phẩm.
+ */
 const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
   const [categories, setCategories] = useState([])
+  
+  // 5 slots hình ảnh (Slot 0 = Ảnh chính, Slots 1-4 = Ảnh bộ sưu tập)
+  const [imageSlots, setImageSlots] = useState(['', '', '', '', ''])
+  const [activeSlotIdx, setActiveSlotIdx] = useState(0)
+
   const [formData, setFormData] = useState({
     name: '',
     category: 'ban',
@@ -17,7 +26,6 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
     weight_kg: '',
     warranty_months: 12,
     warranty_terms: '',
-    image_url: '',
     description: '',
   })
 
@@ -25,15 +33,50 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
   const [apiError, setApiError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
+  // Bộ ảnh gợi ý nhanh 5 góc studio
+  const samplePresets = [
+    {
+      name: 'Bộ Sofa Gỗ Óc Chó',
+      images: [
+        'https://images.unsplash.com/photo-1555041469-a586c61ea9bc',
+        'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e',
+        'https://images.unsplash.com/photo-1586023492125-27b2c045efd7',
+        'https://images.unsplash.com/photo-1567016432779-094069958ea5',
+        'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6',
+      ],
+    },
+    {
+      name: 'Bộ Bàn Ăn Gỗ Sồi 6 Ghế',
+      images: [
+        'https://images.unsplash.com/photo-1617806118233-18e1de247200',
+        'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf',
+        'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4',
+        'https://images.unsplash.com/photo-1604578762246-41134e37f9cc',
+        'https://images.unsplash.com/photo-1595428774223-ef52624120d2',
+      ],
+    },
+    {
+      name: 'Giường Ngủ & Tủ Đầu Giường',
+      images: [
+        'https://images.unsplash.com/photo-1540518614846-7ede433c5172',
+        'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85',
+        'https://images.unsplash.com/photo-1616594039964-ae9021a400a0',
+        'https://images.unsplash.com/photo-1598928506311-c55ded91a20c',
+        'https://images.unsplash.com/photo-1617325247661-675c8d64b934',
+      ],
+    },
+  ]
+
   useEffect(() => {
     if (isOpen) {
-      // Nạp danh mục từ API
       categoryService
         .getCategories()
         .then((cats) => {
-          setCategories(cats)
-          if (cats.length > 0 && !formData.category) {
-            setFormData((prev) => ({ ...prev, category: cats[0].slug || cats[0].name }))
+          if (Array.isArray(cats)) {
+            setCategories(cats)
+            if (cats.length > 0 && !formData.category) {
+              setFormData((prev) => ({ ...prev, category: cats[0].slug || cats[0].name }))
+            }
           }
         })
         .catch(() => {})
@@ -50,7 +93,15 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
     }
   }
 
-  const handleImageFileChange = (e) => {
+  const handleSlotImageChange = (idx, value) => {
+    setImageSlots((prev) => {
+      const next = [...prev]
+      next[idx] = value
+      return next
+    })
+  }
+
+  const handleImageFileUpload = (e, slotIdx) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -87,11 +138,15 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
         ctx.drawImage(img, 0, 0, width, height)
 
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75)
-        setFormData((prev) => ({ ...prev, image_url: compressedBase64 }))
+        handleSlotImageChange(slotIdx, compressedBase64)
       }
       img.src = event.target.result
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleApplyPreset = (presetImages) => {
+    setImageSlots(presetImages.slice(0, 5))
   }
 
   const validate = () => {
@@ -140,6 +195,9 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
 
     setSubmitting(true)
     try {
+      const validImages = imageSlots.map((s) => s.trim()).filter(Boolean)
+      const mainImageUrl = validImages.length > 0 ? validImages[0] : 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'
+
       const payload = {
         name: formData.name.trim(),
         category: formData.category,
@@ -152,25 +210,29 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
         weight_kg: formData.weight_kg !== '' ? parseFloat(formData.weight_kg) : null,
         warranty_months: formData.warranty_months !== '' ? parseInt(formData.warranty_months, 10) : 12,
         warranty_terms: formData.warranty_terms.trim() || null,
-        image_url: formData.image_url.trim() || null,
+        image_url: mainImageUrl,
         description: formData.description.trim() || null,
       }
 
       await productService.createProduct(payload)
+      
+      // Reset Form
       setFormData({
         name: '',
         category: categories.length > 0 ? categories[0].slug || categories[0].name : 'ban',
         price: '',
         discount_price: '',
         stock: 10,
+        min_stock_threshold: 10,
         dimensions: '',
         material: '',
         weight_kg: '',
         warranty_months: 12,
         warranty_terms: '',
-        image_url: '',
         description: '',
       })
+      setImageSlots(['', '', '', '', ''])
+
       if (onSuccess) onSuccess()
       onClose()
     } catch (err) {
@@ -182,79 +244,82 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-slide-up max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in font-sans">
+      <div className="relative w-full max-w-3xl bg-white rounded-none shadow-2xl border border-stone-200/80 overflow-hidden max-h-[90vh] flex flex-col">
         
-        {/* Header */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between shrink-0">
-          <h2 className="text-lg font-display font-bold text-gray-900 flex items-center gap-2">
-            <span>✨</span> Thêm sản phẩm nội thất mới
-          </h2>
+        {/* Header Bar — Tối giản vuông vức nhaxinh.com */}
+        <div className="px-6 py-4 bg-stone-900 text-white flex items-center justify-between shrink-0 border-b border-amber-800">
+          <div>
+            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Phân hệ Quản trị</span>
+            <h2 className="text-base font-heading font-bold uppercase tracking-wider">
+              THÊM SẢN PHẨM NỘI THẤT MỚI
+            </h2>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-200/60 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-colors font-bold text-sm cursor-pointer"
+            className="text-stone-400 hover:text-white transition-colors p-1 cursor-pointer font-bold text-sm"
           >
             ✕
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1 text-xs">
           {apiError && <FormAlert type="error" message={apiError} />}
 
-          {/* Tên sản phẩm & Danh mục */}
+          {/* 1. Tên sản phẩm & Danh mục */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Tên sản phẩm <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Tên sản phẩm <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Ví dụ: Bộ Sofa Gỗ Óc Chó..."
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                placeholder="VD: Bộ Sofa Gỗ Óc Chó Bọc Da Ý"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
               />
-              {errors.name && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.name}</p>}
+              {errors.name && <p className="text-[11px] text-red-600 font-bold mt-1">{errors.name}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Danh mục sản phẩm <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Danh mục sản phẩm <span className="text-red-600">*</span>
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors cursor-pointer"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-bold uppercase tracking-wider cursor-pointer"
               >
                 {categories.length > 0 ? (
                   categories.map((c) => (
                     <option key={c.id || c.slug} value={c.slug || c.name}>
-                      {c.icon || '📁'} {c.name}
+                      {c.name}
                     </option>
                   ))
                 ) : (
                   <>
-                    <option value="ban">🪑 Bàn</option>
-                    <option value="ghe">🛋️ Ghế / Sofa</option>
-                    <option value="ke">📚 Kệ</option>
-                    <option value="tu">🚪 Tủ</option>
-                    <option value="trang-tri">💡 Trang trí</option>
+                    <option value="ban">BÀN & BÀN LÀM VIỆC</option>
+                    <option value="ghe">GHẾ & SOFA</option>
+                    <option value="ke">KỆ SÁCH & TIVI</option>
+                    <option value="tu">TỦ QUẦN ÁO & TRANG TRÍ</option>
+                    <option value="trang-tri">TRANG TRÍ & ĐÈN</option>
                   </>
                 )}
               </select>
-              {errors.category && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.category}</p>}
+              {errors.category && <p className="text-[11px] text-red-600 font-bold mt-1">{errors.category}</p>}
             </div>
           </div>
 
-          {/* Giá gốc, Giá KM, Tồn kho */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* 2. Giá niêm yết, Giá KM, Tồn kho & Ngưỡng tồn kho */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Giá niêm yết (VNĐ) <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Giá niêm yết (VNĐ) <span className="text-red-600">*</span>
               </label>
               <input
                 type="number"
@@ -263,13 +328,13 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.price}
                 onChange={handleChange}
                 placeholder="VD: 15000000"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono font-bold"
               />
-              {errors.price && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.price}</p>}
+              {errors.price && <p className="text-[11px] text-red-600 font-bold mt-1">{errors.price}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                 Giá khuyến mãi (VNĐ)
               </label>
               <input
@@ -278,15 +343,15 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 step="10000"
                 value={formData.discount_price}
                 onChange={handleChange}
-                placeholder="VD: 12900000 (để trống nếu không KM)"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                placeholder="VD: 12900000"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono font-bold"
               />
-              {errors.discount_price && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.discount_price}</p>}
+              {errors.discount_price && <p className="text-[11px] text-red-600 font-bold mt-1">{errors.discount_price}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Số lượng tồn kho ban đầu
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Số lượng tồn kho
               </label>
               <input
                 type="number"
@@ -294,13 +359,13 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 min="0"
                 value={formData.stock}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono font-bold text-center"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Ngưỡng tồn kho tối thiểu (QTN-08)
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Ngưỡng tồn tối thiểu
               </label>
               <input
                 type="number"
@@ -308,16 +373,15 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 min="0"
                 value={formData.min_stock_threshold}
                 onChange={handleChange}
-                placeholder="Mặc định: 10"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono font-bold text-center"
               />
             </div>
           </div>
 
-          {/* Kích thước, Trọng lượng, Chất liệu */}
+          {/* 3. Kích thước, Trọng lượng, Chất liệu */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                 Kích thước (cm)
               </label>
               <input
@@ -326,12 +390,12 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.dimensions}
                 onChange={handleChange}
                 placeholder="VD: 180x80x75 cm"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                 Trọng lượng (kg)
               </label>
               <input
@@ -341,12 +405,12 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.weight_kg}
                 onChange={handleChange}
                 placeholder="VD: 25.5"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                 Chất liệu chính
               </label>
               <input
@@ -355,16 +419,16 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.material}
                 onChange={handleChange}
                 placeholder="VD: Gỗ Óc Chó, Da Bò..."
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
               />
             </div>
           </div>
 
-          {/* Bảo hành (NT-08-CN-005) */}
+          {/* 4. Bảo hành */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Thời gian bảo hành (Tháng)
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Bảo hành (Tháng)
               </label>
               <input
                 type="number"
@@ -372,15 +436,14 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 min="0"
                 value={formData.warranty_months}
                 onChange={handleChange}
-                placeholder="VD: 12 hoặc 24"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                placeholder="VD: 12"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono"
               />
-              {errors.warranty_months && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.warranty_months}</p>}
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Điều kiện bảo hành áp dụng
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Điều kiện bảo hành
               </label>
               <input
                 type="text"
@@ -388,83 +451,125 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.warranty_terms}
                 onChange={handleChange}
                 placeholder="VD: Bảo hành 1 đổi 1 nếu lỗi mối mọt, cong vênh do nhà sản xuất..."
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
               />
             </div>
           </div>
 
-          {/* Hình ảnh sản phẩm (Upload từ máy tính hoặc Nhập URL) */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center justify-between">
-              <span>🖼️ Hình ảnh đại diện sản phẩm</span>
-              <span className="text-[10px] text-gray-400 font-normal">Hỗ trợ JPG, PNG, WEBP (Tối đa 5MB)</span>
-            </label>
+          {/* 5. Bộ 5 Ảnh Sản Phẩm (BỘ SƯU TẬP GALLERY 5 GÓC CHỤP STUDIO) */}
+          <div className="bg-stone-50 p-4 border border-stone-200 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider">
+                  BỘ SƯU TẬP HÌNH ẢNH SẢN PHẨM (5 GÓC CHỤP STUDIO)
+                </label>
+                <span className="text-[10px] text-stone-500 font-medium">
+                  Slot 1 là Ảnh Đại Diện Chính. Slots 2 - 5 là các góc chụp chi tiết bộ sưu tập.
+                </span>
+              </div>
+            </div>
 
-            <div className="space-y-3">
-              {/* Controls: Chọn file từ PC hoặc Nhập URL */}
-              <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
-                <label className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-2xs">
-                  <span>📁</span> Chọn ảnh từ máy tính
+            {/* Quick Sample Presets */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">GỢI Ý BỘ 5 ẢNH MẪU SẮN CÓ:</span>
+              <div className="flex flex-wrap gap-2">
+                {samplePresets.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleApplyPreset(preset.images)}
+                    className="px-3 py-1 bg-white hover:bg-stone-200 text-stone-800 border border-stone-300 rounded-none text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    + Bộ 5 Ảnh: {preset.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 5 Slot Thumbnail Preview Strip */}
+            <div className="grid grid-cols-5 gap-2">
+              {[0, 1, 2, 3, 4].map((slotIdx) => {
+                const imgUrl = imageSlots[slotIdx]
+                const isActive = activeSlotIdx === slotIdx
+                const isMain = slotIdx === 0
+                return (
+                  <div
+                    key={slotIdx}
+                    onClick={() => setActiveSlotIdx(slotIdx)}
+                    className={`relative aspect-[4/5] bg-white border-2 cursor-pointer transition-all overflow-hidden flex flex-col items-center justify-center ${
+                      isActive ? 'border-amber-800 ring-1 ring-amber-800' : 'border-stone-200 hover:border-stone-400'
+                    }`}
+                  >
+                    {imgUrl ? (
+                      <img
+                        src={imgUrl}
+                        alt={`Slot ${slotIdx + 1}`}
+                        className="w-full h-full object-contain p-1 mix-blend-multiply"
+                      />
+                    ) : (
+                      <div className="text-center p-1 text-stone-400">
+                        <span className="text-[10px] font-bold block">+ TẢI ẢNH</span>
+                      </div>
+                    )}
+
+                    {/* Slot Label Badge */}
+                    <span
+                      className={`absolute top-1 left-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none ${
+                        isMain ? 'bg-amber-800 text-white' : 'bg-stone-900/80 text-white'
+                      }`}
+                    >
+                      {isMain ? 'ẢNH CHÍNH' : `GÓC ${slotIdx + 1}`}
+                    </span>
+
+                    {imgUrl && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleSlotImageChange(slotIdx, '')
+                        }}
+                        className="absolute bottom-1 right-1 bg-red-600 text-white w-4 h-4 text-[10px] font-bold flex items-center justify-center rounded-none hover:bg-red-700"
+                        title="Xóa ảnh slot này"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Active Slot Controls (Upload / URL Input) */}
+            <div className="bg-white p-3 border border-stone-200 space-y-2">
+              <span className="text-[11px] font-bold text-stone-900 uppercase tracking-wider block">
+                ĐANG CHỈNH SỬA: {activeSlotIdx === 0 ? 'SLOT 1 — ẢNH ĐẠI DIỆN CHÍNH' : `SLOT ${activeSlotIdx + 1} — ẢNH CHI TIẾT ${activeSlotIdx + 1}`}
+              </span>
+
+              <div className="flex flex-col sm:flex-row items-stretch gap-2">
+                <label className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-300 rounded-none text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center shrink-0">
+                  Chọn ảnh từ máy tính
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageFileChange}
+                    onChange={(e) => handleImageFileUpload(e, activeSlotIdx)}
                     className="hidden"
                   />
                 </label>
 
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    name="image_url"
-                    value={formData.image_url}
-                    onChange={handleChange}
-                    placeholder="Hoặc dán URL ảnh từ Web (https://...)"
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
-                  />
-                  {formData.image_url && (
-                    <button
-                      type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, image_url: '' }))}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 font-bold text-xs"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
+                <input
+                  type="text"
+                  value={imageSlots[activeSlotIdx]}
+                  onChange={(e) => handleSlotImageChange(activeSlotIdx, e.target.value)}
+                  placeholder={`Dán URL ảnh cho Slot ${activeSlotIdx + 1} (https://...)`}
+                  className="flex-1 px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 bg-white text-stone-900"
+                />
               </div>
-
-              {/* Preview Thumbnail Box */}
-              {formData.image_url && (
-                <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200/80 flex items-center gap-3 animate-fade-in">
-                  <img
-                    src={formData.image_url}
-                    alt="Preview"
-                    className="w-14 h-14 object-cover rounded-xl border border-gray-200 bg-white shrink-0"
-                    onError={(e) => {
-                      e.target.onerror = null
-                      e.target.src = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[11px] font-bold text-emerald-700 block">✓ Ảnh sản phẩm đã sẵn sàng</span>
-                    <p className="text-[10px] text-gray-400 truncate font-mono">{formData.image_url.slice(0, 60)}...</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, image_url: '' }))}
-                    className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-[11px] font-bold transition-colors shrink-0"
-                  >
-                    Đổi ảnh khác
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Mô tả sản phẩm */}
+          {/* 6. Mô tả sản phẩm */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
               Mô tả chi tiết sản phẩm
             </label>
             <textarea
@@ -472,26 +577,26 @@ const AddProductModal = ({ isOpen, onClose, onSuccess }) => {
               rows={3}
               value={formData.description}
               onChange={handleChange}
-              placeholder="Mô tả phong cách thiết kế, công năng và tính năng nổi bật..."
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white resize-none"
+              placeholder="Mô tả phong cách thiết kế, công năng và tính năng nổi bật của sản phẩm..."
+              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 bg-white text-stone-900 resize-none"
             />
           </div>
 
-          {/* Action buttons */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-gray-100 shrink-0">
+          {/* Action Buttons */}
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-stone-200/80 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-none font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
             >
-              Hủy
+              HỦY BỎ
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 bg-stone-900 hover:bg-amber-800 text-white rounded-none font-bold text-xs uppercase tracking-wider transition-colors shadow-2xs disabled:opacity-50 cursor-pointer"
             >
-              {submitting ? 'Đang lưu...' : 'Thêm sản phẩm'}
+              {submitting ? 'ĐANG LƯU...' : 'THÊM SẢN PHẨM'}
             </button>
           </div>
         </form>
