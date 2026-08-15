@@ -1,16 +1,16 @@
-# 🛋️ Website Bán Đồ Nội Thất V2
+# Website Bán Đồ Nội Thất V2
 
 Hệ thống E-Commerce thương mại điện tử chuyên kinh doanh sản phẩm nội thất cao cấp, được thiết kế theo kiến trúc **Clean Architecture / Layered Pattern** với **Flask Backend** và **React (Vite) Frontend**.
 
 ---
 
-## 📸 Tổng quan Hệ thống
+## Tổng quan Hệ thống
 
 Website hỗ trợ đầy đủ quy trình bán hàng trực tuyến: từ tìm kiếm, xem chi tiết sản phẩm, tạo combo ưu đãi, áp dụng mã giảm giá (coupon), tính phí vận chuyển, đến đặt hàng và quản lý đơn hàng cho cả Khách hàng và Quản trị viên (Admin).
 
 ---
 
-## 🛠️ Công nghệ sử dụng (Tech Stack)
+## Công nghệ sử dụng (Tech Stack)
 
 ### Backend
 - **Ngôn ngữ:** Python 3.10+ (Khuyên dùng Python 3.12 / 3.13)
@@ -29,7 +29,7 @@ Website hỗ trợ đầy đủ quy trình bán hàng trực tuyến: từ tìm 
 
 ---
 
-## 📁 Cấu trúc Thư mục Dự án
+## Cấu trúc Thư mục Dự án
 
 ```
 Website Bán đồ nội thất V2/
@@ -57,7 +57,7 @@ Website Bán đồ nội thất V2/
 
 ---
 
-## ⚙️ Hướng dẫn Cài đặt & Khởi chạy (Local Development)
+## Hướng dẫn Cài đặt & Khởi chạy (Local Development)
 
 ### Yêu cầu Tiền đề (Prerequisites)
 1. **XAMPP / MariaDB / MySQL Server** (Đang chạy MySQL ở port `3306`)
@@ -120,7 +120,7 @@ Website Bán đồ nội thất V2/
    ```bash
    python run.py
    ```
-   > 🟢 Backend sẽ tự động chạy auto-migration, tạo bảng & dữ liệu mẫu (Seed Data) và lắng nghe tại `http://localhost:5000`.
+   > Backend sẽ tự động chạy auto-migration, tạo bảng & dữ liệu mẫu (Seed Data) và lắng nghe tại `http://localhost:5000`.
 
 ---
 
@@ -140,21 +140,21 @@ Website Bán đồ nội thất V2/
    ```bash
    npm run dev
    ```
-   > 🟢 Frontend sẽ chạy tại `http://localhost:5173` (Tự động proxy các request `/api` sang `http://localhost:5000`).
+   > Frontend sẽ chạy tại `http://localhost:5173` (Tự động proxy các request `/api` sang `http://localhost:5000`).
 
 ---
 
-## 🔐 Các Tính năng Chính
+## Các Tính năng Chính
 
-- 👤 **Hệ thống Tài khoản & Phân quyền:** Đăng ký, đăng nhập JWT, đổi mật khẩu, quên mật khẩu (mã xác nhận Email/OTP), phân quyền Khách hàng và Admin.
-- 🛍️ **Danh mục & Sản phẩm:** Xem danh sách, lọc theo giá/loại/bảo hành, tìm kiếm sản phẩm, xem chi tiết và biến thể.
-- 🎁 **Combo Khuyến mãi & Coupon:** Bán hàng theo gói Combo tiết kiệm, áp dụng mã giảm giá theo phần trăm hoặc số tiền cố định.
-- 🛒 **Giỏ hàng & Đặt hàng:** Quản lý giỏ hàng real-time, tính phí vận chuyển theo khoảng cách/trọng lượng, thanh toán COD hoặc quét mã QR Chuyển khoản.
-- 📦 **Quản trị Admin (Admin Dashboard):** Quản lý đơn hàng (Duyệt, Giao hàng, Hủy), Quản lý sản phẩm & tồn kho, Quản lý banner quảng cáo, Thống kê doanh thu.
+- **Hệ thống Tài khoản & Phân quyền:** Đăng ký, đăng nhập JWT, đổi mật khẩu, quên mật khẩu (mã xác nhận Email/OTP), phân quyền Khách hàng và Admin.
+- **Danh mục & Sản phẩm:** Xem danh sách, lọc theo giá/loại/bảo hành, tìm kiếm sản phẩm, xem chi tiết và biến thể.
+- **Combo Khuyến mãi & Coupon:** Bán hàng theo gói Combo tiết kiệm, áp dụng mã giảm giá theo phần trăm hoặc số tiền cố định.
+- **Giỏ hàng & Đặt hàng:** Quản lý giỏ hàng real-time, tính phí vận chuyển theo khoảng cách/trọng lượng, thanh toán COD hoặc quét mã QR Chuyển khoản.
+- **Quản trị Admin (Admin Dashboard):** Quản lý đơn hàng (Duyệt, Giao hàng, Hủy), Quản lý sản phẩm & tồn kho, Quản lý banner quảng cáo, Thống kê doanh thu.
 
 ---
 
-## 🔧 Xử lý Sự cố Thường gặp (Troubleshooting)
+## Xử lý Sự cố Thường gặp (Troubleshooting)
 
 ### 1. Lỗi `python run.py` bị đứng yên / treo khi khởi chạy
 * **Nguyên nhân:** XAMPP MySQL bị tắt đột ngột trước đó dẫn tới hỏng bảng phân quyền Aria (`mysql/db.MAI`). Khi Flask kết nối tới MySQL, tiến trình bị treo ở câu lệnh socket.
@@ -176,7 +176,7 @@ Website Bán đồ nội thất V2/
 
 ---
 
-## 🧪 Kiểm thử (Testing)
+## Kiểm thử (Testing)
 
 Để chạy hệ thống Unit test cho Backend:
 ```bash
