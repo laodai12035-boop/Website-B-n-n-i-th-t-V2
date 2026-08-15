@@ -42,6 +42,15 @@ const returnService = {
     return response.data.data
   },
 
+  // Alias methods for compatibility
+  async getAllReturnRequests() {
+    return this.getAllReturnRequestsForAdmin()
+  },
+
+  async getAdminReturnRequests() {
+    return this.getAllReturnRequestsForAdmin()
+  },
+
   /**
    * Admin: Cập nhật trạng thái duyệt/từ chối yêu cầu đổi/trả.
    * @param {number|string} requestId
