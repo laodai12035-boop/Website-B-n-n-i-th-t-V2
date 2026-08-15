@@ -282,27 +282,29 @@ const Navbar = ({ hideCategoryNav = false }) => {
 
       </div>
 
-      {/* 3. DYNAMIC CATEGORY NAVIGATION MENU WITH 2 ARROWS (ẨN TRÊN TRANG ĐĂNG NHẬP / ĐĂNG KÝ) */}
+      {/* 3. DYNAMIC CATEGORY NAVIGATION MENU WITH FLEX SLOT ARROWS (KHÔNG BAO GIỜ BỊ CHỜM NẮM/ĐÈ LÊN CHỮ) */}
       {!shouldHideCategories && (
-        <div className="hidden lg:block bg-white border-b border-stone-200 relative">
-          <div className="max-w-7xl mx-auto px-4 relative flex items-center">
+        <div className="hidden lg:block bg-white border-b border-stone-200">
+          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between gap-2">
             
-            {/* Mũi tên Cuộn Trái (‹) */}
-            {showLeftArrow && (
-              <button
-                type="button"
-                onClick={() => scrollNav('left')}
-                className="absolute left-2 z-10 w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
-                title="Cuộn sang trái"
-              >
-                ‹
-              </button>
-            )}
+            {/* Slot Mũi tên Cuộn Trái (‹) */}
+            <div className="w-8 shrink-0 flex items-center justify-start">
+              {showLeftArrow && (
+                <button
+                  type="button"
+                  onClick={() => scrollNav('left')}
+                  className="w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
+                  title="Cuộn sang trái"
+                >
+                  ‹
+                </button>
+              )}
+            </div>
 
             {/* Nav Container — Ẩn thanh trượt ngang mặc định */}
             <nav
               ref={navRef}
-              className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wider text-stone-800 overflow-x-auto scrollbar-none gap-6 px-6 py-0 w-full select-none"
+              className="flex-1 flex items-center gap-6 sm:gap-8 md:gap-10 text-[13px] font-semibold uppercase tracking-wider text-stone-800 overflow-x-auto scrollbar-none px-4 py-0 select-none border-x border-stone-100"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               <Link to="/" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
@@ -329,17 +331,19 @@ const Navbar = ({ hideCategoryNav = false }) => {
               </Link>
             </nav>
 
-            {/* Mũi tên Cuộn Phải (›) */}
-            {showRightArrow && (
-              <button
-                type="button"
-                onClick={() => scrollNav('right')}
-                className="absolute right-2 z-10 w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
-                title="Cuộn sang phải"
-              >
-                ›
-              </button>
-            )}
+            {/* Slot Mũi tên Cuộn Phải (›) */}
+            <div className="w-8 shrink-0 flex items-center justify-end">
+              {showRightArrow && (
+                <button
+                  type="button"
+                  onClick={() => scrollNav('right')}
+                  className="w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
+                  title="Cuộn sang phải"
+                >
+                  ›
+                </button>
+              )}
+            </div>
 
           </div>
         </div>
