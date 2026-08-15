@@ -4,6 +4,10 @@ import FormAlert from '@/components/ui/FormAlert'
 
 const PHONE_REGEX = /^0[0-9]{9}$/
 
+/**
+ * AddAddressModal — Modal Thêm địa chỉ mới trực tiếp (Chuẩn MASTER.md).
+ * Thiết kế vuông vức góc cạnh (rounded-none), accent bg-amber-800.
+ */
 const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
   const { addAddress } = useAddress()
 
@@ -36,7 +40,7 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
 
   const validate = () => {
     const errs = {}
-    if (!formData.recipient_name.strip ? !formData.recipient_name.trim() : !formData.recipient_name) {
+    if (!formData.recipient_name || !formData.recipient_name.trim()) {
       errs.recipient_name = 'Họ tên người nhận là bắt buộc'
     }
     if (!formData.phone || !formData.phone.trim()) {
@@ -83,20 +87,22 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-slide-up">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in font-sans">
+      <div className="relative w-full max-w-lg bg-white rounded-none shadow-2xl border border-stone-200/80 overflow-hidden animate-slide-up">
         
         {/* Header */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-lg font-display font-bold text-gray-900 flex items-center gap-2">
-            <span>📍</span> Thêm địa chỉ giao hàng mới
+        <div className="px-6 py-4 bg-stone-50 border-b border-stone-200/80 flex items-center justify-between">
+          <h2 className="text-sm font-heading font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
+            THÊM ĐỊA CHỈ GIAO HÀNG MỚI
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-200/60 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-colors font-bold text-sm"
+            className="text-stone-400 hover:text-stone-900 transition-colors p-1 cursor-pointer"
           >
-            ✕
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -107,7 +113,7 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Họ tên người nhận */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-stone-700 mb-1 uppercase tracking-wider">
                 Họ tên người nhận <span className="text-red-500">*</span>
               </label>
               <input
@@ -116,14 +122,14 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.recipient_name}
                 onChange={handleChange}
                 placeholder="Nhập họ tên người nhận"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 focus:bg-white text-stone-900"
               />
-              {errors.recipient_name && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.recipient_name}</p>}
+              {errors.recipient_name && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.recipient_name}</p>}
             </div>
 
             {/* Số điện thoại */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-stone-700 mb-1 uppercase tracking-wider">
                 Số điện thoại <span className="text-red-500">*</span>
               </label>
               <input
@@ -132,16 +138,16 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="Ví dụ: 0901234567"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 focus:bg-white text-stone-900"
               />
-              {errors.phone && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.phone}</p>}
+              {errors.phone && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.phone}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Tỉnh / Thành */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-stone-700 mb-1 uppercase tracking-wider">
                 Tỉnh / Thành phố <span className="text-red-500">*</span>
               </label>
               <input
@@ -150,14 +156,14 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.province}
                 onChange={handleChange}
                 placeholder="VD: TP. Hồ Chí Minh"
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white"
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 focus:bg-white text-stone-900"
               />
-              {errors.province && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.province}</p>}
+              {errors.province && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.province}</p>}
             </div>
 
             {/* Quận / Huyện */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-stone-700 mb-1 uppercase tracking-wider">
                 Quận / Huyện <span className="text-red-500">*</span>
               </label>
               <input
@@ -166,14 +172,14 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.district}
                 onChange={handleChange}
                 placeholder="VD: Quận 1"
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white"
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 focus:bg-white text-stone-900"
               />
-              {errors.district && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.district}</p>}
+              {errors.district && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.district}</p>}
             </div>
 
             {/* Phường / Xã */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-stone-700 mb-1 uppercase tracking-wider">
                 Phường / Xã <span className="text-red-500">*</span>
               </label>
               <input
@@ -182,15 +188,15 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.ward}
                 onChange={handleChange}
                 placeholder="VD: Phường Bến Nghé"
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white"
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 focus:bg-white text-stone-900"
               />
-              {errors.ward && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.ward}</p>}
+              {errors.ward && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.ward}</p>}
             </div>
           </div>
 
           {/* Địa chỉ chi tiết */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
+            <label className="block text-xs font-semibold text-stone-700 mb-1 uppercase tracking-wider">
               Địa chỉ chi tiết (Số nhà, tên đường...) <span className="text-red-500">*</span>
             </label>
             <input
@@ -199,9 +205,9 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
               value={formData.detail_address}
               onChange={handleChange}
               placeholder="VD: 123 Nguyễn Huệ, Tòa nhà Bitexco"
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white"
+              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 focus:bg-white text-stone-900"
             />
-            {errors.detail_address && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.detail_address}</p>}
+            {errors.detail_address && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.detail_address}</p>}
           </div>
 
           {/* Checkbox Đặt làm mặc định */}
@@ -212,28 +218,28 @@ const AddAddressModal = ({ isOpen, onClose, onSuccess }) => {
               name="is_default"
               checked={formData.is_default}
               onChange={handleChange}
-              className="w-4 h-4 rounded text-amber-600 border-gray-300 focus:ring-amber-500 cursor-pointer"
+              className="w-4 h-4 rounded-none text-amber-800 border-stone-300 focus:ring-amber-800 cursor-pointer"
             />
-            <label htmlFor="is_default" className="text-xs font-semibold text-gray-700 cursor-pointer">
+            <label htmlFor="is_default" className="text-xs font-semibold text-stone-700 cursor-pointer">
               Đặt làm địa chỉ giao hàng mặc định
             </label>
           </div>
 
           {/* Buttons */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-gray-100">
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-stone-200/80">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors"
+              className="px-5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-none text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs disabled:opacity-50"
+              className="px-6 py-2 bg-amber-800 hover:bg-amber-900 text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs disabled:opacity-50 cursor-pointer"
             >
-              {submitting ? 'Đang lưu...' : 'Lưu địa chỉ'}
+              {submitting ? 'Đang lưu...' : 'LƯU ĐỊA CHỈ'}
             </button>
           </div>
         </form>
