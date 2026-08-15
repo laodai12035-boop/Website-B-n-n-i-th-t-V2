@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
 import orderService from '@/services/orderService'
 import returnService from '@/services/returnService'
 import OrderTimeline from '@/components/order/OrderTimeline'
 import ReturnRequestModal from '@/components/order/ReturnRequestModal'
 
 /**
- * OrderDetailPage — Trang xem chi tiết đơn hàng cho Khách hàng (NT-06-CN-002, NT-06-CN-003, NT-06-CN-004).
- * Tuyến đường: /orders/:id
+ * OrderDetailPage — Trang xem chi tiết đơn hàng cho Khách hàng (nhaxinh.com style).
+ * Góc cạnh vuông vức (rounded-none), phông chữ Hanken Grotesk & Playfair Display, icon vector SVG.
  */
 const OrderDetailPage = () => {
   const { id } = useParams()
@@ -51,7 +52,6 @@ const OrderDetailPage = () => {
         const data = await orderService.getOrderDetail(id)
         setOrder(data)
 
-        // Lấy thông tin yêu cầu đổi/trả nếu có
         try {
           const retData = await returnService.getReturnRequestByOrder(id)
           setReturnRequest(retData)
@@ -104,91 +104,95 @@ const OrderDetailPage = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'pending':
-        return <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">⏳ Chờ xác nhận</span>
+        return <span className="px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-none uppercase tracking-wider">Chờ xác nhận</span>
       case 'confirmed':
-        return <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">✓ Đã xác nhận</span>
+        return <span className="px-3 py-1 bg-stone-100 text-stone-900 border border-stone-300 text-xs font-bold rounded-none uppercase tracking-wider">Đã xác nhận</span>
       case 'shipping':
-        return <span className="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-bold rounded-full">🚚 Đang giao hàng</span>
+        return <span className="px-3 py-1 bg-blue-50 text-blue-900 border border-blue-200 text-xs font-bold rounded-none uppercase tracking-wider">Đang giao hàng</span>
       case 'delivered':
-        return <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">🎉 Đã hoàn thành</span>
+        return <span className="px-3 py-1 bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-bold rounded-none uppercase tracking-wider">Hoàn thành</span>
       case 'cancelled':
-        return <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-bold rounded-full">✖ Đã hủy</span>
+        return <span className="px-3 py-1 bg-red-50 text-red-900 border border-red-200 text-xs font-bold rounded-none uppercase tracking-wider">Đã hủy</span>
       default:
-        return <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-bold rounded-full">{status}</span>
+        return <span className="px-3 py-1 bg-stone-100 text-stone-800 border border-stone-200 text-xs font-bold rounded-none uppercase tracking-wider">{status}</span>
     }
   }
 
   const getPaymentBadge = (pStatus, pMethod) => {
     if (pStatus === 'paid') {
-      return <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-full">💳 Đã thanh toán</span>
+      return <span className="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold rounded-none uppercase tracking-wider">Đã thanh toán</span>
     }
     if (pMethod === 'QR_BANK' || pMethod === 'qr') {
-      return <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold rounded-full">📱 QR Ngân hàng (Chờ xác nhận)</span>
+      return <span className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-none uppercase tracking-wider">VietQR Ngân hàng</span>
     }
-    return <span className="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-bold rounded-full">💵 COD (Tiền mặt lúc nhận)</span>
+    return <span className="px-3 py-1 bg-stone-100 text-stone-800 border border-stone-200 text-xs font-bold rounded-none uppercase tracking-wider">COD (Tiền mặt lúc nhận)</span>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/60 flex flex-col font-sans">
+    <div className="min-h-screen bg-stone-50 flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8 animate-fade-in">
 
-        {/* Back Link & Header */}
+        {/* Back Link */}
         <div className="mb-6 flex items-center justify-between">
           <Link
             to="/orders"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-amber-600 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-amber-800 transition-colors uppercase tracking-wider"
           >
-            ← Quay lại lịch sử đơn hàng
+            ← Quay lại danh sách đơn hàng
           </Link>
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-gray-500 text-xs space-y-3 bg-white rounded-3xl border border-gray-100">
-            <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="font-semibold">Đang tải thông tin chi tiết đơn hàng...</p>
+          <div className="py-20 text-center text-stone-400 text-xs space-y-3 bg-white rounded-none border border-stone-200/80">
+            <div className="w-8 h-8 border-2 border-amber-800 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="font-semibold">Đang nạp chi tiết đơn hàng...</p>
           </div>
         ) : errorInfo ? (
-          /* Error State (403 Forbidden / 404 Not Found) */
-          <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center space-y-4 shadow-sm">
-            <div className="text-5xl">{errorInfo.code === 'FORBIDDEN' ? '🔒' : '🔎'}</div>
+          /* Error State */
+          <div className="bg-white rounded-none border border-stone-200/80 p-10 text-center space-y-4 shadow-2xs">
+            <div className="w-16 h-16 bg-stone-100 text-stone-400 rounded-none flex items-center justify-center mx-auto mb-2 border border-stone-200">
+              <svg className="w-8 h-8 stroke-current" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-base font-heading font-bold text-stone-900 uppercase tracking-wider">
                 {errorInfo.code === 'FORBIDDEN' ? 'Từ chối truy cập (403)' : 'Không tìm thấy đơn hàng (404)'}
               </h3>
-              <p className="text-xs text-gray-500 max-w-md mx-auto">{errorInfo.message}</p>
+              <p className="text-xs text-stone-500 max-w-md mx-auto">{errorInfo.message}</p>
             </div>
             <Link
               to="/orders"
-              className="inline-block px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl text-xs font-bold transition-colors"
+              className="inline-block px-6 py-3 bg-stone-900 hover:bg-amber-800 text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs"
             >
-              Về trang danh sách đơn hàng
+              Quay lại danh sách đơn hàng
             </Link>
           </div>
         ) : order ? (
           <div className="space-y-6">
 
             {cancelSuccess && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 font-bold flex items-center gap-2 animate-fade-in">
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-none text-xs text-emerald-800 font-bold flex items-center gap-2 animate-fade-in">
                 <span>✅</span> {cancelSuccess}
               </div>
             )}
 
             {/* Order Header Summary Card */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-xs space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
+            <div className="bg-white rounded-none border border-stone-200/80 p-6 shadow-2xs space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200/80 pb-4">
                 <div>
-                  <div className="text-xs text-gray-400 font-medium">MÃ ĐƠN HÀNG</div>
-                  <h1 className="text-xl font-display font-extrabold text-gray-900 font-mono">
+                  <div className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">MÃ ĐƠN HÀNG</div>
+                  <h1 className="text-2xl font-heading font-bold text-stone-900 font-mono tracking-wider">
                     {order.order_code}
                   </h1>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {getStatusBadge(order.status)}
                   {getPaymentBadge(order.payment_status, order.payment_method)}
 
-                  {/* Nút Hủy Đơn Hàng (Chỉ hiện khi pending hoặc confirmed - QTN-04) */}
+                  {/* Nút Hủy Đơn Hàng */}
                   {(order.status === 'pending' || order.status === 'confirmed') && (
                     <button
                       type="button"
@@ -196,27 +200,27 @@ const OrderDetailPage = () => {
                         setCancelError('')
                         setShowCancelModal(true)
                       }}
-                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-extrabold transition-colors flex items-center gap-1"
+                      className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-none text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                     >
-                      <span>✖</span> Hủy đơn hàng
+                      Hủy đơn hàng
                     </button>
                   )}
 
-                  {/* Nút Yêu cầu Đổi/Trả hàng (Chỉ hiện khi delivered - QTN-05) */}
+                  {/* Nút Yêu cầu Đổi/Trả hàng */}
                   {order.status === 'delivered' && (
                     returnRequest ? (
-                      <span className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 border ${
+                      <span className={`px-3 py-1.5 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-1 border ${
                         returnRequest.status === 'pending'
-                          ? 'bg-amber-50 text-amber-800 border-amber-200'
+                          ? 'bg-amber-50 text-amber-900 border-amber-200'
                           : returnRequest.status === 'approved'
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                          : 'bg-red-50 text-red-800 border-red-200'
+                          ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                          : 'bg-red-50 text-red-900 border-red-200'
                       }`}>
-                        <span>🔄</span> {
+                        {
                           returnRequest.status === 'pending'
                             ? '⏳ Đang chờ Admin duyệt đổi/trả'
                             : returnRequest.status === 'approved'
-                            ? '✅ Yêu cầu đổi/trả đã được chấp nhận'
+                            ? '✅ Yêu cầu đổi/trả đã chấp nhận'
                             : '❌ Yêu cầu đổi/trả bị từ chối'
                         }
                       </span>
@@ -224,65 +228,51 @@ const OrderDetailPage = () => {
                       <button
                         type="button"
                         onClick={() => setShowReturnModal(true)}
-                        className="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-extrabold transition-colors flex items-center gap-1 shadow-2xs"
+                        className="px-3.5 py-1.5 bg-amber-800 hover:bg-amber-900 text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs cursor-pointer"
                       >
-                        <span>🔄</span> Yêu cầu đổi/trả
+                        Yêu cầu đổi/trả
                       </button>
                     )
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-600">
-                <div><span>Ngày đặt hàng:</span> <span className="font-semibold text-gray-900">{formatDate(order.created_at)}</span></div>
-                <div><span>Hình thức thanh toán:</span> <span className="font-semibold text-gray-900">{order.payment_method === 'QR_BANK' || order.payment_method === 'qr' ? 'Chuyển khoản QR Ngân hàng' : 'Thanh toán COD'}</span></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-stone-600">
+                <div><span className="text-stone-400 uppercase tracking-wider">Ngày đặt hàng:</span> <span className="font-semibold text-stone-900 font-mono">{formatDate(order.created_at)}</span></div>
+                <div><span className="text-stone-400 uppercase tracking-wider">Phương thức thanh toán:</span> <span className="font-semibold text-stone-900">{order.payment_method === 'QR_BANK' || order.payment_method === 'qr' ? 'Chuyển khoản VietQR Ngân hàng' : 'Thanh toán COD'}</span></div>
               </div>
             </div>
 
-            {/* Thẻ Trạng thái Yêu cầu Đổi/Trả & Phản hồi/Lý do từ Admin */}
+            {/* Return Request Banner */}
             {returnRequest && (
-              <div className={`p-5 rounded-3xl border text-xs space-y-3 animate-fade-in shadow-xs ${
+              <div className={`p-5 rounded-none border text-xs space-y-3 animate-fade-in shadow-2xs ${
                 returnRequest.status === 'pending'
                   ? 'bg-amber-50/90 border-amber-200 text-amber-900'
                   : returnRequest.status === 'approved'
                   ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
-                  : 'bg-rose-50/90 border-rose-200 text-rose-900'
+                  : 'bg-red-50/90 border-red-200 text-red-900'
               }`}>
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/15 pb-3">
-                  <div className="flex items-center gap-2 font-extrabold text-sm">
-                    <span>🔄</span> Yêu cầu {returnRequest.request_type === 'return' ? 'Trả hàng & Hoàn tiền' : returnRequest.request_type === 'exchange' ? 'Đổi sản phẩm' : 'Bảo hành'}:
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${
-                      returnRequest.status === 'pending'
-                        ? 'bg-amber-200/80 text-amber-950'
-                        : returnRequest.status === 'approved'
-                        ? 'bg-emerald-200/80 text-emerald-950'
-                        : 'bg-rose-200/80 text-rose-950'
-                    }`}>
-                      {returnRequest.status === 'pending' ? '⏳ Đang chờ Admin duyệt' : returnRequest.status === 'approved' ? '✅ Đã được chấp nhận' : '❌ Đã bị từ chối'}
+                  <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">
+                    Yêu cầu {returnRequest.request_type === 'return' ? 'Trả hàng & Hoàn tiền' : returnRequest.request_type === 'exchange' ? 'Đổi sản phẩm' : 'Bảo hành'}:
+                    <span className="px-2.5 py-0.5 rounded-none text-[10px] font-bold uppercase tracking-wider bg-white border border-current">
+                      {returnRequest.status === 'pending' ? 'Đang chờ duyệt' : returnRequest.status === 'approved' ? 'Đã chấp nhận' : 'Từ chối'}
                     </span>
                   </div>
-                  <span className="text-[11px] font-semibold opacity-75">{formatDate(returnRequest.created_at)}</span>
+                  <span className="text-[11px] font-mono opacity-75">{formatDate(returnRequest.created_at)}</span>
                 </div>
 
                 <div className="space-y-2">
                   <div>
-                    <span className="font-bold text-gray-700">Lý do từ phía bạn:</span> <span className="italic font-medium">"{returnRequest.reason}"</span>
+                    <span className="font-bold text-stone-700">Lý do từ phía bạn:</span> <span className="italic font-medium">"{returnRequest.reason}"</span>
                   </div>
 
-                  {returnRequest.admin_note ? (
-                    <div className={`p-3.5 rounded-2xl border font-medium mt-2 shadow-2xs ${
-                      returnRequest.status === 'rejected'
-                        ? 'bg-white border-rose-200 text-rose-900'
-                        : 'bg-white border-emerald-200 text-emerald-900'
-                    }`}>
-                      <div className="flex items-center gap-1.5 font-bold mb-1 text-xs">
-                        <span>{returnRequest.status === 'rejected' ? '⚠️ Ghi chú lý do từ chối của Admin:' : '💬 Ghi chú phản hồi từ Admin:'}</span>
+                  {returnRequest.admin_note && (
+                    <div className="p-3.5 rounded-none bg-white border border-stone-200 font-medium mt-2 shadow-2xs">
+                      <div className="flex items-center gap-1.5 font-bold mb-1 text-xs uppercase tracking-wider">
+                        Phản hồi từ Admin:
                       </div>
-                      <p className="leading-relaxed text-xs font-semibold">"{returnRequest.admin_note}"</p>
-                    </div>
-                  ) : returnRequest.status === 'rejected' && (
-                    <div className="p-3 rounded-2xl bg-white border border-rose-200 text-rose-800 text-xs font-medium mt-2">
-                      ⚠️ Yêu cầu đổi/trả đã bị Admin từ chối do không đủ điều kiện theo quy định.
+                      <p className="leading-relaxed text-xs font-semibold text-stone-900">"{returnRequest.admin_note}"</p>
                     </div>
                   )}
                 </div>
@@ -293,53 +283,59 @@ const OrderDetailPage = () => {
             <OrderTimeline status={order.status} />
 
             {/* Recipient / Shipping Info Card */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-xs space-y-3">
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
-                <span>📍</span> Thông tin nhận hàng
+            <div className="bg-white rounded-none border border-stone-200/80 p-6 shadow-2xs space-y-4">
+              <h3 className="text-xs font-heading font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2 border-b border-stone-200/80 pb-3">
+                <svg className="w-4 h-4 text-amber-800 stroke-current" fill="none" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                </svg>
+                <span>THÔNG TIN NHẬN HÀNG</span>
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
-                  <div className="text-gray-400 font-medium">Người nhận hàng:</div>
-                  <div className="font-bold text-gray-900">{order.recipient_name}</div>
-                  <div className="text-gray-500">{order.recipient_phone}</div>
+                  <div className="text-stone-400 uppercase tracking-wider font-medium">Người nhận hàng:</div>
+                  <div className="font-bold text-stone-900 mt-0.5">{order.recipient_name}</div>
+                  <div className="text-stone-500 font-mono">{order.recipient_phone}</div>
                 </div>
                 <div>
-                  <div className="text-gray-400 font-medium">Địa chỉ giao hàng:</div>
-                  <div className="font-semibold text-gray-900">{order.shipping_address}</div>
+                  <div className="text-stone-400 uppercase tracking-wider font-medium">Địa chỉ giao hàng:</div>
+                  <div className="font-semibold text-stone-900 mt-0.5">{order.shipping_address}</div>
                 </div>
               </div>
               {order.note && (
-                <div className="pt-2 text-xs text-amber-800 bg-amber-50/50 p-3 rounded-xl border border-amber-100/60">
-                  <span className="font-bold">Ghi chú giao hàng:</span> "{order.note}"
+                <div className="pt-2 text-xs text-amber-900 bg-amber-50/50 p-3 rounded-none border border-amber-200/60">
+                  <span className="font-bold uppercase tracking-wider">Ghi chú giao hàng:</span> "{order.note}"
                 </div>
               )}
             </div>
 
             {/* Items Table Card */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-xs space-y-4">
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
-                <span>🛍️</span> Danh sách sản phẩm ({order.items?.length || 0})
+            <div className="bg-white rounded-none border border-stone-200/80 p-6 shadow-2xs space-y-4">
+              <h3 className="text-xs font-heading font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2 border-b border-stone-200/80 pb-3">
+                <svg className="w-4 h-4 text-amber-800 stroke-current" fill="none" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span>DANH SÁCH SẢN PHẨM ({order.items?.length || 0})</span>
               </h3>
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-stone-100">
                 {order.items?.map((item) => (
                   <div key={item.id} className="py-3 flex items-center gap-4">
                     <img
                       src={item.product?.image_url || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'}
                       alt={item.product_name}
-                      className="w-14 h-14 object-cover rounded-xl bg-gray-50 border border-gray-100 shrink-0"
+                      className="w-14 h-16 object-cover rounded-none bg-stone-100 border border-stone-200/80 shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <Link
                         to={`/products/${item.product_id}`}
-                        className="text-xs font-bold text-gray-900 hover:text-amber-600 truncate block"
+                        className="text-xs font-bold text-stone-900 hover:text-amber-800 truncate block"
                       >
                         {item.product_name || item.product?.name}
                       </Link>
-                      <div className="text-[11px] text-gray-500">
+                      <div className="text-[11px] text-stone-500">
                         Đơn giá: {formatCurrency(item.price)} × Số lượng: {item.quantity}
                       </div>
                     </div>
-                    <div className="text-xs font-extrabold text-gray-900 font-display">
+                    <div className="text-xs font-bold text-stone-900">
                       {formatCurrency(item.subtotal)}
                     </div>
                   </div>
@@ -348,28 +344,28 @@ const OrderDetailPage = () => {
             </div>
 
             {/* Price Breakdown Card */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-xs space-y-3">
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
-                <span>💰</span> Chi tiết thanh toán
+            <div className="bg-white rounded-none border border-stone-200/80 p-6 shadow-2xs space-y-3">
+              <h3 className="text-xs font-heading font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2 border-b border-stone-200/80 pb-3">
+                <span>CHI TIẾT THANH TOÁN</span>
               </h3>
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-stone-600">
                   <span>Tạm tính sản phẩm:</span>
-                  <span className="font-semibold text-gray-900">{formatCurrency(order.subtotal)}</span>
+                  <span className="font-semibold text-stone-900">{formatCurrency(order.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Phí vận chuyển (QTN-07):</span>
-                  <span className="font-semibold text-gray-900">{formatCurrency(order.shipping_fee)}</span>
+                <div className="flex justify-between text-stone-600">
+                  <span>Phí vận chuyển:</span>
+                  <span className="font-semibold text-stone-900">{formatCurrency(order.shipping_fee)}</span>
                 </div>
                 {order.discount_amount > 0 && (
-                  <div className="flex justify-between text-emerald-600">
+                  <div className="flex justify-between text-emerald-800 font-semibold">
                     <span>Mã giảm giá ưu đãi:</span>
                     <span className="font-bold">-{formatCurrency(order.discount_amount)}</span>
                   </div>
                 )}
-                <div className="pt-3 border-t border-gray-200 flex justify-between items-baseline text-sm">
-                  <span className="font-extrabold text-gray-900">Tổng thanh toán:</span>
-                  <span className="text-xl font-extrabold text-amber-700 font-display">
+                <div className="pt-3 border-t border-stone-200/80 flex justify-between items-baseline text-sm">
+                  <span className="font-bold text-stone-900 uppercase tracking-wider">Tổng thanh toán:</span>
+                  <span className="text-xl font-bold text-amber-800">
                     {formatCurrency(order.total_amount)}
                   </span>
                 </div>
@@ -381,40 +377,44 @@ const OrderDetailPage = () => {
 
       </main>
 
+      <Footer />
+
       {/* Cancel Order Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                <span>⚠️</span> Xác nhận hủy đơn hàng
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in font-sans">
+          <div className="bg-white rounded-none max-w-md w-full p-6 shadow-2xl border border-stone-200/80 space-y-4">
+            <div className="flex items-center justify-between border-b border-stone-200/80 pb-3">
+              <h3 className="text-xs font-heading font-bold text-stone-900 uppercase tracking-wider">
+                XÁC NHẬN HỦY ĐƠN HÀNG
               </h3>
               <button
                 type="button"
                 onClick={() => setShowCancelModal(false)}
-                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center text-xs"
+                className="text-stone-400 hover:text-stone-900 transition-colors p-1 cursor-pointer"
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
-            <p className="text-xs text-gray-600">
-              Bạn có chắc chắn muốn hủy đơn hàng <span className="font-mono font-bold text-gray-900">{order?.order_code}</span> không? Số lượng sản phẩm trong đơn sẽ được hoàn lại vào kho.
+            <p className="text-xs text-stone-600">
+              Bạn có chắc chắn muốn hủy đơn hàng <span className="font-mono font-bold text-stone-900">{order?.order_code}</span> không? Số lượng sản phẩm trong đơn sẽ được hoàn lại vào kho.
             </p>
 
             {cancelError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-semibold">
+              <div className="p-3 bg-red-50 border border-red-200 rounded-none text-xs text-red-800 font-semibold">
                 ⚠️ {cancelError}
               </div>
             )}
 
             <form onSubmit={handleCancelOrder} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Vui lòng chọn lý do hủy:</label>
+                <label className="text-xs font-semibold text-stone-700 block mb-1 uppercase tracking-wider">Vui lòng chọn lý do hủy:</label>
                 <select
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 bg-white"
+                  className="w-full px-3.5 py-2.5 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 bg-white text-stone-900"
                 >
                   <option value="Thay đổi nhu cầu mua hàng">Thay đổi nhu cầu mua hàng</option>
                   <option value="Muốn thay đổi phương thức thanh toán/địa chỉ">Muốn thay đổi phương thức thanh toán / địa chỉ</option>
@@ -428,7 +428,7 @@ const OrderDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowCancelModal(false)}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors"
+                  className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-none text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                   disabled={cancelling}
                 >
                   Quay lại
@@ -436,15 +436,16 @@ const OrderDetailPage = () => {
                 <button
                   type="submit"
                   disabled={cancelling}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm disabled:opacity-50"
+                  className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs disabled:opacity-50 cursor-pointer"
                 >
-                  {cancelling ? 'Đang hủy đơn...' : 'Xác nhận hủy đơn'}
+                  {cancelling ? 'Đang hủy...' : 'XÁC NHẬN HỦY'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
       {/* Return Request Modal */}
       {showReturnModal && (
         <ReturnRequestModal

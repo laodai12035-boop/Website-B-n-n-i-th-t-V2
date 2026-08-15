@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
 import InputField from '@/components/ui/InputField'
 import Button from '@/components/ui/Button'
 import FormAlert from '@/components/ui/FormAlert'
@@ -10,13 +11,8 @@ import api from '@/services/api'
 const PHONE_REGEX = /^0[0-9]{9}$/
 
 /**
- * ProfilePage — Trang thông tin cá nhân (Protected Page).
- *
- * Tính năng:
- * - Xem thông tin tài khoản (Họ tên, Email, Số điện thoại, Vai trò, Avatar)
- * - Chế độ chỉnh sửa thông tin (Edit Mode)
- * - Chọn & tải tệp ảnh đại diện (Avatar) trực tiếp từ máy tính cá nhân (NT-01-CN-005)
- * - Client-side validation: Họ tên (2-100 chars), SĐT (10 chữ số VN)
+ * ProfilePage — Trang thông tin cá nhân phong cách Nhà Xinh (nhaxinh.com).
+ * Dashboard quản lý thông tin tài khoản, avatar, nút liên kết Sổ địa chỉ & Lịch sử đơn hàng.
  */
 const ProfilePage = () => {
   const { user, logout, updateProfile } = useAuth()
@@ -35,7 +31,6 @@ const ProfilePage = () => {
   const [successMsg, setSuccessMsg] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  // Khởi tạo fields khi user state thay đổi
   useEffect(() => {
     if (user) {
       setFields({
@@ -58,23 +53,19 @@ const ProfilePage = () => {
     }
   }
 
-  // Xử lý chọn tệp ảnh từ máy tính (NT-01-CN-005)
   const handleAvatarFileSelect = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 1. Kiểm tra kích thước file (tối đa 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setApiError('Dung lượng tệp ảnh quá lớn. Vui lòng chọn tệp dưới 5MB.')
       return
     }
 
-    // 2. Client-side Live Preview
     const objectUrl = URL.createObjectURL(file)
     setPreviewAvatar(objectUrl)
     setApiError(null)
 
-    // 3. Tải tệp lên server qua API
     const formData = new FormData()
     formData.append('avatar', file)
 
@@ -163,79 +154,99 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-stone-50 flex flex-col font-sans">
       <Navbar />
 
       <main className="flex-1 max-w-4xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
-        <div className="card bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+        
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-xs font-medium text-stone-500 mb-6">
+          <Link to="/" className="hover:text-amber-800 transition-colors">Trang chủ</Link>
+          <span>/</span>
+          <span className="text-stone-900 font-semibold">Tài khoản cá nhân</span>
+        </nav>
+
+        <div className="bg-white rounded-none p-6 sm:p-8 border border-stone-200/80 shadow-2xs">
+          
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200/80 pb-6 mb-6">
             <div className="flex items-center gap-4">
-              {/* Avatar display with upload overlay */}
+              {/* Avatar display */}
               <div className="relative group">
-                <div className="w-20 h-20 rounded-2xl bg-amber-100 border-2 border-amber-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm relative">
+                <div className="w-20 h-20 rounded-none bg-stone-100 border border-stone-200 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs relative">
                   {previewAvatar ? (
                     <img src={previewAvatar} alt={user?.full_name} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-3xl font-extrabold text-amber-800">
+                    <span className="text-3xl font-heading font-bold text-amber-800">
                       {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   )}
 
                   {uploadingAvatar && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs font-bold">
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs font-bold">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
                 </div>
 
-                {/* Edit overlay camera button */}
                 {isEditing && (
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     title="Chọn ảnh từ máy tính"
-                    className="absolute -bottom-1 -right-1 w-7 h-7 bg-amber-600 hover:bg-amber-700 text-white rounded-xl flex items-center justify-center text-xs shadow-md border-2 border-white transition-transform hover:scale-110 cursor-pointer"
+                    className="absolute -bottom-2 -right-2 p-1.5 bg-amber-800 hover:bg-amber-900 text-white rounded-none text-xs shadow-2xs cursor-pointer border border-white"
                   >
-                    📷
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M3 4V1h2v3h3v2H5v3H3V6H0V4h3zm3 6V7h3V4h7l1.83 2H21c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V10h2zm7 9c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0-8c1.65 0 3 1.35 3 3s-1.35 3-3 3-3-1.35-3-3 1.35-3 3-3z"/>
+                    </svg>
                   </button>
                 )}
               </div>
 
               <div>
-                <h1 className="text-2xl font-display font-extrabold text-gray-900">{user?.full_name}</h1>
-                <p className="text-sm text-gray-500">{user?.email}</p>
+                <h1 className="text-2xl font-heading font-bold text-stone-900 uppercase tracking-wider">{user?.full_name}</h1>
+                <p className="text-xs text-stone-500 font-mono mt-0.5">{user?.email}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to="/orders"
+                className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-200 rounded-none text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4 stroke-current" fill="none" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span>Đơn hàng</span>
+              </Link>
+              
               <Link
                 to="/profile/addresses"
-                className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
+                className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-200 rounded-none text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
               >
-                <span>📍</span> Sổ địa chỉ
+                <svg className="w-4 h-4 text-amber-800 stroke-current" fill="none" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                </svg>
+                <span>Sổ địa chỉ</span>
               </Link>
-              <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-900 uppercase tracking-wider">
+
+              <span className="px-3 py-1 text-xs font-bold rounded-none bg-amber-800 text-white uppercase tracking-wider">
                 {user?.role}
               </span>
+
               {!isEditing && (
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={handleStartEdit}
-                  className="rounded-xl border-gray-300 font-bold"
+                  className="px-4 py-2 border border-stone-900 text-stone-900 hover:bg-stone-900 hover:text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                 >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
                   Chỉnh sửa
-                </Button>
+                </button>
               )}
             </div>
           </div>
 
-          {/* Hidden File Input for Local Computer Avatar Selection (NT-01-CN-005) */}
+          {/* Hidden File Input */}
           <input
             type="file"
             ref={fileInputRef}
@@ -250,32 +261,32 @@ const ProfilePage = () => {
 
           {/* Content Area */}
           {!isEditing ? (
-            /* Chế độ xem (View Mode) */
+            /* View Mode */
             <div className="space-y-4 max-w-lg">
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Họ và tên</label>
-                <p className="text-base font-bold text-gray-900 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100">{user?.full_name}</p>
+                <label className="text-[11px] font-bold text-stone-400 uppercase tracking-widest block mb-1">Họ và tên</label>
+                <p className="text-sm font-bold text-stone-900 bg-stone-50 px-4 py-3 rounded-none border border-stone-200/80">{user?.full_name}</p>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Email (Khóa định danh)</label>
-                <p className="text-base font-medium text-gray-500 bg-gray-100 px-4 py-2.5 rounded-xl border border-gray-200 cursor-not-allowed">{user?.email}</p>
+                <label className="text-[11px] font-bold text-stone-400 uppercase tracking-widest block mb-1">Email tài khoản</label>
+                <p className="text-sm font-medium text-stone-500 bg-stone-100 px-4 py-3 rounded-none border border-stone-200 cursor-not-allowed font-mono">{user?.email}</p>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Số điện thoại</label>
-                <p className="text-base font-bold text-gray-900 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100">{user?.phone || 'Chưa cập nhật'}</p>
+                <label className="text-[11px] font-bold text-stone-400 uppercase tracking-widest block mb-1">Số điện thoại liên hệ</label>
+                <p className="text-sm font-bold text-stone-900 bg-stone-50 px-4 py-3 rounded-none border border-stone-200/80">{user?.phone || 'Chưa cập nhật'}</p>
               </div>
 
               {user?.avatar_url && (
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">URL Ảnh đại diện</label>
-                  <p className="text-xs font-mono text-gray-600 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100 truncate">{user?.avatar_url}</p>
+                  <label className="text-[11px] font-bold text-stone-400 uppercase tracking-widest block mb-1">URL Ảnh đại diện</label>
+                  <p className="text-xs font-mono text-stone-600 bg-stone-50 px-4 py-3 rounded-none border border-stone-200/80 truncate">{user?.avatar_url}</p>
                 </div>
               )}
             </div>
           ) : (
-            /* Chế độ chỉnh sửa (Edit Mode Form) */
+            /* Edit Mode */
             <form onSubmit={handleSubmit} noValidate className="space-y-5 max-w-lg">
               <InputField
                 id="full_name"
@@ -300,9 +311,8 @@ const ProfilePage = () => {
                 required
               />
 
-              {/* Avatar Section with Local Computer Picker Button (NT-01-CN-005) */}
               <div>
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-1.5">
+                <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block mb-1.5">
                   Ảnh đại diện (Avatar)
                 </label>
                 
@@ -311,11 +321,11 @@ const ProfilePage = () => {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingAvatar}
-                    className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                    className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-300 rounded-none text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>🖼️</span> {uploadingAvatar ? 'Đang tải ảnh...' : 'Chọn ảnh từ máy tính'}
+                    <span>🖼️ {uploadingAvatar ? 'Đang tải...' : 'Chọn ảnh từ máy tính'}</span>
                   </button>
-                  <span className="text-xs text-gray-400 text-center sm:text-left">hoặc dán liên kết URL bên dưới</span>
+                  <span className="text-xs text-stone-400 text-center sm:text-left">hoặc dán liên kết URL bên dưới</span>
                 </div>
 
                 <InputField
@@ -331,39 +341,39 @@ const ProfilePage = () => {
               </div>
 
               <div className="flex items-center gap-3 pt-4">
-                <Button
+                <button
                   type="submit"
-                  variant="primary"
-                  loading={loading}
-                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl px-6"
+                  disabled={loading}
+                  className="px-6 py-3 bg-stone-900 hover:bg-amber-800 text-white font-bold text-xs uppercase tracking-wider rounded-none transition-colors cursor-pointer shadow-2xs"
                 >
-                  {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
-                </Button>
-                <Button
+                  {loading ? 'Đang lưu...' : 'LƯU THAY ĐỔI'}
+                </button>
+                <button
                   type="button"
-                  variant="ghost"
                   onClick={handleCancelEdit}
                   disabled={loading}
-                  className="rounded-xl"
+                  className="px-6 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs uppercase tracking-wider rounded-none transition-colors cursor-pointer"
                 >
-                  Hủy
-                </Button>
+                  HỦY
+                </button>
               </div>
             </form>
           )}
 
           {/* Footer Actions */}
-          <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+          <div className="mt-8 pt-6 border-t border-stone-200/80 flex justify-end">
             <button
               type="button"
               onClick={logout}
-              className="px-4 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors cursor-pointer"
+              className="px-5 py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-none transition-colors cursor-pointer uppercase tracking-wider"
             >
               Đăng xuất
             </button>
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   )
 }
