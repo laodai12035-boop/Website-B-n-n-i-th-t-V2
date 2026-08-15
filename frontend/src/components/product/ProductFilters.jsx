@@ -16,7 +16,7 @@ const PRICE_PRESETS = [
 ]
 
 /**
- * ProductFilters — Bộ lọc khoảng giá & Dropdown sắp xếp đồng bộ chuẩn MASTER.md.
+ * ProductFilters — Bộ lọc khoảng giá & Dropdown sắp xếp vuông vức sắc nét (rounded-none).
  */
 const ProductFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -68,9 +68,9 @@ const ProductFilters = () => {
   const hasActiveFilters = currentMinPrice || currentMaxPrice || (currentSort && currentSort !== 'newest')
 
   return (
-    <div className="bg-white rounded-2xl p-4 border border-stone-200/80 shadow-xs mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div className="bg-white rounded-none p-4 border border-stone-200/80 shadow-2xs mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
 
-      {/* Left: Price Presets (Đồng bộ style 100% với Category Tabs) */}
+      {/* Left: Price Presets (Vuông vức góc cạnh) */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider shrink-0">
           Khoảng giá:
@@ -85,9 +85,9 @@ const ProductFilters = () => {
                 key={idx}
                 type="button"
                 onClick={() => handlePresetSelect(preset)}
-                className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`px-4 py-2 rounded-none text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
                   isSelected
-                    ? 'bg-amber-800 text-white shadow-sm font-semibold'
+                    ? 'bg-amber-800 text-white shadow-2xs font-semibold'
                     : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200/80'
                 }`}
               >
@@ -110,7 +110,7 @@ const ProductFilters = () => {
             id="sort_select"
             value={currentSort}
             onChange={handleSortChange}
-            className="px-3.5 py-2 bg-white text-xs font-medium text-stone-800 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 cursor-pointer shadow-2xs"
+            className="px-3.5 py-2 bg-white text-xs font-medium text-stone-800 rounded-none border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 cursor-pointer shadow-2xs"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.id} value={opt.id}>
@@ -125,7 +125,7 @@ const ProductFilters = () => {
           <button
             type="button"
             onClick={handleResetFilters}
-            className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-xl border border-red-200 transition-colors cursor-pointer"
+            className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-none border border-red-200 transition-colors cursor-pointer"
           >
             Xóa bộ lọc
           </button>

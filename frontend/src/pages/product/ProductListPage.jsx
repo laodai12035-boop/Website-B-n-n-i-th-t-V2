@@ -119,7 +119,7 @@ const ProductListPage = () => {
           </div>
         </div>
 
-        {/* Categories Bar */}
+        {/* Categories Bar (Vuông vức góc cạnh) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
           {categories.map((cat) => {
             const isActive = currentCategory === cat.id
@@ -128,16 +128,16 @@ const ProductListPage = () => {
                 key={cat.id}
                 type="button"
                 onClick={() => handleCategorySelect(cat.id)}
-                className={`px-5 py-2.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                className={`px-5 py-2.5 rounded-none text-xs font-medium whitespace-nowrap transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                   isActive
-                    ? 'bg-amber-800 text-white shadow-sm font-semibold'
+                    ? 'bg-amber-800 text-white shadow-2xs font-semibold'
                     : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200/80'
                 }`}
               >
                 <span>{cat.name}</span>
                 {cat.count !== undefined && (
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
+                    className={`text-[10px] px-2 py-0.5 rounded-none font-mono ${
                       isActive ? 'bg-amber-950/40 text-white' : 'bg-stone-100 text-stone-500'
                     }`}
                   >
