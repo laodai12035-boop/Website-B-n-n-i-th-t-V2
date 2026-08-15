@@ -5,7 +5,6 @@ import bannerService from '@/services/bannerService'
 const DEFAULT_BANNERS = [
   {
     id: 'default-1',
-    tag: 'BỘ SƯU TẬP MỚI',
     title: 'Victoria',
     subtitle: 'Từ cảm hứng miền quê Pháp đến cảm xúc ngôi nhà Việt đường cong mềm mại, chi tiết chạm tay và tông màu ấm cho từng không gian sống.',
     image_url: 'https://nhaxinh.com/wp-content/uploads/2026/07/nha-xinh-victoria-phong-khach-tong-quan-scaled.webp',
@@ -13,25 +12,23 @@ const DEFAULT_BANNERS = [
   },
   {
     id: 'default-2',
-    tag: 'BỘ SƯU TẬP NỔI BẬT',
-    title: 'Pianosa',
-    subtitle: 'Vẻ đẹp thanh lịch phong cách Ý hiện đại, sự kết hợp hoàn hảo giữa chất liệu da bò Ý tinh khôi và khung gỗ sồi cao cấp.',
+    title: 'Scandinavian',
+    subtitle: 'Thiết kế tối giản, tinh tế mang đến giấc ngủ ngon chuẩn phong cách sống Châu Âu hiện đại.',
     image_url: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1600&q=80',
     link_url: '/products?category=phong-ngu',
   },
   {
     id: 'default-3',
-    tag: 'KHÔNG GIAN LÀM VIỆC',
-    title: 'Scandinavian',
-    subtitle: 'Tối giản, tinh tế và tràn đầy cảm hứng sáng tạo với thiết kế công thái học vượt thời gian.',
+    title: 'Walnut Executive',
+    subtitle: 'Nâng tầm không gian làm việc với chất liệu gỗ óc chó tự nhiên đường nét sắc sảo sang trọng.',
     image_url: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=1600&q=80',
     link_url: '/products?category=ban',
   },
 ]
 
 /**
- * BannerSlider — Hero Banner chuẩn phong cách Nhà Xinh (nhaxinh.com).
- * Tiêu đề bộ sưu tập dùng font Serif Italic (Victoria, Pianosa...) tạo cảm xúc nghệ thuật bay bổng.
+ * BannerSlider — Full-bleed Hero Banner phong cách Nhà Xinh (nhaxinh.com).
+ * Không bo góc, phông chữ Georgia nghiêng sang trọng, button vuông nhọn đẳng cấp.
  */
 const BannerSlider = () => {
   const [banners, setBanners] = useState(DEFAULT_BANNERS)
@@ -42,12 +39,7 @@ const BannerSlider = () => {
       try {
         const data = await bannerService.getPublicBanners()
         if (data && data.length > 0) {
-          // Gán fallback tag nếu từ DB
-          const formatted = data.map((item, i) => ({
-            ...item,
-            tag: item.tag || DEFAULT_BANNERS[i % DEFAULT_BANNERS.length].tag,
-          }))
-          setBanners(formatted)
+          setBanners(data)
         }
       } catch (err) {
         console.error('Error fetching public banners:', err)
@@ -56,7 +48,7 @@ const BannerSlider = () => {
     fetchBanners()
   }, [])
 
-  // Auto slide mỗi 6 giây
+  // Auto slide every 6 seconds
   useEffect(() => {
     if (banners.length <= 1) return
     const timer = setInterval(() => {
@@ -77,61 +69,63 @@ const BannerSlider = () => {
   if (banners.length === 0) return null
 
   return (
-    <div className="relative w-full mb-12 overflow-hidden bg-stone-900 group">
-      {/* Slider Image with Overlay */}
-      <div className="relative h-[480px] sm:h-[560px] md:h-[620px] w-full overflow-hidden">
+    <div className="relative w-full overflow-hidden bg-stone-900 group rounded-none">
+      {/* Slider Image with Center Overlay */}
+      <div className="relative h-[480px] sm:h-[580px] md:h-[650px] w-full overflow-hidden">
         {banners.map((banner, index) => (
           <div
             key={banner.id || index}
-            className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-              index === currentIndex ? 'opacity-100 z-10 scale-100' : 'opacity-0 z-0 scale-105 pointer-events-none'
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
             }`}
           >
+            {/* Background Image */}
             <img
               src={banner.image_url}
               alt={banner.title}
-              className="w-full h-full object-cover transform duration-1000"
+              className="w-full h-full object-cover"
               onError={(e) => {
                 e.target.onerror = null
                 e.target.src = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1600&q=80'
               }}
             />
-            {/* Lớp phủ tối nhẹ để nổi bật chữ */}
-            <div className="absolute inset-0 bg-stone-900/40 backdrop-brightness-90 flex items-center justify-center text-center">
-              <div className="max-w-3xl px-6 sm:px-12 text-white space-y-4 animate-fade-in py-10">
+
+            {/* Dark Soft Overlay */}
+            <div className="absolute inset-0 bg-black/35 flex flex-col items-center justify-center text-center px-4 sm:px-8">
+              <div className="max-w-3xl space-y-3 sm:space-y-4 animate-fade-in">
                 
-                {/* Tagline nhỏ phía trên */}
-                <span className="block text-xs sm:text-sm uppercase tracking-[0.25em] font-sans font-medium text-stone-200/90">
-                  {banner.tag || 'BỘ SƯU TẬP MỚI'}
+                {/* Category Subtitle */}
+                <span className="block text-xs sm:text-sm font-sans uppercase tracking-[0.3em] font-semibold text-white/90 drop-shadow-sm">
+                  BỘ SƯU TẬP MỚI
                 </span>
 
-                {/* Tiêu đề Bộ Sưu Tập - Italic Serif bay bổng kiểu Victoria nhaxinh.com */}
-                <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif italic font-normal text-white drop-shadow-lg tracking-wide leading-tight">
+                {/* Main Serif Italic Title (Giống nhaxinh.com) */}
+                <h1 className="font-heading font-serif italic text-4xl sm:text-6xl md:text-7xl font-normal text-white leading-tight drop-shadow-md">
                   {banner.title}
-                </h2>
+                </h1>
 
-                {/* Đoạn mô tả cảm xúc */}
+                {/* Subtitle / Description */}
                 {banner.subtitle && (
-                  <p className="text-xs sm:text-sm md:text-base text-stone-100 max-w-2xl mx-auto font-sans font-normal leading-relaxed text-shadow drop-shadow-sm">
+                  <p className="font-sans text-xs sm:text-sm md:text-base text-white/90 max-w-2xl mx-auto font-normal leading-relaxed drop-shadow-sm px-4">
                     {banner.subtitle}
                   </p>
                 )}
 
-                {/* Hàng nút bấm Call To Action chuẩn Nhà Xinh */}
-                <div className="pt-4 flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                {/* CTA Action Buttons (Thiết kế vuông sắc cạnh chuẩn Nhà Xinh) */}
+                <div className="pt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                   {banner.link_url && (
                     <Link
                       to={banner.link_url}
-                      className="px-7 py-3 bg-white hover:bg-stone-100 text-stone-900 font-bold text-xs uppercase tracking-wider rounded-md shadow-md transition-all transform hover:scale-105 cursor-pointer"
+                      className="bg-white text-stone-900 hover:bg-stone-100 px-6 sm:px-8 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors shadow-md rounded-none border border-white inline-block"
                     >
                       KHÁM PHÁ BỘ SƯU TẬP
                     </Link>
                   )}
                   <Link
                     to="/products"
-                    className="px-4 py-3 text-white hover:text-amber-300 font-bold text-xs uppercase tracking-wider underline underline-offset-8 transition-colors cursor-pointer"
+                    className="border border-white text-white hover:bg-white hover:text-stone-900 px-6 sm:px-8 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all rounded-none inline-block"
                   >
-                    CÂU CHUYỆN BỘ SƯU TẬP
+                    CÂU CHUYỆN NỘI THẤT
                   </Link>
                 </div>
 
@@ -147,7 +141,7 @@ const BannerSlider = () => {
           <button
             type="button"
             onClick={handlePrev}
-            className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center text-xl font-light transition-all opacity-0 group-hover:opacity-100 cursor-pointer backdrop-blur-xs border border-white/20"
+            className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-none bg-black/20 hover:bg-black/60 text-white flex items-center justify-center text-xl transition-all opacity-0 group-hover:opacity-100 cursor-pointer border border-white/20"
             aria-label="Previous Banner"
           >
             ❮
@@ -156,21 +150,21 @@ const BannerSlider = () => {
           <button
             type="button"
             onClick={handleNext}
-            className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center text-xl font-light transition-all opacity-0 group-hover:opacity-100 cursor-pointer backdrop-blur-xs border border-white/20"
+            className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-none bg-black/20 hover:bg-black/60 text-white flex items-center justify-center text-xl transition-all opacity-0 group-hover:opacity-100 cursor-pointer border border-white/20"
             aria-label="Next Banner"
           >
             ❯
           </button>
 
-          {/* Dots Indicator */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+          {/* Minimal Dots Indicator */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
             {banners.map((_, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => setCurrentIndex(idx)}
-                className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  idx === currentIndex ? 'w-10 bg-amber-500' : 'w-2.5 bg-white/50 hover:bg-white'
+                className={`h-1.5 transition-all duration-300 cursor-pointer ${
+                  idx === currentIndex ? 'w-8 bg-white' : 'w-3 bg-white/40 hover:bg-white/70'
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />

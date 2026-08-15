@@ -93,14 +93,14 @@ const ProductListPage = () => {
     <div className="min-h-screen bg-stone-50 flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
-        {/* Banner Hero Slider Quảng Cáo (NT-11-CN-001) */}
-        {!currentSearch && !currentCategory && <BannerSlider />}
+      {/* Banner Hero Slider Quảng Cáo tràn viền chuẩn nhaxinh.com */}
+      {!currentSearch && !currentCategory && <BannerSlider />}
 
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
         {/* Page Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-stone-900 tracking-tight">
+            <h1 className="text-3xl font-heading font-bold text-stone-900 tracking-tight">
               {currentSearch ? (
                 <>Kết quả tìm kiếm cho: <span className="text-amber-800">"{currentSearch}"</span></>
               ) : currentCategory ? (
