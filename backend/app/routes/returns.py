@@ -131,9 +131,9 @@ def admin_get_all_return_requests():
 
 
 # ============================================================
-# PATCH /api/v1/returns/admin/<request_id> — Admin cập nhật
+# PATCH/PUT /api/v1/returns/admin/<request_id> — Admin cập nhật
 # ============================================================
-@returns_bp.route("/admin/<int:request_id>", methods=["PATCH"])
+@returns_bp.route("/admin/<int:request_id>", methods=["PATCH", "PUT"])
 @jwt_required()
 def admin_update_return_request(request_id: int):
     admin_id = int(get_jwt_identity())
