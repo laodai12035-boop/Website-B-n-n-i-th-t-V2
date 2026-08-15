@@ -25,7 +25,7 @@ const AdminLayout = ({ children }) => {
     { path: '/admin/coupons', label: 'MÃ GIẢM GIÁ VOUCHER' },
     { path: '/admin/banners', label: 'QUẢN LÝ BANNER' },
     { path: '/admin/reviews', label: 'ĐÁNH GIÁ & NHẬN XÉT' },
-    { path: '/admin/customers', label: 'QUẢN LÝ KHÁCH HÀNG' },
+    { path: '/admin/customers', label: 'QUẢN LÝ TÀI KHOẢN' },
   ]
 
   const isCurrentActive = (item) => {

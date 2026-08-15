@@ -4,19 +4,37 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useCart } from '@/contexts/CartContext'
 import SearchBar from '@/components/product/SearchBar'
+import productService from '@/services/productService'
 
 /**
  * Navbar — Thanh điều hướng chuẩn phong cách Nhà Xinh (Nội thất cao cấp).
- * Cấu trúc: Top utility bar + Main Header + Navigation Categories + Integrated Search.
+ * Nạp danh mục sản phẩm ĐỘNG từ Database (API getCategories).
  */
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
   const { wishlistCount } = useWishlist()
   const { cartCount, setIsCartOpen } = useCart()
   const navigate = useNavigate()
+
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [categories, setCategories] = useState([])
   const dropdownRef = useRef(null)
+
+  // Nạp danh mục động từ Database
+  useEffect(() => {
+    const fetchNavCategories = async () => {
+      try {
+        const catData = await productService.getCategories()
+        if (Array.isArray(catData) && catData.length > 0) {
+          setCategories(catData)
+        }
+      } catch (err) {
+        console.warn('Lỗi khi nạp danh mục động cho Navbar:', err)
+      }
+    }
+    fetchNavCategories()
+  }, [])
 
   // Đóng dropdown khi click ngoài
   useEffect(() => {
@@ -34,6 +52,17 @@ const Navbar = () => {
     await logout()
     navigate('/login')
   }
+
+  // Danh mục mặc định nếu chưa có từ DB
+  const defaultCategories = [
+    { id: 'phong-khach', name: 'PHÒNG KHÁCH' },
+    { id: 'phong-an', name: 'PHÒNG ĂN' },
+    { id: 'phong-ngu', name: 'PHÒNG NGỦ' },
+    { id: 'ban', name: 'BÀN & GHẾ' },
+    { id: 'tu-ke', name: 'TỦ & KỆ' },
+  ]
+
+  const activeCategories = categories.length > 0 ? categories : defaultCategories
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-xs font-sans">
@@ -89,39 +118,82 @@ const Navbar = () => {
               </span>
             </button>
 
-            {/* User Account Menu */}
+            <span className="text-stone-300">|</span>
+
+            {/* Account Menu / Login Button */}
             {isAuthenticated ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
-                  onClick={() => setDropdownOpen((prev) => !prev)}
-                  className="flex items-center gap-1.5 font-medium text-stone-800 hover:text-amber-800 cursor-pointer"
+                  onClick={() => setDropdownOpen((v) => !v)}
+                  className="flex items-center gap-1.5 font-semibold text-stone-800 hover:text-amber-800 transition-colors cursor-pointer"
                 >
-                  <svg className="w-4 h-4 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <span className="w-5 h-5 rounded-full bg-amber-800 text-white text-[10px] font-bold flex items-center justify-center">
+                    {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                  <span className="max-w-[100px] truncate">{user?.full_name || 'Tài khoản'}</span>
+                  <svg className="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
-                  <span className="max-w-[100px] truncate">{user?.full_name}</span>
                 </button>
 
+                {/* Dropdown Menu */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-stone-200 rounded-lg shadow-lg py-2 z-50 text-xs text-stone-800">
-                    <div className="px-3 py-1.5 border-b border-stone-100 font-semibold text-stone-900 truncate">
-                      {user?.full_name}
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-stone-200 shadow-lg rounded-none py-1.5 z-50 text-xs">
+                    <div className="px-4 py-2 border-b border-stone-100">
+                      <p className="font-bold text-stone-900 truncate">{user?.full_name}</p>
+                      <p className="text-[11px] text-stone-400 truncate">{user?.email}</p>
                     </div>
-                    <Link to="/profile" onClick={() => setDropdownOpen(false)} className="block px-3 py-2 hover:bg-stone-50">Hồ sơ cá nhân</Link>
-                    <Link to="/orders" onClick={() => setDropdownOpen(false)} className="block px-3 py-2 hover:bg-stone-50">Lịch sử đơn hàng</Link>
+
                     {user?.role === 'admin' && (
-                      <Link to="/admin" onClick={() => setDropdownOpen(false)} className="block px-3 py-2 font-bold text-amber-800 hover:bg-amber-50">Quản trị Admin</Link>
+                      <Link
+                        to="/admin"
+                        onClick={() => setDropdownOpen(false)}
+                        className="block px-4 py-2 text-amber-800 font-bold hover:bg-amber-50 transition-colors"
+                      >
+                        Quản Trị Viên (Admin)
+                      </Link>
                     )}
-                    <button type="button" onClick={handleLogout} className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 font-medium">Đăng xuất</button>
+
+                    <Link
+                      to="/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2 text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      Hồ sơ cá nhân
+                    </Link>
+
+                    <Link
+                      to="/profile/addresses"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2 text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      Địa chỉ nhận hàng
+                    </Link>
+
+                    <Link
+                      to="/orders"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2 text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      Lịch sử đơn hàng
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-red-600 font-semibold hover:bg-red-50 transition-colors border-t border-stone-100 mt-1 cursor-pointer"
+                    >
+                      Đăng xuất
+                    </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link to="/login" className="hover:text-amber-800">Đăng nhập</Link>
-                <span>/</span>
-                <Link to="/register" className="hover:text-amber-800">Đăng ký</Link>
+              <div className="flex items-center gap-2 font-semibold">
+                <Link to="/login" className="hover:text-amber-800 transition-colors">Đăng nhập</Link>
+                <span className="text-stone-300">/</span>
+                <Link to="/register" className="hover:text-amber-800 transition-colors">Đăng ký</Link>
               </div>
             )}
 
@@ -130,31 +202,31 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* 2. MAIN HEADER BAR (Logo + Navigation + Search) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between gap-6 border-b border-stone-100">
+      {/* 2. MAIN BRAND HEADER */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4 border-b border-stone-100">
         
-        {/* Mobile Hamburger Menu Toggle */}
+        {/* Mobile Hamburger Button */}
         <button
           type="button"
-          onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className="lg:hidden text-stone-700 p-1"
-          aria-label="Toggle Navigation"
+          onClick={() => setMobileMenuOpen((v) => !v)}
+          className="lg:hidden p-2 text-stone-700 hover:text-stone-900 cursor-pointer"
+          aria-label="Mở menu mobile"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
-        {/* Brand Logo (Nhà Xinh Minimal Premium Logo Style) */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="w-9 h-9 bg-stone-900 text-white font-bold text-lg flex items-center justify-center rounded">
+        {/* Brand Logo Nhà Xinh */}
+        <Link to="/" className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-stone-900 text-white font-extrabold text-lg flex items-center justify-center rounded-none shadow-2xs font-heading">
             NX
           </div>
           <div>
-            <span className="text-xl sm:text-2xl font-bold tracking-wider uppercase text-stone-900 block leading-tight">
-              NHÀ XINH <span className="text-amber-700 font-normal">V2</span>
+            <span className="text-xl sm:text-2xl font-heading font-black tracking-wider text-stone-900 block leading-none">
+              NHÀ XINH <span className="text-amber-800 text-sm font-sans font-bold">V2</span>
             </span>
-            <span className="text-[9px] uppercase tracking-[0.3em] text-stone-400 block -mt-0.5">
+            <span className="text-[10px] font-sans font-semibold text-stone-400 uppercase tracking-widest block mt-0.5">
               NỘI THẤT CAO CẤP
             </span>
           </div>
@@ -167,32 +239,30 @@ const Navbar = () => {
 
       </div>
 
-      {/* 3. CATEGORY NAVIGATION MENU (Phong cách Nhà Xinh uppercase, clean dividers) */}
+      {/* 3. DYNAMIC CATEGORY NAVIGATION MENU (Nạp động từ DB) */}
       <div className="hidden lg:block bg-white border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-8">
-          <nav className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wider text-stone-800">
-            <Link to="/" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all">
+          <nav className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wider text-stone-800 overflow-x-auto scrollbar-none gap-4">
+            <Link to="/" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
               TRANG CHỦ
             </Link>
-            <Link to="/products?category=san-pham-moi" className="py-3.5 text-amber-800 hover:text-amber-900 border-b-2 border-transparent hover:border-amber-800 transition-all">
+
+            <Link to="/products?sort=newest" className="py-3.5 text-amber-800 hover:text-amber-900 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
               SẢN PHẨM MỚI
             </Link>
-            <Link to="/products?category=phong-khach" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all">
-              PHÒNG KHÁCH
-            </Link>
-            <Link to="/products?category=phong-an" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all">
-              PHÒNG ĂN
-            </Link>
-            <Link to="/products?category=phong-ngu" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all">
-              PHÒNG NGỦ
-            </Link>
-            <Link to="/products?category=ban" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all">
-              BÀN & GHẾ
-            </Link>
-            <Link to="/products?category=tu-ke" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all">
-              TỦ & KỆ
-            </Link>
-            <Link to="/products" className="py-3.5 text-stone-900 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all">
+
+            {/* Render các danh mục động từ Database */}
+            {activeCategories.map((cat) => (
+              <Link
+                key={cat.id || cat.slug}
+                to={`/products?category=${cat.id || cat.slug}`}
+                className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0"
+              >
+                {cat.name}
+              </Link>
+            ))}
+
+            <Link to="/products" className="py-3.5 text-stone-900 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
               TẤT CẢ SẢN PHẨM
             </Link>
           </nav>
@@ -203,10 +273,19 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-stone-900 text-white p-4 space-y-3 border-t border-stone-800 text-sm">
           <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block py-2 border-b border-stone-800">Trang chủ</Link>
-          <Link to="/products?category=san-pham-moi" onClick={() => setMobileMenuOpen(false)} className="block py-2 border-b border-stone-800 text-amber-400">Sản phẩm mới</Link>
-          <Link to="/products?category=phong-khach" onClick={() => setMobileMenuOpen(false)} className="block py-2 border-b border-stone-800">Phòng khách</Link>
-          <Link to="/products?category=phong-an" onClick={() => setMobileMenuOpen(false)} className="block py-2 border-b border-stone-800">Phòng ăn</Link>
-          <Link to="/products?category=phong-ngu" onClick={() => setMobileMenuOpen(false)} className="block py-2 border-b border-stone-800">Phòng ngủ</Link>
+          <Link to="/products?sort=newest" onClick={() => setMobileMenuOpen(false)} className="block py-2 border-b border-stone-800 text-amber-400">Sản phẩm mới</Link>
+          
+          {activeCategories.map((cat) => (
+            <Link
+              key={cat.id || cat.slug}
+              to={`/products?category=${cat.id || cat.slug}`}
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 border-b border-stone-800"
+            >
+              {cat.name}
+            </Link>
+          ))}
+
           <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="block py-2">Tất cả sản phẩm</Link>
         </div>
       )}
