@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import ProductCard from '@/components/product/ProductCard'
-import SearchBar from '@/components/product/SearchBar'
 import ProductFilters from '@/components/product/ProductFilters'
 import BannerSlider from '@/components/home/BannerSlider'
 import productService from '@/services/productService'
@@ -18,9 +17,17 @@ const DEFAULT_CATEGORIES = [
   { id: 'phong-ngu', name: 'Phòng ngủ' },
 ]
 
+const SORT_OPTIONS = [
+  { id: 'newest', label: 'Sản phẩm mới nhất' },
+  { id: 'discount', label: '🔥 Giảm giá nhiều nhất' },
+  { id: 'price_asc', label: 'Giá từ thấp tới cao' },
+  { id: 'price_desc', label: 'Giá từ cao tới thấp' },
+  { id: 'rating_desc', label: 'Đánh giá cao nhất' },
+]
+
 /**
  * ProductListPage — Trang Danh sách & Tìm kiếm sản phẩm.
- * Hỗ trợ từ khóa `search`, bộ lọc danh mục `category`, khoảng giá `min_price`/`max_price` và `sort`.
+ * Layout chuẩn E-commerce: Cột bên TRÁI là Bộ lọc & Danh mục, Cột PHẢI là Toolbar Sắp xếp & Lưới sản phẩm.
  */
 const ProductListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -35,6 +42,7 @@ const ProductListPage = () => {
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ page: 1, total_items: 0, total_pages: 1 })
+  const [showMobileFilter, setShowMobileFilter] = useState(false)
 
   // Nạp danh sách danh mục động kèm số lượng sản phẩm
   useEffect(() => {
@@ -84,6 +92,17 @@ const ProductListPage = () => {
       params.delete('category')
     }
     setSearchParams(params)
+    setShowMobileFilter(false)
+  }
+
+  const handleSortChange = (e) => {
+    const params = new URLSearchParams(searchParams)
+    if (e.target.value) {
+      params.set('sort', e.target.value)
+    } else {
+      params.delete('sort')
+    }
+    setSearchParams(params)
   }
 
   // Tên danh mục đang chọn (để hiển thị tiêu đề)
@@ -105,7 +124,7 @@ const ProductListPage = () => {
                 🔥 FLASH SALE & GIẢM GIÁ ĐẶC BIỆT
               </h2>
               <p className="text-xs text-stone-300 max-w-xl font-sans leading-relaxed">
-                Ưu đãi đặc biệt giảm giá trực tiếp từ 10% đến 30% cho các sản phẩm nội thất phòng khách, phòng ăn & phòng ngủ cao cấp. Áp dụng đồng thời với mã giảm giá khi thanh toán!
+                Ưu đãi đặc biệt giảm giá trực tiếp từ 10% đến 30% cho các sản phẩm nội thất phòng khách, phòng ăn & phòng ngủ cao cấp.
               </p>
             </div>
             <div className="bg-amber-950/80 p-4 border border-amber-800/80 text-center shrink-0 min-w-[220px]">
@@ -121,106 +140,137 @@ const ProductListPage = () => {
       {!currentSearch && !currentCategory && currentSort !== 'discount' && <BannerSlider />}
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
-        {/* Page Header */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-heading font-bold text-stone-900 tracking-tight">
-              {currentSearch ? (
-                <>Kết quả tìm kiếm cho: <span className="text-amber-800">"{currentSearch}"</span></>
-              ) : currentSort === 'discount' || currentCategory === 'khuyen-mai' ? (
-                <>Sản phẩm <span className="text-amber-800">Giảm giá Đặc biệt</span></>
-              ) : currentCategory ? (
-                <>Danh mục: <span className="text-amber-800">{activeCategoryObj?.name || currentCategory}</span></>
-              ) : (
-                'Tuyệt tác Nội Thất Cao Cấp'
-              )}
-            </h1>
-            <p className="text-sm text-stone-500 mt-1.5 font-sans">
-              Khám phá các sản phẩm nội thất sang trọng & độc bản cho không gian sống của bạn
-            </p>
-          </div>
 
-          <div className="w-full md:w-80">
-            <SearchBar />
+        {/* Breadcrumb & Title */}
+        <div className="mb-6 pb-4 border-b border-stone-200">
+          <div className="text-xs text-stone-500 mb-2 flex items-center gap-2 font-sans">
+            <span>Trang chủ</span>
+            <span>/</span>
+            <span>Sản Phẩm</span>
+            {activeCategoryObj && activeCategoryObj.id && (
+              <>
+                <span>/</span>
+                <span className="text-amber-800 font-semibold">{activeCategoryObj.name}</span>
+              </>
+            )}
           </div>
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold text-stone-900 tracking-tight">
+            {currentSearch ? (
+              <>Kết quả tìm kiếm: <span className="text-amber-800">"{currentSearch}"</span></>
+            ) : currentSort === 'discount' || currentCategory === 'khuyen-mai' ? (
+              <>Sản phẩm <span className="text-amber-800">Giảm giá Đặc biệt</span></>
+            ) : activeCategoryObj && activeCategoryObj.id ? (
+              <>{activeCategoryObj.name}</>
+            ) : (
+              'Tất Cả Sản Phẩm Nội Thất'
+            )}
+          </h1>
         </div>
 
-        {/* Categories Bar (Vuông vức góc cạnh) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
-          {categories.map((cat) => {
-            const isActive = currentCategory === cat.id
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => handleCategorySelect(cat.id)}
-                className={`px-5 py-2.5 rounded-none text-xs font-medium whitespace-nowrap transition-all duration-200 flex items-center gap-2 cursor-pointer ${
-                  isActive
-                    ? 'bg-amber-800 text-white shadow-2xs font-semibold'
-                    : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200/80'
-                }`}
-              >
-                <span>{cat.name}</span>
-                {cat.count !== undefined && (
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-none font-mono ${
-                      isActive ? 'bg-amber-950/40 text-white' : 'bg-stone-100 text-stone-500'
-                    }`}
-                  >
-                    {cat.count}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
+        {/* 2-COLUMN E-COMMERCE LAYOUT */}
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-        {/* Price & Sort Filter Bar */}
-        <ProductFilters />
+          {/* LEFT SIDEBAR FILTER (Desktop: Visible | Mobile: Modal/Drawer toggle) */}
+          <aside className={`w-full lg:w-64 xl:w-72 shrink-0 ${showMobileFilter ? 'block' : 'hidden lg:block'}`}>
+            <ProductFilters
+              categories={categories}
+              currentCategory={currentCategory}
+              onCategorySelect={handleCategorySelect}
+            />
+          </aside>
 
-        {/* Content Area */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 border border-stone-200/80 animate-pulse h-80">
-                <div className="bg-stone-200 h-48 rounded-xl mb-4" />
-                <div className="bg-stone-200 h-4 w-3/4 rounded mb-2" />
-                <div className="bg-stone-200 h-4 w-1/2 rounded" />
+          {/* RIGHT MAIN CONTENT AREA */}
+          <div className="flex-1 w-full min-w-0">
+
+            {/* TOP BAR: Product count, Mobile Filter Button, Sort Dropdown */}
+            <div className="bg-white p-4 border border-stone-200/80 shadow-2xs mb-6 flex flex-wrap items-center justify-between gap-4">
+              
+              {/* Product Count & Mobile Toggle */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowMobileFilter(!showMobileFilter)}
+                  className="lg:hidden px-3 py-1.5 bg-stone-800 text-white text-xs font-medium flex items-center gap-1.5"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <span>{showMobileFilter ? 'Ẩn bộ lọc' : 'Bộ lọc & Danh mục'}</span>
+                </button>
+
+                <span className="text-xs text-stone-600 font-sans">
+                  Hiển thị <span className="font-bold text-amber-800">{pagination.total_items || products.length}</span> sản phẩm
+                </span>
               </div>
-            ))}
-          </div>
-        ) : products.length > 0 ? (
-          /* Product Grid: 375px (1 col), 768px (2 cols), 1024px+ (3-4 cols) */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((prod) => (
-              <ProductCard key={prod.id} product={prod} />
-            ))}
-          </div>
-        ) : (
-          /* Empty State (TC-02) */
-          <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm max-w-lg mx-auto my-8">
-            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+
+              {/* Sort Selector Dropdown */}
+              <div className="flex items-center gap-2 shrink-0">
+                <label htmlFor="sort_select" className="text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                  Sắp xếp:
+                </label>
+                <select
+                  id="sort_select"
+                  value={currentSort}
+                  onChange={handleSortChange}
+                  className="px-3 py-1.5 bg-stone-50 text-xs font-medium text-stone-800 rounded-none border border-stone-200 focus:outline-none focus:border-amber-800 cursor-pointer"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
             </div>
-            <h3 className="text-lg font-display font-bold text-gray-900 mb-1">
-              Không tìm thấy sản phẩm nào
-            </h3>
-            <p className="text-sm text-gray-500 mb-6">
-              {currentSearch
-                ? `Không có sản phẩm nào khớp với từ khóa "${currentSearch}".`
-                : 'Chưa có sản phẩm nào trong danh mục này.'}
-            </p>
-            <button
-              type="button"
-              onClick={() => handleCategorySelect('')}
-              className="btn-primary text-sm px-5 py-2.5"
-            >
-              Xem tất cả sản phẩm
-            </button>
+
+            {/* Product Grid Area */}
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-white rounded-none p-4 border border-stone-200/80 animate-pulse h-80">
+                    <div className="bg-stone-200 h-48 mb-4" />
+                    <div className="bg-stone-200 h-4 w-3/4 mb-2" />
+                    <div className="bg-stone-200 h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : products.length > 0 ? (
+              /* Product Grid: 3 columns on desktop, 2 on tablet, 1 on mobile */
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {products.map((prod) => (
+                  <ProductCard key={prod.id} product={prod} />
+                ))}
+              </div>
+            ) : (
+              /* Empty State */
+              <div className="bg-white rounded-none p-12 text-center border border-stone-200 shadow-2xs max-w-lg mx-auto my-8">
+                <div className="w-16 h-16 bg-amber-50 text-amber-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-heading font-bold text-stone-900 mb-1">
+                  Không tìm thấy sản phẩm nào
+                </h3>
+                <p className="text-xs text-stone-500 mb-6">
+                  {currentSearch
+                    ? `Không có sản phẩm nào khớp với từ khóa "${currentSearch}".`
+                    : 'Chưa có sản phẩm nào phù hợp với bộ lọc hiện tại.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleCategorySelect('')}
+                  className="px-5 py-2.5 bg-amber-800 hover:bg-amber-900 text-white text-xs font-semibold uppercase tracking-wider transition-colors"
+                >
+                  Xem tất cả sản phẩm
+                </button>
+              </div>
+            )}
+
           </div>
-        )}
+
+        </div>
 
       </main>
 
@@ -230,3 +280,4 @@ const ProductListPage = () => {
 }
 
 export default ProductListPage
+

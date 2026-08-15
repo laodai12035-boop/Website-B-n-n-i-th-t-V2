@@ -20,6 +20,7 @@ import ForbiddenPage from '@/pages/error/ForbiddenPage'
 import ProductListPage from '@/pages/product/ProductListPage'
 import ProductDetailPage from '@/pages/product/ProductDetailPage'
 import ProductComparePage from '@/pages/product/ProductComparePage'
+import ContactPage from '@/pages/contact/ContactPage'
 import WishlistPage from '@/pages/user/WishlistPage'
 import CartPage from '@/pages/cart/CartPage'
 import CheckoutPage from '@/pages/checkout/CheckoutPage'
@@ -42,10 +43,11 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/403" element={<ForbiddenPage />} />
 
-        {/* Public product & shopping routes */}
+        {/* Public product, contact & shopping routes */}
         <Route path="/products" element={<ProductListPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/compare" element={<ProductComparePage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/cart" element={<CartPage />} />
 

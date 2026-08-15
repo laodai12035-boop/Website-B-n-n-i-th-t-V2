@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700&family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,8 +6,8 @@
 
 /* =============================================
    GLOBAL BASE STYLES & TYPOGRAPHY
-   - Client App: Be Vietnam Pro / Hanken Grotesk & Playfair Display
-   - Admin Panel: Inter & Be Vietnam Pro (Cao cấp, Rõ nét, Đậm đà, Thực dụng)
+   - Client App & Admin: Be Vietnam Pro (Hiện đại, Rõ nét, Chuẩn E-commerce Việt Nam)
+   - Accent Display: Playfair Display (Dành riêng cho Hero Banner/Editorial)
    ============================================= */
 @layer base {
   * {
@@ -15,7 +15,7 @@
   }
 
   html, body, input, button, select, textarea {
-    font-family: 'Be Vietnam Pro', 'Inter', 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+    font-family: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   html {
@@ -27,13 +27,17 @@
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
-  h1, h2, h3, h4, h5, h6, .font-heading {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Be Vietnam Pro', sans-serif;
+  }
+
+  .font-display, .font-serif {
     font-family: 'Playfair Display', Georgia, serif;
   }
 
-  /* Admin Font Rule — Đậm nét, Thực dụng & Đột phá độ tương phản */
+  /* Admin Font Rule */
   .font-admin, .font-admin * {
-    font-family: 'Inter', 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-family: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif !important;
   }
 }
 

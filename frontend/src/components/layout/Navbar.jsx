@@ -113,7 +113,7 @@ const Navbar = ({ hideCategoryNav = false }) => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           {/* Topbar Left: Hotline & Info Links */}
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-5">
             <a href="tel:0903884358" className="flex items-center gap-1.5 font-semibold text-amber-800 hover:text-amber-900 transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h32a2 2 0 012 2v2a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm0 6a2 2 0 012-2h32a2 2 0 012 2v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2zm0 6a2 2 0 012-2h32a2 2 0 012 2v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2z" />
@@ -125,6 +125,10 @@ const Navbar = ({ hideCategoryNav = false }) => {
             <span className="hidden lg:inline text-stone-300">|</span>
             <Link to="/products?sort=discount" className="hidden lg:inline text-red-600 font-semibold hover:underline">
               🔥 Giảm giá đặc biệt
+            </Link>
+            <span className="text-stone-300">|</span>
+            <Link to="/contact" className="font-semibold text-stone-700 hover:text-amber-800 transition-colors">
+              Liên hệ
             </Link>
           </div>
 
@@ -329,6 +333,10 @@ const Navbar = ({ hideCategoryNav = false }) => {
               <Link to="/products" className="py-3.5 text-stone-900 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
                 TẤT CẢ SẢN PHẨM
               </Link>
+
+              <Link to="/contact" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
+                LIÊN HỆ
+              </Link>
             </nav>
 
             {/* Slot Mũi tên Cuộn Phải (›) */}
@@ -366,7 +374,8 @@ const Navbar = ({ hideCategoryNav = false }) => {
             </Link>
           ))}
 
-          <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="block py-2">Tất cả sản phẩm</Link>
+          <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="block py-2 border-b border-stone-800">Tất cả sản phẩm</Link>
+          <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-amber-400 font-semibold">Liên hệ</Link>
         </div>
       )}
 
