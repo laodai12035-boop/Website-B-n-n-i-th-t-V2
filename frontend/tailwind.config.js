@@ -44,9 +44,9 @@ export default {
       },
       fontFamily: {
         sans: ['"Hanken Grotesk"', 'sans-serif'],
-        heading: ['Lora', 'serif'],
-        serif: ['Lora', 'serif'],
-        display: ['Lora', 'serif'],
+        heading: ['"Playfair Display"', 'Georgia', 'serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
       },
       boxShadow: {
         'card': '0 4px 24px -4px rgba(0,0,0,0.06)',

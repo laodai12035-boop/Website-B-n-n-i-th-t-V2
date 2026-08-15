@@ -39,14 +39,14 @@
 
 ### Typography
 
-- **Heading Font:** Lora (Google Font, serif - chuẩn nét xử lý dấu tiếng Việt phức tạp, không bị lỗi dấu chồng) — Dùng cho tiêu đề cảm xúc/thương hiệu, tên bộ sưu tập (dùng kèm class `italic`), hero banner, section title
-- **Body Font:** Hanken Grotesk (Google Font, sans-serif) — Dùng mặc định cho toàn bộ body text, menu, button, tên sản phẩm, mô tả
-- **Mood:** luxury, poetic, elegant, refined, high-end
-- **Google Fonts:** [Lora + Hanken Grotesk](https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap)
+- **Heading Font:** Playfair Display (Google Font, serif) — Đẳng cấp luxury, hỗ trợ 100% tiếng Việt chuẩn Unicode, dùng cho tiêu đề cảm xúc/bộ sưu tập/hero banner
+- **Body Font:** Hanken Grotesk (Google Font, sans-serif) — Dùng mặc định cho toàn bộ body text, menu, button, mô tả
+- **Mood:** luxury, high-end, elegant, refined, modern
+- **Google Fonts:** [Playfair Display & Hanken Grotesk](https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
 ```
 
 ### Spacing Variables
