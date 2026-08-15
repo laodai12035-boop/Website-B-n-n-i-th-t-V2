@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useCart } from '@/contexts/CartContext'
@@ -10,12 +10,17 @@ import productService from '@/services/productService'
  * Navbar — Thanh điều hướng chuẩn phong cách Nhà Xinh (Nội thất cao cấp).
  * 1. Nạp danh mục sản phẩm ĐỘNG từ Database (API getCategories).
  * 2. Ẩn thanh trượt xấu xí của trình duyệt, thay bằng 2 Mũi tên cuộn 2 đầu (‹ và ›) bấm cuộn mượt mà.
+ * 3. Hỗ trợ ẩn thanh danh mục trên các trang Đăng nhập / Đăng ký.
  */
-const Navbar = () => {
+const Navbar = ({ hideCategoryNav = false }) => {
   const { user, isAuthenticated, logout } = useAuth()
   const { wishlistCount } = useWishlist()
   const { cartCount, setIsCartOpen } = useCart()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const isAuthPage = ['/login', '/register', '/forgot-password'].includes(location.pathname)
+  const shouldHideCategories = hideCategoryNav || isAuthPage
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -268,73 +273,77 @@ const Navbar = () => {
           </div>
         </Link>
 
-        {/* Search Bar Center/Right */}
-        <div className="flex-1 max-w-sm ml-auto">
-          <SearchBar />
-        </div>
+        {/* Search Bar Center/Right (Ẩn trên các trang Đăng nhập / Đăng ký) */}
+        {!isAuthPage && (
+          <div className="flex-1 max-w-sm ml-auto">
+            <SearchBar />
+          </div>
+        )}
 
       </div>
 
-      {/* 3. DYNAMIC CATEGORY NAVIGATION MENU WITH 2 ARROWS (CUỘN MƯỢT MÀ, KHÔNG DÙNG THANH TRƯỢT XẤU XÍ) */}
-      <div className="hidden lg:block bg-white border-b border-stone-200 relative">
-        <div className="max-w-7xl mx-auto px-4 relative flex items-center">
-          
-          {/* Mũi tên Cuộn Trái (‹) */}
-          {showLeftArrow && (
-            <button
-              type="button"
-              onClick={() => scrollNav('left')}
-              className="absolute left-2 z-10 w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
-              title="Cuộn sang trái"
-            >
-              ‹
-            </button>
-          )}
-
-          {/* Nav Container — Ẩn thanh trượt ngang mặc định */}
-          <nav
-            ref={navRef}
-            className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wider text-stone-800 overflow-x-auto scrollbar-none gap-6 px-6 py-0 w-full select-none"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            <Link to="/" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
-              TRANG CHỦ
-            </Link>
-
-            <Link to="/products?sort=newest" className="py-3.5 text-amber-800 hover:text-amber-900 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
-              SẢN PHẨM MỚI
-            </Link>
-
-            {/* Render các danh mục động từ Database */}
-            {activeCategories.map((cat) => (
-              <Link
-                key={cat.id || cat.slug}
-                to={`/products?category=${cat.id || cat.slug}`}
-                className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0"
+      {/* 3. DYNAMIC CATEGORY NAVIGATION MENU WITH 2 ARROWS (ẨN TRÊN TRANG ĐĂNG NHẬP / ĐĂNG KÝ) */}
+      {!shouldHideCategories && (
+        <div className="hidden lg:block bg-white border-b border-stone-200 relative">
+          <div className="max-w-7xl mx-auto px-4 relative flex items-center">
+            
+            {/* Mũi tên Cuộn Trái (‹) */}
+            {showLeftArrow && (
+              <button
+                type="button"
+                onClick={() => scrollNav('left')}
+                className="absolute left-2 z-10 w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
+                title="Cuộn sang trái"
               >
-                {cat.name}
-              </Link>
-            ))}
+                ‹
+              </button>
+            )}
 
-            <Link to="/products" className="py-3.5 text-stone-900 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
-              TẤT CẢ SẢN PHẨM
-            </Link>
-          </nav>
-
-          {/* Mũi tên Cuộn Phải (›) */}
-          {showRightArrow && (
-            <button
-              type="button"
-              onClick={() => scrollNav('right')}
-              className="absolute right-2 z-10 w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
-              title="Cuộn sang phải"
+            {/* Nav Container — Ẩn thanh trượt ngang mặc định */}
+            <nav
+              ref={navRef}
+              className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wider text-stone-800 overflow-x-auto scrollbar-none gap-6 px-6 py-0 w-full select-none"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              ›
-            </button>
-          )}
+              <Link to="/" className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
+                TRANG CHỦ
+              </Link>
 
+              <Link to="/products?sort=newest" className="py-3.5 text-amber-800 hover:text-amber-900 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
+                SẢN PHẨM MỚI
+              </Link>
+
+              {/* Render các danh mục động từ Database */}
+              {activeCategories.map((cat) => (
+                <Link
+                  key={cat.id || cat.slug}
+                  to={`/products?category=${cat.id || cat.slug}`}
+                  className="py-3.5 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+
+              <Link to="/products" className="py-3.5 text-stone-900 hover:text-amber-800 border-b-2 border-transparent hover:border-amber-800 transition-all shrink-0">
+                TẤT CẢ SẢN PHẨM
+              </Link>
+            </nav>
+
+            {/* Mũi tên Cuộn Phải (›) */}
+            {showRightArrow && (
+              <button
+                type="button"
+                onClick={() => scrollNav('right')}
+                className="absolute right-2 z-10 w-7 h-7 bg-stone-900 text-white hover:bg-amber-800 shadow-md flex items-center justify-center text-base font-bold transition-all cursor-pointer rounded-none border border-stone-800"
+                title="Cuộn sang phải"
+              >
+                ›
+              </button>
+            )}
+
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 4. MOBILE MENU DRAWER */}
       {mobileMenuOpen && (
