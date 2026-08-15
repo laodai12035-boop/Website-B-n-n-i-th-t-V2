@@ -52,12 +52,12 @@ const ProductCard = ({ product, isCompact = false }) => {
   return (
     <div className="group bg-white border border-stone-200/80 rounded-none shadow-2xs hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col h-full hover:-translate-y-1">
 
-      {/* 1. Image Container — Tỷ lệ 4:5 vuông vức */}
-      <Link to={`/products/${product.id}`} className="relative aspect-[4/5] overflow-hidden bg-stone-100 block group/img rounded-none">
+      {/* 1. Image Container — Tỷ lệ 4:5 vuông vức studio fit */}
+      <Link to={`/products/${product.id}`} className="relative aspect-[4/5] overflow-hidden bg-[#F7F7F5] border-b border-stone-100 flex items-center justify-center p-3 sm:p-4 block group/img rounded-none">
         <img
           src={product.image_url || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'}
           alt={product.name}
-          className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-200 ease-out"
+          className="w-full h-full object-contain mix-blend-multiply group-hover/img:scale-105 transition-transform duration-300 ease-out drop-shadow-xs"
           loading="lazy"
           onError={(e) => {
             e.target.onerror = null
