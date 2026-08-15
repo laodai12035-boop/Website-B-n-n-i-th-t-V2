@@ -2,11 +2,20 @@ import api from './api'
 
 export const categoryService = {
   /**
-   * Lấy danh sách danh mục sản phẩm (Public).
+   * Lấy danh sách danh mục sản phẩm (Public & Admin).
    */
   async getCategories() {
     const response = await api.get('/categories')
     return response.data.data
+  },
+
+  // Alias methods for compatibility across components
+  async getAllCategories() {
+    return this.getCategories()
+  },
+
+  async getAdminCategories() {
+    return this.getCategories()
   },
 
   /**
