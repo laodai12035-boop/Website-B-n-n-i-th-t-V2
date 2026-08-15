@@ -5,9 +5,9 @@ import { useCart } from '@/contexts/CartContext'
 
 /**
  * ProductCard — Thẻ sản phẩm phong cách Nhà Xinh (nhaxinh.com).
- * Cấu trúc: Vuông vức sắc nét (rounded-none), tỷ lệ 4:5, Terracotta/Amber discount badge, Accent price inline.
+ * Hỗ trợ chế độ isCompact cho khu vực Sản phẩm liên quan (gọn nhẹ, tối giản).
  */
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, isCompact = false }) => {
   const { isComparing, addToCompare, removeFromCompare } = useCompare()
   const { isWishlisted, toggleWishlist } = useWishlist()
   const { addToCart } = useCart()
@@ -68,20 +68,20 @@ const ProductCard = ({ product }) => {
         {/* Overlay gradient tinh tế */}
         <div className="absolute inset-0 bg-gradient-to-t from-stone-900/35 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-200" />
 
-        {/* Badges & Actions overlay (Vuông vức góc cạnh) */}
+        {/* Badges & Actions overlay */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
           
-          {/* Badge giảm giá / danh mục */}
+          {/* Badge giảm giá / danh mục (Ẩn badge danh mục trong mode compact) */}
           <div>
             {hasDiscount ? (
               <span className="bg-amber-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-none shadow-2xs tracking-wide">
                 -{discountPercent}%
               </span>
-            ) : (
+            ) : !isCompact ? (
               <span className="bg-stone-100/95 text-stone-700 text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-none border border-stone-200/90 shadow-2xs">
                 {product.category || 'Nội thất'}
               </span>
-            )}
+            ) : null}
           </div>
 
           {/* Action Icons (Wishlist & Compare) */}
@@ -102,21 +102,22 @@ const ProductCard = ({ product }) => {
               </svg>
             </button>
 
-            {/* Compare Button */}
-            <button
-              onClick={handleToggleCompare}
-              type="button"
-              title={inCompare ? 'Bỏ so sánh' : 'Thêm vào so sánh'}
-              className={`p-2 rounded-none transition-all duration-200 shadow-2xs cursor-pointer ${
-                inCompare
-                  ? 'bg-amber-800 text-white'
-                  : 'bg-white/90 text-stone-700 hover:text-amber-800 hover:bg-white'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </button>
+            {!isCompact && (
+              <button
+                onClick={handleToggleCompare}
+                type="button"
+                title={inCompare ? 'Bỏ so sánh' : 'Thêm vào so sánh'}
+                className={`p-2 rounded-none transition-all duration-200 shadow-2xs cursor-pointer ${
+                  inCompare
+                    ? 'bg-amber-800 text-white'
+                    : 'bg-white/90 text-stone-700 hover:text-amber-800 hover:bg-white'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </button>
+            )}
           </div>
 
         </div>
@@ -135,11 +136,13 @@ const ProductCard = ({ product }) => {
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
           
-          {/* Category & Rating Row */}
+          {/* Category & Rating Row (chế độ compact hiển thị rating) */}
           <div className="flex items-center justify-between gap-1 mb-2">
-            <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-widest">
-              {product.category || 'Nội thất'}
-            </span>
+            {!isCompact ? (
+              <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-widest">
+                {product.category || 'Nội thất'}
+              </span>
+            ) : <div />}
 
             {/* Rating sao */}
             <div className="flex items-center gap-1 bg-stone-100 px-2 py-0.5 rounded-none border border-stone-200/60">
@@ -149,23 +152,22 @@ const ProductCard = ({ product }) => {
               <span className="text-xs font-bold text-stone-900">
                 {product.rating ? Number(product.rating).toFixed(1) : '5.0'}
               </span>
-              <span className="text-[10px] text-stone-400">
-                ({product.rating_count || 12})
-              </span>
             </div>
           </div>
 
           {/* Product Name */}
-          <h3 className="text-base font-sans font-semibold text-stone-900 line-clamp-2 leading-snug group-hover:text-amber-800 transition-colors">
+          <h3 className="text-sm sm:text-base font-sans font-semibold text-stone-900 line-clamp-2 leading-snug group-hover:text-amber-800 transition-colors">
             <Link to={`/products/${product.id}`} className="cursor-pointer">{product.name}</Link>
           </h3>
 
-          {/* Description */}
-          <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
-            {product.description}
-          </p>
+          {/* Description (Ẩn trong compact mode) */}
+          {!isCompact && (
+            <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
+              {product.description}
+            </p>
+          )}
 
-          {/* Biến thể màu sắc (vuông vức góc cạnh) */}
+          {/* Biến thể màu sắc */}
           <div className="flex items-center gap-1.5 mt-2.5">
             {colorVariants.slice(0, 4).map((hex, i) => (
               <span
@@ -179,14 +181,14 @@ const ProductCard = ({ product }) => {
 
         </div>
 
-        {/* 3. Price & CTA Row (Vuông vức góc cạnh) */}
+        {/* 3. Price & CTA Row */}
         <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
           
           {/* Price Container */}
           <div className="flex items-baseline gap-2 flex-wrap">
             {hasDiscount ? (
               <>
-                <span className="text-lg font-bold text-amber-800 leading-none">
+                <span className="text-base sm:text-lg font-bold text-amber-800 leading-none">
                   {formatCurrency(product.discount_price)}
                 </span>
                 <span className="text-[11px] text-stone-400 line-through leading-none">
@@ -194,13 +196,13 @@ const ProductCard = ({ product }) => {
                 </span>
               </>
             ) : (
-              <span className="text-lg font-bold text-amber-800 leading-none">
+              <span className="text-base sm:text-lg font-bold text-amber-800 leading-none">
                 {formatCurrency(product.price)}
               </span>
             )}
           </div>
 
-          {/* Action Buttons (Vuông vức góc cạnh) */}
+          {/* Action Buttons */}
           <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={handleAddToCart}
