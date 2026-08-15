@@ -28,14 +28,12 @@ import OrderDetailPage from '@/pages/order/OrderDetailPage'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AdminRoute from '@/components/auth/AdminRoute'
 import AdminLayout from '@/components/layout/AdminLayout'
-import { CompareProvider } from '@/contexts/CompareContext'
-
 import CartDrawer from '@/components/cart/CartDrawer'
 import CompareDrawer from '@/components/product/CompareDrawer'
 
 function App() {
   return (
-    <CompareProvider>
+    <>
       <Routes>
         {/* Public auth routes */}
         <Route path="/register" element={<RegisterPage />} />
@@ -212,7 +210,7 @@ function App() {
       {/* Floating Drawers & Modals */}
       <CartDrawer />
       <CompareDrawer />
-    </CompareProvider>
+    </>
   )
 }
 
