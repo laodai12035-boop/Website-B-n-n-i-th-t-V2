@@ -80,11 +80,17 @@ class ComboService:
                 insufficient_products.append({"product_id": item.product_id, "reason": "NOT_AVAILABLE"})
                 continue
 
-            if product.stock < item.quantity:
+            cart_item = db.session.query(CartItem).filter_by(
+                user_id=user_id, product_id=product.id
+            ).first()
+            existing_qty = cart_item.quantity if cart_item else 0
+            total_needed = existing_qty + item.quantity
+
+            if product.stock < total_needed:
                 insufficient_products.append({
                     "product_id": product.id,
                     "product_name": product.name,
-                    "requested": item.quantity,
+                    "requested": total_needed,
                     "available": product.stock,
                     "reason": "OUT_OF_STOCK",
                 })
@@ -94,20 +100,28 @@ class ComboService:
         if insufficient_products:
             raise ValueError("COMBO_OUT_OF_STOCK")
 
-        # 2. Thêm hoặc cập nhật từng sản phẩm trong giỏ hàng
+        # 2. Thêm hoặc cập nhật từng sản phẩm trong giỏ hàng với giá ưu đãi Combo
         added_items = []
         for item, product in item_products:
+            original_price = float(
+                product.discount_price if (product.discount_price and float(product.discount_price) > 0 and float(product.discount_price) < float(product.price))
+                else product.price
+            )
+            combo_price = round(original_price * (1 - combo.discount_percent / 100), 0)
+
             cart_item = db.session.query(CartItem).filter_by(
                 user_id=user_id, product_id=product.id
             ).first()
 
             if cart_item:
                 cart_item.quantity += item.quantity
+                cart_item.unit_price_override = combo_price
             else:
                 cart_item = CartItem(
                     user_id=user_id,
                     product_id=product.id,
                     quantity=item.quantity,
+                    unit_price_override=combo_price,
                 )
                 db.session.add(cart_item)
 
@@ -115,6 +129,7 @@ class ComboService:
                 "product_id": product.id,
                 "product_name": product.name,
                 "quantity_added": item.quantity,
+                "unit_price": combo_price,
             })
 
         db.session.commit()

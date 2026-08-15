@@ -53,9 +53,9 @@ class Order(db.Model):
             "discount_amount": float(self.discount_amount),
             "shipping_fee": float(self.shipping_fee) if self.shipping_fee is not None else 0.0,
             "total_amount": float(self.total_amount),
-            "qr_expire_at": self.qr_expire_at.isoformat() if self.qr_expire_at else None,
+            "qr_expire_at": (self.qr_expire_at.isoformat() + "Z") if self.qr_expire_at else None,
             "items": [item.to_dict() for item in self.items],
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": (self.created_at.isoformat() + "Z") if self.created_at else None,
         }
 
 

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import Navbar from '@/components/layout/Navbar'
-import AdminQuickSearch from '@/components/admin/AdminQuickSearch'
 import couponService from '@/services/couponService'
 import FormAlert from '@/components/ui/FormAlert'
 
 /**
- * AdminCouponsPage — Trang Quản lý Mã giảm giá Khuyến mãi (NT-11-CN-002, QTN-01).
- * Tuyến đường: /admin/coupons
+ * AdminCouponsPage — Trang Quản lý Mã giảm giá Khuyến mãi dành cho Admin (nhaxinh.com style).
+ * Góc cạnh vuông vức (rounded-none), KHÔNG SỬ DỤNG ICON.
  */
 const AdminCouponsPage = () => {
   const [coupons, setCoupons] = useState([])
@@ -29,16 +27,17 @@ const AdminCouponsPage = () => {
     discount_value: '',
     min_order_value: 0,
     max_discount: '',
-    is_active: true,
+    usage_limit: '',
     start_date: '',
     end_date: '',
+    is_active: true,
   })
 
   const fetchCoupons = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await couponService.getAdminCoupons()
+      const data = await couponService.getAllCoupons()
       setCoupons(data || [])
     } catch (err) {
       setError(err.response?.data?.message || 'Không thể nạp danh sách mã giảm giá.')
@@ -52,32 +51,34 @@ const AdminCouponsPage = () => {
   }, [])
 
   const handleOpenModal = (coupon = null) => {
+    setEditingCoupon(coupon)
     setModalError(null)
+
     if (coupon) {
-      setEditingCoupon(coupon)
       setFormData({
         code: coupon.code || '',
         description: coupon.description || '',
         discount_type: coupon.discount_type || 'percent',
-        discount_value: coupon.discount_value ?? '',
-        min_order_value: coupon.min_order_value ?? 0,
-        max_discount: coupon.max_discount ?? '',
-        is_active: coupon.is_active ?? true,
-        start_date: coupon.start_date ? coupon.start_date.substring(0, 16) : '',
-        end_date: coupon.end_date ? coupon.end_date.substring(0, 16) : '',
+        discount_value: coupon.discount_value || '',
+        min_order_value: coupon.min_order_value || 0,
+        max_discount: coupon.max_discount || '',
+        usage_limit: coupon.usage_limit || '',
+        start_date: coupon.start_date ? new Date(coupon.start_date).toISOString().slice(0, 16) : '',
+        end_date: coupon.end_date ? new Date(coupon.end_date).toISOString().slice(0, 16) : '',
+        is_active: coupon.is_active !== undefined ? coupon.is_active : true,
       })
     } else {
-      setEditingCoupon(null)
       setFormData({
         code: '',
-        description: 'Giảm 10% cho đơn hàng đạt giá trị tối thiểu',
+        description: '',
         discount_type: 'percent',
-        discount_value: 10,
-        min_order_value: 2000000,
-        max_discount: 1000000,
-        is_active: true,
+        discount_value: '',
+        min_order_value: 0,
+        max_discount: '',
+        usage_limit: '',
         start_date: '',
         end_date: '',
+        is_active: true,
       })
     }
     setIsModalOpen(true)
@@ -91,29 +92,15 @@ const AdminCouponsPage = () => {
 
   const handleSubmitForm = async (e) => {
     e.preventDefault()
+    setSubmitting(true)
     setModalError(null)
 
-    const cleanCode = formData.code.trim().toUpperCase()
-    if (!cleanCode) {
-      setModalError('Vui lòng nhập mã giảm giá (VD: NOITHAT10).')
-      return
-    }
-
-    if (!formData.discount_value || parseFloat(formData.discount_value) <= 0) {
-      setModalError('Giá trị giảm phải lớn hơn 0.')
-      return
-    }
-
-    setSubmitting(true)
-
     const payload = {
-      code: cleanCode,
-      description: formData.description.trim() || null,
-      discount_type: formData.discount_type,
-      discount_value: parseFloat(formData.discount_value),
-      min_order_value: parseFloat(formData.min_order_value) || 0,
-      max_discount: formData.max_discount ? parseFloat(formData.max_discount) : null,
-      is_active: formData.is_active,
+      ...formData,
+      discount_value: Number(formData.discount_value),
+      min_order_value: Number(formData.min_order_value || 0),
+      max_discount: formData.max_discount ? Number(formData.max_discount) : null,
+      usage_limit: formData.usage_limit ? Number(formData.usage_limit) : null,
       start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
       end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
     }
@@ -121,236 +108,204 @@ const AdminCouponsPage = () => {
     try {
       if (editingCoupon) {
         await couponService.updateCoupon(editingCoupon.id, payload)
-        setSuccessMsg(`Cập nhật mã giảm giá "${cleanCode}" thành công!`)
+        setSuccessMsg(`Cập nhật mã giảm giá "${formData.code}" thành công!`)
       } else {
         await couponService.createCoupon(payload)
-        setSuccessMsg(`Tạo mã giảm giá mới "${cleanCode}" thành công!`)
+        setSuccessMsg(`Tạo mới mã giảm giá "${formData.code}" thành công!`)
       }
       handleCloseModal()
       fetchCoupons()
-      setTimeout(() => setSuccessMsg(null), 3000)
+      setTimeout(() => setSuccessMsg(null), 4000)
     } catch (err) {
-      const errMsg = err.response?.data?.message || 'Đã xảy ra lỗi khi lưu thông tin mã giảm giá.'
-      setModalError(errMsg)
+      setModalError(err.response?.data?.message || 'Không thể lưu thông tin mã giảm giá.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleDeleteCoupon = async (coupon) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa mã giảm giá "${coupon.code}" không?`)) return
+  const handleToggleActive = async (coupon) => {
+    try {
+      await couponService.toggleCouponStatus(coupon.id, !coupon.is_active)
+      fetchCoupons()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể chuyển trạng thái mã giảm giá.')
+    }
+  }
 
+  const handleDeleteCoupon = async (coupon) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn mã giảm giá "${coupon.code}" không?`)) {
+      return
+    }
     try {
       await couponService.deleteCoupon(coupon.id)
-      setSuccessMsg(`Xóa mã giảm giá "${coupon.code}" thành công!`)
+      setSuccessMsg(`Đã xóa mã giảm giá "${coupon.code}".`)
       fetchCoupons()
-      setTimeout(() => setSuccessMsg(null), 3000)
-    } catch (err) {
-      setError(err.response?.data?.message || 'Không thể xóa mã giảm giá.')
-    }
-  }
-
-  const handleToggleActive = async (coupon) => {
-    const newStatus = !coupon.is_active
-    try {
-      await couponService.updateCoupon(coupon.id, { is_active: newStatus })
-      setCoupons((prev) =>
-        prev.map((c) => (c.id === coupon.id ? { ...c, is_active: newStatus } : c))
-      )
-      setSuccessMsg(
-        newStatus
-          ? `Kích hoạt lại mã giảm giá "${coupon.code}" thành công!`
-          : `Đã vô hiệu hóa mã giảm giá "${coupon.code}" (NT-11-CN-003). Khách hàng không thể áp dụng mã này.`
-      )
       setTimeout(() => setSuccessMsg(null), 4000)
     } catch (err) {
-      setError(err.response?.data?.message || 'Không thể cập nhật trạng thái mã giảm giá.')
+      alert(err.response?.data?.message || 'Không thể xóa mã giảm giá.')
     }
   }
 
-  const formatCurrency = (amount) => {
-    if (amount === undefined || amount === null) return '0đ'
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+  const formatCurrency = (val) => {
+    if (!val) return '0đ'
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
   }
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return 'Vĩnh viễn'
+    if (!dateStr) return 'Vô thời hạn'
     return new Date(dateStr).toLocaleDateString('vi-VN')
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      <Navbar />
-
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-1">
-              <Link to="/admin" className="hover:text-amber-600 transition-colors">
-                Quản trị
-              </Link>
-              <span>/</span>
-              <span className="text-gray-900 font-bold">Quản Lý Mã Giảm Giá</span>
-            </div>
-            <h1 className="text-2xl font-display font-extrabold text-gray-900 flex items-center gap-2">
-              <span>🎟️</span> Quản Lý & Vô Hiệu Hóa Mã Giảm Giá (NT-11-CN-002 / NT-11-CN-003 - QTN-01)
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <AdminQuickSearch />
-            <button
-              type="button"
-              onClick={() => handleOpenModal(null)}
-              className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer shrink-0"
-            >
-              <span>+</span> Tạo Mã Giảm Giá Mới
-            </button>
-          </div>
+    <div className="space-y-6 font-sans animate-fade-in">
+      
+      {/* Header */}
+      <div className="bg-white rounded-none border border-stone-200/80 p-6 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span className="text-[10px] font-bold text-amber-800 uppercase tracking-widest bg-amber-100 px-2.5 py-0.5 rounded-none border border-amber-200 inline-block mb-1">
+            Phân hệ Quản trị
+          </span>
+          <h1 className="text-2xl font-heading font-bold text-stone-900 uppercase tracking-wider">
+            QUẢN LÝ MÃ GIẢM GIÁ ({coupons.length})
+          </h1>
+          <p className="text-xs text-stone-500 mt-0.5">
+            Tạo mã voucher khuyến mãi, áp đặt điều kiện đơn tối thiểu và quản lý thời hạn áp dụng
+          </p>
         </div>
 
-        {error && (
-          <div className="mb-4">
-            <FormAlert type="error" message={error} />
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => handleOpenModal(null)}
+          className="px-5 py-3 bg-stone-900 hover:bg-amber-800 text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs cursor-pointer shrink-0"
+        >
+          + TẠO MÃ GIẢM GIÁ MỚI
+        </button>
+      </div>
 
-        {successMsg && (
-          <div className="mb-4">
-            <FormAlert type="success" message={successMsg} />
-          </div>
-        )}
+      {error && <FormAlert type="error" message={error} />}
+      {successMsg && <FormAlert type="success" message={successMsg} />}
 
-        {/* Coupons List / Grid */}
-        {loading ? (
-          <div className="py-16 text-center text-gray-400 text-xs space-y-3">
-            <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="font-semibold">Đang nạp danh sách mã giảm giá...</p>
-          </div>
-        ) : coupons.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center text-gray-400 border border-gray-100 shadow-xs space-y-3">
-            <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto font-bold">
-              🎟️
-            </div>
-            <p className="font-bold text-gray-800 text-base">Chưa có mã giảm giá nào</p>
-            <p className="text-xs text-gray-500 max-w-md mx-auto">
-              Hãy tạo mã giảm giá đầu tiên để triển khai các chương trình ưu đãi hấp dẫn thúc đẩy doanh số bán hàng!
-            </p>
-            <button
-              type="button"
-              onClick={() => handleOpenModal(null)}
-              className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-2"
+      {/* Coupons Grid */}
+      {loading ? (
+        <div className="py-16 text-center text-stone-400 text-xs space-y-3 bg-white rounded-none border border-stone-200/80">
+          <div className="w-8 h-8 border-2 border-amber-800 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="font-semibold">Đang nạp danh sách mã giảm giá...</p>
+        </div>
+      ) : coupons.length === 0 ? (
+        <div className="bg-white rounded-none p-12 text-center text-stone-400 border border-stone-200/80 shadow-2xs space-y-3">
+          <p className="font-heading font-bold text-stone-900 text-base uppercase tracking-wider">Chưa có mã giảm giá nào</p>
+          <button
+            type="button"
+            onClick={() => handleOpenModal(null)}
+            className="px-6 py-3 bg-stone-900 hover:bg-amber-800 text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+          >
+            + Tạo Mã Giảm Giá Ngay
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {coupons.map((c) => (
+            <div
+              key={c.id}
+              className="bg-white rounded-none border border-stone-200/80 shadow-2xs overflow-hidden flex flex-col justify-between hover:border-amber-800/60 transition-all relative"
             >
-              <span>+</span> Tạo Mã Giảm Giá Ngay
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {coupons.map((c) => (
-              <div
-                key={c.id}
-                className="bg-white rounded-3xl border border-gray-100 shadow-xs overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow relative"
-              >
-                {/* Top Ticket Header */}
-                <div className="p-5 bg-gradient-to-r from-amber-500 to-amber-600 text-white relative">
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="px-2.5 py-0.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider">
-                      {c.discount_type === 'percent' ? `Giảm ${c.discount_value}%` : `Giảm ${formatCurrency(c.discount_value)}`}
+              {/* Ticket Header */}
+              <div className="p-5 bg-stone-900 text-white relative border-b border-amber-800">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="px-2.5 py-0.5 bg-amber-800 text-white rounded-none text-[10px] font-bold uppercase tracking-wider">
+                    {c.discount_type === 'percent' ? `GIẢM ${c.discount_value}%` : `GIẢM ${formatCurrency(c.discount_value)}`}
+                  </span>
+                  {c.is_active ? (
+                    <span className="px-2.5 py-0.5 bg-emerald-700 text-white text-[10px] font-bold rounded-none uppercase tracking-wider">
+                      ĐANG HOẠT ĐỘNG
                     </span>
-                    {c.is_active ? (
-                      <span className="px-2.5 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full shadow-xs">
-                        Đang Khả Dụng
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-0.5 bg-gray-800 text-gray-200 text-[10px] font-bold rounded-full">
-                        Tạm Ẩn
-                      </span>
-                    )}
-                  </div>
-
-                  <h3 className="text-2xl font-mono font-extrabold tracking-wider underline decoration-amber-300 decoration-2 select-all">
-                    {c.code}
-                  </h3>
-                  {c.description && (
-                    <p className="text-xs text-amber-100 mt-1 line-clamp-2 font-medium">{c.description}</p>
+                  ) : (
+                    <span className="px-2.5 py-0.5 bg-stone-700 text-stone-300 text-[10px] font-bold rounded-none uppercase tracking-wider">
+                      TẠM ẨN
+                    </span>
                   )}
                 </div>
 
-                {/* Ticket Details (QTN-01) */}
-                <div className="p-5 flex-1 space-y-3 text-xs text-gray-600 bg-white">
-                  <div className="space-y-1.5 border-b border-gray-100 pb-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400 font-semibold">Đơn tối thiểu (QTN-01):</span>
-                      <span className="font-bold text-gray-900">{formatCurrency(c.min_order_value)}</span>
-                    </div>
+                <h3 className="text-2xl font-mono font-bold tracking-wider underline decoration-amber-500 underline-offset-4 select-all">
+                  {c.code}
+                </h3>
+                {c.description && (
+                  <p className="text-xs text-stone-300 mt-1 line-clamp-2 leading-relaxed">{c.description}</p>
+                )}
+              </div>
 
-                    {c.discount_type === 'percent' && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400 font-semibold">Giảm tối đa:</span>
-                        <span className="font-bold text-amber-700">
-                          {c.max_discount ? formatCurrency(c.max_discount) : 'Không giới hạn'}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400 font-semibold">Hạn sử dụng:</span>
-                      <span className="font-medium text-gray-700">{formatDate(c.end_date)}</span>
-                    </div>
+              {/* Ticket Details */}
+              <div className="p-5 flex-1 space-y-3 text-xs text-stone-600 bg-white">
+                <div className="space-y-1.5 border-b border-stone-100 pb-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-stone-400 font-bold uppercase tracking-wider text-[11px]">Đơn tối thiểu:</span>
+                    <span className="font-bold text-stone-900 font-mono">{formatCurrency(c.min_order_value)}</span>
                   </div>
 
-                  {/* Actions Footer */}
-                  <div className="pt-1 flex items-center justify-between gap-2">
+                  {c.discount_type === 'percent' && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-stone-400 font-bold uppercase tracking-wider text-[11px]">Giảm tối đa:</span>
+                      <span className="font-bold text-amber-800 font-mono">
+                        {c.max_discount ? formatCurrency(c.max_discount) : 'Không giới hạn'}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-stone-400 font-bold uppercase tracking-wider text-[11px]">Hạn sử dụng:</span>
+                    <span className="font-semibold text-stone-700 font-mono">{formatDate(c.end_date)}</span>
+                  </div>
+                </div>
+
+                {/* Actions Footer */}
+                <div className="pt-1 flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleActive(c)}
+                    className={`px-3 py-1.5 rounded-none font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer border ${
+                      c.is_active
+                        ? 'bg-stone-100 text-stone-900 border-stone-200 hover:bg-stone-200'
+                        : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+                    }`}
+                  >
+                    {c.is_active ? 'TẠM ẨN' : 'KÍCH HOẠT'}
+                  </button>
+
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => handleToggleActive(c)}
-                      className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-colors cursor-pointer border ${
-                        c.is_active
-                          ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                      }`}
+                      onClick={() => handleOpenModal(c)}
+                      className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-900 rounded-none font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
                     >
-                      {c.is_active ? '⏸️ Tạm Ẩn' : '▶️ Kích Hoạt'}
+                      SỬA
                     </button>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenModal(c)}
-                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
-                      >
-                        ✏️ Sửa
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCoupon(c)}
-                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-red-100"
-                      >
-                        🗑️ Xóa
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCoupon(c)}
+                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-none font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                    >
+                      XÓA
+                    </button>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* MODAL TẠO / SỬA MÃ GIẢM GIÁ */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-              <h2 className="text-lg font-display font-extrabold text-gray-900 flex items-center gap-2">
-                <span>{editingCoupon ? '✏️' : '✨'}</span>
-                {editingCoupon ? 'Chỉnh Sửa Mã Giảm Giá' : 'Tạo Mã Giảm Giá Mới (QTN-01)'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in font-sans">
+          <div className="bg-white rounded-none max-w-xl w-full p-6 shadow-2xl border border-stone-200/80 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 border-b border-stone-200/80 pb-3">
+              <h2 className="text-sm font-heading font-bold text-stone-900 uppercase tracking-wider">
+                {editingCoupon ? 'CHỈNH SỬA MÃ GIẢM GIÁ' : 'TẠO MÃ GIẢM GIÁ MỚI'}
               </h2>
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                className="text-stone-400 hover:text-stone-900 transition-colors p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -363,11 +318,10 @@ const AdminCouponsPage = () => {
             )}
 
             <form onSubmit={handleSubmitForm} className="space-y-4 text-xs">
-              {/* Mã giảm giá & Mô tả */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">
-                    Mã Giảm Giá (Code) <span className="text-red-500">*</span>
+                  <label className="block font-bold text-stone-700 mb-1 uppercase tracking-wider">
+                    Mã Giảm Giá (Code) <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="text"
@@ -375,16 +329,16 @@ const AdminCouponsPage = () => {
                     placeholder="VD: NOITHAT10"
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl font-mono font-extrabold uppercase text-amber-700 tracking-wider focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none font-mono font-bold uppercase text-amber-800 tracking-wider focus:outline-none focus:border-amber-800 bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Loại Giảm Giá</label>
+                  <label className="block font-bold text-stone-700 mb-1 uppercase tracking-wider">Loại Giảm Giá</label>
                   <select
                     value={formData.discount_type}
                     onChange={(e) => setFormData({ ...formData, discount_type: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl font-bold focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none font-bold focus:outline-none focus:border-amber-800 bg-white text-stone-900"
                   >
                     <option value="percent">Giảm theo Phần trăm (%)</option>
                     <option value="fixed">Giảm Số tiền cố định (VND)</option>
@@ -393,21 +347,20 @@ const AdminCouponsPage = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">Mô Tả Chương Trình Ưu Đãi</label>
+                <label className="block font-bold text-stone-700 mb-1 uppercase tracking-wider">Mô Tả Ưu Đãi</label>
                 <input
                   type="text"
-                  placeholder="VD: Giảm 10% cho tất cả đơn hàng phòng khách từ 2.000.000đ"
+                  placeholder="VD: Giảm 10% cho đơn hàng từ 2.000.000đ"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all outline-none"
+                  className="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
                 />
               </div>
 
-              {/* Mức giảm & Đơn hàng tối thiểu (QTN-01) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">
-                    Mức Giảm giá ({formData.discount_type === 'percent' ? '%' : 'VND'}) <span className="text-red-500">*</span>
+                  <label className="block font-bold text-stone-700 mb-1 uppercase tracking-wider">
+                    Mức Giảm ({formData.discount_type === 'percent' ? '%' : 'VND'}) <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="number"
@@ -417,13 +370,13 @@ const AdminCouponsPage = () => {
                     placeholder={formData.discount_type === 'percent' ? 'VD: 10' : 'VD: 500000'}
                     value={formData.discount_value}
                     onChange={(e) => setFormData({ ...formData, discount_value: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl font-bold focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none font-bold focus:outline-none focus:border-amber-800 bg-white text-stone-900"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">
-                    Đơn Hàng Tối Thiểu (QTN-01) <span className="text-red-500">*</span>
+                  <label className="block font-bold text-stone-700 mb-1 uppercase tracking-wider">
+                    Đơn Hàng Tối Thiểu <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="number"
@@ -433,15 +386,14 @@ const AdminCouponsPage = () => {
                     placeholder="VD: 2000000"
                     value={formData.min_order_value}
                     onChange={(e) => setFormData({ ...formData, min_order_value: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl font-bold focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none font-bold focus:outline-none focus:border-amber-800 bg-white text-stone-900"
                   />
                 </div>
               </div>
 
-              {/* Max Discount (dành cho phần trăm) */}
               {formData.discount_type === 'percent' && (
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Mức Giảm Tối Đa (VND - Tùy chọn)</label>
+                  <label className="block font-bold text-stone-700 mb-1 uppercase tracking-wider">Mức Giảm Tối Đa (VND - Tùy chọn)</label>
                   <input
                     type="number"
                     min="0"
@@ -449,62 +401,59 @@ const AdminCouponsPage = () => {
                     placeholder="VD: 1000000 (Để trống nếu không giới hạn)"
                     value={formData.max_discount}
                     onChange={(e) => setFormData({ ...formData, max_discount: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
                   />
                 </div>
               )}
 
-              {/* Start Date & End Date */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Ngày Bắt Đầu Hiệu Lực</label>
+                  <label className="block font-bold text-stone-700 mb-1 uppercase tracking-wider">Ngày Bắt Đầu Hiệu Lực</label>
                   <input
                     type="datetime-local"
                     value={formData.start_date}
                     onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Ngày Kết Thúc Hiệu Lực</label>
+                  <label className="block font-bold text-stone-700 mb-1 uppercase tracking-wider">Ngày Kết Thúc Hiệu Lực</label>
                   <input
                     type="datetime-local"
                     value={formData.end_date}
                     onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
                   />
                 </div>
               </div>
 
-              {/* Active Checkbox */}
               <div className="pt-2">
-                <label className="flex items-center gap-2 cursor-pointer font-bold text-gray-700">
+                <label className="flex items-center gap-2 cursor-pointer font-bold text-stone-700 uppercase tracking-wider">
                   <input
                     type="checkbox"
                     checked={formData.is_active}
                     onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="w-4 h-4 text-amber-600 rounded-md focus:ring-amber-500 border-gray-300"
+                    className="w-4 h-4 text-amber-800 rounded-none border-stone-300"
                   />
-                  <span>Bật trạng thái sẵn sàng áp dụng ngay cho khách hàng</span>
+                  <span>Kích hoạt mã ngay cho khách hàng</span>
                 </label>
               </div>
 
-              {/* Modal Buttons */}
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-stone-200/80 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-none font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
                 >
-                  Hủy Bỏ
+                  HỦY BỎ
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                  className="px-6 py-2.5 bg-stone-900 hover:bg-amber-800 text-white rounded-none font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
                 >
-                  {submitting ? 'Đang lưu...' : editingCoupon ? 'Cập Nhật Mã Giảm Giá' : 'Tạo Mã Giảm Giá Mới'}
+                  {submitting ? 'ĐANG LƯU...' : editingCoupon ? 'CẬP NHẬT MÃ GIẢM GIÁ' : 'TẠO MÃ GIẢM GIÁ MỚI'}
                 </button>
               </div>
             </form>

@@ -995,6 +995,74 @@ def toggle_admin_customer_status(customer_id: int):
         return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
 
 
+@admin_bp.route("/customers", methods=["POST"])
+@admin_required()
+def create_admin_customer():
+    """
+    Quản trị viên thêm tài khoản người dùng / admin mới.
+    """
+    from flask import request
+    from app.services.admin_service import AdminService
+
+    body = request.get_json() or {}
+    try:
+        new_account = AdminService.create_admin_account(body)
+        return _success(
+            data=new_account,
+            message="Tạo tài khoản mới thành công.",
+            status=201,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        msg_map = {
+            "EMAIL_REQUIRED": "Email là bắt buộc.",
+            "EMAIL_ALREADY_EXISTS": "Email này đã được đăng ký trong hệ thống.",
+            "FULL_NAME_REQUIRED": "Họ tên là bắt buộc.",
+            "PASSWORD_TOO_SHORT": "Mật khẩu phải có ít nhất 6 ký tự.",
+        }
+        return jsonify({
+            "status": "error",
+            "message": msg_map.get(err_str, err_str),
+            "code": err_str,
+        }), 400
+
+
+@admin_bp.route("/customers/<int:customer_id>/role", methods=["PUT"])
+@admin_required()
+def update_admin_customer_role(customer_id: int):
+    """
+    Quản trị viên phân quyền tài khoản (user/admin).
+    """
+    from flask import request
+    from app.services.admin_service import AdminService
+
+    body = request.get_json() or {}
+    role = body.get("role")
+    if not role:
+        return jsonify({
+            "status": "error",
+            "message": "Vai trò (role) là bắt buộc.",
+            "code": "MISSING_ROLE"
+        }), 400
+
+    try:
+        updated_customer = AdminService.update_customer_role(customer_id, role)
+        return _success(
+            data=updated_customer,
+            message=f"Phân quyền tài khoản thành '{role}' thành công.",
+            status=200,
+        )
+    except ValueError as exc:
+        err_str = str(exc)
+        if err_str == "CUSTOMER_NOT_FOUND":
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy tài khoản.",
+                "code": "CUSTOMER_NOT_FOUND"
+            }), 404
+        return jsonify({"status": "error", "message": err_str, "code": "BAD_REQUEST"}), 400
+
+
 # ============================================================
 # GET /api/v1/admin/analytics/categories — Thống kê theo danh mục (NT-13-CN-002)
 # ============================================================

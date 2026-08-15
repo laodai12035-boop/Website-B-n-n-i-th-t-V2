@@ -14,7 +14,7 @@ class Banner(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(255), nullable=False, comment="Tiêu đề banner")
     subtitle = db.Column(db.String(255), nullable=True, comment="Phụ đề banner")
-    image_url = db.Column(db.String(500), nullable=False, comment="Đường dẫn hình ảnh banner (Bắt buộc)")
+    image_url = db.Column(db.Text, nullable=False, comment="Đường dẫn hình ảnh banner (Bắt buộc)")
     link_url = db.Column(db.String(500), nullable=True, comment="Liên kết điều hướng khi nhấp banner")
     display_order = db.Column(db.Integer, default=0, nullable=False, comment="Thứ tự hiển thị")
     is_active = db.Column(db.Boolean, default=True, nullable=False, comment="Trạng thái hiển thị (True=Active)")

@@ -64,6 +64,7 @@ def apply_coupon():
 # GET /api/v1/coupons/active — Lấy danh sách mã khả dụng
 # ============================================================
 @coupons_bp.route("/active", methods=["GET"])
+@coupons_bp.route("", methods=["GET"])
 def get_active_coupons():
     coupons = CouponService.get_active_coupons()
     return _success(data=coupons, status=200)

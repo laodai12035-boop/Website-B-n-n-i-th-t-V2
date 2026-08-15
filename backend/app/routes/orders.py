@@ -40,6 +40,7 @@ def create_cod_order():
     shipping_address = body.get("shipping_address", "").strip()
     note = body.get("note")
     coupon_code = body.get("coupon_code")
+    buy_now_item = body.get("buy_now_item")
 
     if not recipient_name or not recipient_phone or not shipping_address:
         return jsonify({
@@ -56,6 +57,7 @@ def create_cod_order():
             shipping_address=shipping_address,
             note=note,
             coupon_code=coupon_code,
+            buy_now_item=buy_now_item,
         )
     except ValueError as exc:
         err_str = str(exc)
@@ -131,6 +133,7 @@ def create_qr_order():
     shipping_address = body.get("shipping_address", "").strip()
     note = body.get("note")
     coupon_code = body.get("coupon_code")
+    buy_now_item = body.get("buy_now_item")
 
     if not recipient_name or not recipient_phone or not shipping_address:
         return jsonify({
@@ -147,6 +150,7 @@ def create_qr_order():
             shipping_address=shipping_address,
             note=note,
             coupon_code=coupon_code,
+            buy_now_item=buy_now_item,
         )
     except ValueError as exc:
         err_str = str(exc)

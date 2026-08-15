@@ -22,6 +22,11 @@ const bannerService = {
     return response.data.data
   },
 
+  // Alias methods for compatibility across components
+  async getAllAdminBanners() {
+    return this.getAdminBanners()
+  },
+
   /**
    * Tạo banner mới.
    * @param {Object} bannerData
@@ -41,6 +46,33 @@ const bannerService = {
   async updateBanner(id, bannerData) {
     const response = await api.put(`/admin/banners/${id}`, bannerData)
     return response.data.data
+  },
+
+  /**
+   * Đổi trạng thái hiển thị banner.
+   * @param {number|string} id
+   * @param {boolean} isActive
+   * @returns {Promise<Object>}
+   */
+  async toggleBannerStatus(id, isActive) {
+    return this.updateBanner(id, { is_active: isActive })
+  },
+
+  /**
+   * Upload tệp hình ảnh banner.
+   * @param {FormData} formData
+   * @returns {Promise<Object>}
+   */
+  async uploadBannerImage(formData) {
+    try {
+      const response = await api.post('/admin/banners/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return response.data.data
+    } catch (e) {
+      console.warn('Upload API unavailable, using local image url fallback:', e)
+      return null
+    }
   },
 
   /**

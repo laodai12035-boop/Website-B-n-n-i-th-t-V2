@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import comboService from '@/services/comboService'
 import { useCart } from '@/contexts/CartContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
- * ComboSection — Component hiển thị các bộ sản phẩm Combo ưu đãi trên trang chi tiết sản phẩm.
+ * ComboSection — Component hiển thị các bộ sản phẩm Combo ưu đãi (Terracotta/Amber badges & square buttons).
  */
 const ComboSection = ({ productId }) => {
-  const { fetchCart } = useCart()
+  const { refreshCart, setIsCartOpen } = useCart()
+  const { isAuthenticated } = useAuth()
   const [combos, setCombos] = useState([])
   const [loading, setLoading] = useState(true)
   const [addingComboId, setAddingComboId] = useState(null)
@@ -34,15 +36,21 @@ const ComboSection = ({ productId }) => {
   }
 
   const handleAddCombo = async (comboId) => {
+    if (!isAuthenticated) {
+      setMsg({ type: 'error', text: 'Vui lòng đăng nhập để thêm combo vào giỏ hàng!', comboId })
+      setTimeout(() => setMsg({ type: '', text: '', comboId: null }), 4000)
+      return
+    }
     setAddingComboId(comboId)
     setMsg({ type: '', text: '', comboId: null })
     try {
       const res = await comboService.addComboToCart(comboId)
-      await fetchCart()
+      if (refreshCart) await refreshCart()
+      if (setIsCartOpen) setIsCartOpen(true)
       setMsg({ type: 'success', text: res.message || 'Đã thêm combo vào giỏ hàng!', comboId })
       setTimeout(() => setMsg({ type: '', text: '', comboId: null }), 4000)
     } catch (err) {
-      const errorText = err.response?.data?.message || 'Không thể thêm combo vào giỏ hàng.'
+      const errorText = err.response?.data?.message || err.response?.data?.msg || 'Không thể thêm combo vào giỏ hàng.'
       setMsg({ type: 'error', text: errorText, comboId })
       setTimeout(() => setMsg({ type: '', text: '', comboId: null }), 5000)
     } finally {
@@ -53,15 +61,19 @@ const ComboSection = ({ productId }) => {
   if (loading || combos.length === 0) return null
 
   return (
-    <div className="mt-12 bg-gradient-to-br from-amber-50/60 via-orange-50/40 to-yellow-50/60 rounded-3xl p-6 sm:p-8 border border-amber-200/70 shadow-sm">
-      <div className="flex items-center gap-3 mb-6">
-        <span className="text-2xl">🔥</span>
+    <div className="mt-10 bg-white rounded-none p-6 sm:p-8 border border-stone-200/80 shadow-2xs">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-stone-100">
+        <div className="w-10 h-10 bg-amber-800 text-white rounded-none flex items-center justify-center font-bold">
+          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M13.5 2c-1.39 0-2.73.55-3.71 1.54L3.5 9.83c-1.95 1.95-1.95 5.12 0 7.07l3.6 3.6c1.95 1.95 5.12 1.95 7.07 0l6.29-6.29c.99-.98 1.54-2.32 1.54-3.71V4.5c0-1.38-1.12-2.5-2.5-2.5h-6zm4 5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+          </svg>
+        </div>
         <div>
-          <h3 className="text-lg font-display font-extrabold text-gray-900">
-            ƯU ĐÃI MUA THEO BỘ (COMBO)
+          <h3 className="text-lg font-heading font-bold text-stone-900 uppercase tracking-wider">
+            ƯU ĐÃI MUA THEO BỘ (COMBO NỘI THẤT)
           </h3>
-          <p className="text-xs text-gray-600">
-            Mua trọn bộ nội thất đồng bộ để nhận ngay giá ưu đãi hấp dẫn
+          <p className="text-xs text-stone-500 mt-0.5">
+            Sở hữu trọn bộ sản phẩm đồng bộ thiết kế với mức giá ưu đãi đặc biệt
           </p>
         </div>
       </div>
@@ -70,19 +82,20 @@ const ComboSection = ({ productId }) => {
         {combos.map((combo) => (
           <div
             key={combo.id}
-            className="bg-white rounded-2xl p-5 border border-amber-100 shadow-xs hover:shadow-md transition-shadow space-y-4"
+            className="bg-stone-50/50 rounded-none p-5 border border-stone-200/80 shadow-2xs space-y-4"
           >
-            {/* Combo Title & Badge */}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+            {/* Combo Title & Badge Terracotta/Amber */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200/80 pb-3">
               <div>
-                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                  <span>✨</span> {combo.name}
+                <h4 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+                  <span>{combo.name}</span>
                 </h4>
                 {combo.description && (
-                  <p className="text-xs text-gray-500 mt-0.5">{combo.description}</p>
+                  <p className="text-xs text-stone-500 mt-0.5">{combo.description}</p>
                 )}
               </div>
-              <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-extrabold rounded-full animate-pulse">
+              {/* Badge Tiết Kiệm chuẩn màu Terracotta/Amber theo MASTER.md */}
+              <span className="px-3 py-1 bg-amber-800 text-white text-xs font-bold rounded-none shadow-2xs tracking-wide">
                 TIẾT KIỆM {combo.discount_percent}%
               </span>
             </div>
@@ -92,27 +105,27 @@ const ComboSection = ({ productId }) => {
               {combo.items.map((item) => (
                 <div
                   key={item.combo_item_id}
-                  className="flex items-center gap-3 p-2.5 rounded-xl bg-gray-50/80 border border-gray-100"
+                  className="flex items-center gap-3 p-2.5 rounded-none bg-white border border-stone-200/80"
                 >
                   <img
                     src={item.product_image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc'}
                     alt={item.product_name}
-                    className="w-12 h-12 object-cover rounded-lg bg-white border border-gray-100 shrink-0"
+                    className="w-12 h-12 object-cover rounded-none bg-stone-100 border border-stone-200/80 shrink-0"
                   />
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/products/${item.product_id}`}
-                      className="text-xs font-bold text-gray-800 hover:text-amber-600 truncate block"
+                      className="text-xs font-bold text-stone-800 hover:text-amber-800 truncate block"
                     >
                       {item.product_name}
                     </Link>
-                    <div className="text-[11px] text-gray-500">x{item.quantity} sản phẩm</div>
+                    <div className="text-[11px] text-stone-400">x{item.quantity} sản phẩm</div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-xs font-extrabold text-amber-700 font-display">
+                      <span className="text-xs font-bold text-amber-800">
                         {formatCurrency(item.combo_price)}
                       </span>
                       {item.original_price > item.combo_price && (
-                        <span className="text-[10px] text-gray-400 line-through">
+                        <span className="text-[10px] text-stone-400 line-through">
                           {formatCurrency(item.original_price)}
                         </span>
                       )}
@@ -123,17 +136,17 @@ const ComboSection = ({ productId }) => {
             </div>
 
             {/* Price Total & Action Button */}
-            <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
+            <div className="pt-3 border-t border-stone-200/80 flex flex-wrap items-center justify-between gap-4">
               <div className="space-y-0.5">
-                <div className="text-xs text-gray-500 flex items-center gap-2">
+                <div className="text-xs text-stone-500 flex items-center gap-2">
                   <span>Giá mua lẻ: <span className="line-through">{formatCurrency(combo.original_total)}</span></span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-bold text-gray-700">Giá trọn bộ:</span>
-                  <span className="text-lg font-extrabold text-amber-700 font-display">
+                  <span className="text-xs font-bold text-stone-700">Giá trọn bộ:</span>
+                  <span className="text-lg font-bold text-amber-800">
                     {formatCurrency(combo.combo_total)}
                   </span>
-                  <span className="text-xs font-semibold text-emerald-600">
+                  <span className="text-xs font-semibold text-emerald-700">
                     (Tiết kiệm {formatCurrency(combo.savings)})
                   </span>
                 </div>
@@ -143,13 +156,16 @@ const ComboSection = ({ productId }) => {
                 type="button"
                 onClick={() => handleAddCombo(combo.id)}
                 disabled={addingComboId === combo.id}
-                className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-extrabold shadow-sm active:scale-98 transition-all disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-3 bg-amber-800 hover:bg-amber-900 text-white rounded-none text-xs font-bold uppercase tracking-wider shadow-2xs active:scale-98 transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
               >
                 {addingComboId === combo.id ? (
                   'Đang xử lý...'
                 ) : (
                   <>
-                    <span>🛒</span> Thêm trọn bộ vào giỏ
+                    <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                    <span>THÊM TRỌN BỘ VÀO GIỎ</span>
                   </>
                 )}
               </button>
@@ -158,10 +174,10 @@ const ComboSection = ({ productId }) => {
             {/* Message alert per combo */}
             {msg.comboId === combo.id && (
               <div
-                className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                className={`p-3 rounded-none text-xs font-semibold flex items-center gap-2 ${
                   msg.type === 'error'
-                    ? 'bg-red-50 text-red-700 border border-red-200'
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    ? 'bg-red-50 text-red-800 border border-red-200'
+                    : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                 }`}
               >
                 <span>{msg.type === 'error' ? '⚠️' : '✅'}</span>

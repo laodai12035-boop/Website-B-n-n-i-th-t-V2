@@ -33,6 +33,11 @@ const couponService = {
     return response.data.data
   },
 
+  // Alias methods for compatibility across components
+  async getAllCoupons() {
+    return this.getAdminCoupons()
+  },
+
   /**
    * Quản trị viên tạo mã giảm giá mới.
    * @param {Object} couponData
@@ -52,6 +57,16 @@ const couponService = {
   async updateCoupon(id, couponData) {
     const response = await api.put(`/admin/coupons/${id}`, couponData)
     return response.data.data
+  },
+
+  /**
+   * Quản trị viên chuyển đổi trạng thái ẩn/hiển thị mã giảm giá.
+   * @param {number|string} id
+   * @param {boolean} isActive
+   * @returns {Promise<Object>}
+   */
+  async toggleCouponStatus(id, isActive) {
+    return this.updateCoupon(id, { is_active: isActive })
   },
 
   /**

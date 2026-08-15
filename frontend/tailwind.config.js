@@ -43,12 +43,17 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Playfair Display', 'Georgia', 'serif'],
+        sans: ['"Be Vietnam Pro"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        admin: ['"Be Vietnam Pro"', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        heading: ['"Be Vietnam Pro"', 'system-ui', 'sans-serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
       },
       boxShadow: {
-        'card': '0 4px 24px -4px rgba(0,0,0,0.12)',
-        'card-hover': '0 12px 40px -8px rgba(0,0,0,0.20)',
+        'card': '0 4px 24px -4px rgba(0,0,0,0.06)',
+        'card-hover': '0 16px 40px -8px rgba(0,0,0,0.12)',
+        'glass': '0 8px 32px 0 rgba(28, 25, 23, 0.08)',
+        'luxury': '0 20px 40px -15px rgba(161, 98, 7, 0.15)',
       },
       borderRadius: {
         'xl': '1rem',

@@ -28,7 +28,7 @@ class Product(db.Model):
     category = db.Column(db.String(50), nullable=False, index=True, comment="Danh mục: ban, ghe, ke, tu, trang-tri")
     stock = db.Column(db.Integer, nullable=False, default=0, comment="Số lượng tồn kho")
     min_stock_threshold = db.Column(db.Integer, nullable=False, default=10, comment="Ngưỡng tồn kho tối thiểu QTN-08")
-    image_url = db.Column(db.String(500), nullable=True, comment="URL ảnh đại diện sản phẩm")
+    image_url = db.Column(db.Text, nullable=True, comment="URL ảnh đại diện sản phẩm")
     material = db.Column(db.String(100), nullable=True, comment="Chất liệu sản phẩm")
     dimensions = db.Column(db.String(100), nullable=True, comment="Kích thước (Dài x Rộng x Cao) đơn vị cm, VD: 120x60x75")
     weight_kg = db.Column(db.Float, nullable=True, comment="Trọng lượng thực tế (kg) — QTN-07")

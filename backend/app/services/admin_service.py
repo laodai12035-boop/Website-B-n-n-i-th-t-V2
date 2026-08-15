@@ -207,7 +207,7 @@ class AdminService:
         """
         from sqlalchemy import case, func
 
-        base_query = db.session.query(User).filter(User.role == "user")
+        base_query = db.session.query(User)
 
         summary = {
             "total_customers": base_query.count(),
@@ -224,6 +224,10 @@ class AdminService:
                 query = query.filter(User.is_active == True)
             elif st == "inactive":
                 query = query.filter(User.is_active == False)
+            elif st == "admin":
+                query = query.filter(User.role == "admin")
+            elif st == "user":
+                query = query.filter(User.role == "user")
 
         # 2. Tìm kiếm theo từ khóa
         if search and search.strip():
@@ -296,16 +300,6 @@ class AdminService:
     def toggle_customer_status(customer_id: int, is_active: bool) -> Dict[str, Any]:
         """
         Quản trị viên khóa hoặc mở khóa tài khoản khách hàng (NT-12-CN-002).
-
-        Args:
-            customer_id: ID khách hàng cần khóa/mở khóa
-            is_active: Trạng thái mới (True = Hoạt động, False = Khóa)
-
-        Returns:
-            Dict thông tin tài khoản khách hàng sau khi cập nhật.
-
-        Raises:
-            ValueError("CUSTOMER_NOT_FOUND"): Khách hàng không tồn tại trong hệ thống.
         """
         user = db.session.query(User).filter(User.id == customer_id).first()
         if not user:
@@ -323,6 +317,70 @@ class AdminService:
             "is_active": user.is_active,
             "updated_at": datetime.utcnow().isoformat(),
         }
+
+    @staticmethod
+    def create_admin_account(data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Quản trị viên tạo tài khoản mới (User hoặc Admin).
+        """
+        from app.extensions import bcrypt
+
+        email = (data.get("email") or "").strip().lower()
+        if not email:
+            raise ValueError("EMAIL_REQUIRED")
+
+        existing_user = db.session.query(User).filter(User.email == email).first()
+        if existing_user:
+            raise ValueError("EMAIL_ALREADY_EXISTS")
+
+        full_name = (data.get("full_name") or "").strip()
+        if not full_name:
+            raise ValueError("FULL_NAME_REQUIRED")
+
+        password = (data.get("password") or "").strip()
+        if not password or len(password) < 6:
+            raise ValueError("PASSWORD_TOO_SHORT")
+
+        phone = (data.get("phone") or "").strip() or None
+        role = (data.get("role") or "user").strip().lower()
+        if role not in ["user", "admin"]:
+            role = "user"
+
+        is_active = bool(data.get("is_active", True))
+
+        password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+
+        new_user = User(
+            full_name=full_name,
+            email=email,
+            phone=phone,
+            password_hash=password_hash,
+            role=role,
+            is_active=is_active,
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return new_user.to_dict()
+
+    @staticmethod
+    def update_customer_role(customer_id: int, role: str) -> Dict[str, Any]:
+        """
+        Quản trị viên phân quyền tài khoản (user/admin).
+        """
+        user = db.session.query(User).filter(User.id == customer_id).first()
+        if not user:
+            raise ValueError("CUSTOMER_NOT_FOUND")
+
+        r = (role or "").strip().lower()
+        if r not in ["user", "admin"]:
+            raise ValueError("INVALID_ROLE")
+
+        user.role = r
+        db.session.commit()
+
+        return user.to_dict()
 
     @staticmethod
     def get_dashboard_analytics(

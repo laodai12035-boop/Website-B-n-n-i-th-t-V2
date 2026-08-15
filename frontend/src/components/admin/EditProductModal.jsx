@@ -3,8 +3,17 @@ import productService from '@/services/productService'
 import categoryService from '@/services/categoryService'
 import FormAlert from '@/components/ui/FormAlert'
 
+/**
+ * EditProductModal — Modal Chỉnh sửa thông tin sản phẩm phong cách Nhà Xinh (nhaxinh.com).
+ * Góc cạnh vuông vức (rounded-none), chữ thuần tối giản (NO EMOJIS), hỗ trợ 5 ảnh sản phẩm.
+ */
 const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
   const [categories, setCategories] = useState([])
+
+  // 5 slots hình ảnh (Slot 0 = Ảnh chính, Slots 1-4 = Ảnh bộ sưu tập)
+  const [imageSlots, setImageSlots] = useState(['', '', '', '', ''])
+  const [activeSlotIdx, setActiveSlotIdx] = useState(0)
+
   const [formData, setFormData] = useState({
     name: '',
     category: 'ban',
@@ -17,7 +26,6 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
     weight_kg: '',
     warranty_months: 12,
     warranty_terms: '',
-    image_url: '',
     description: '',
     is_active: true,
   })
@@ -25,6 +33,30 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Bộ ảnh gợi ý nhanh 5 góc studio
+  const samplePresets = [
+    {
+      name: 'Bộ Sofa Gỗ Óc Chó',
+      images: [
+        'https://images.unsplash.com/photo-1555041469-a586c61ea9bc',
+        'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e',
+        'https://images.unsplash.com/photo-1586023492125-27b2c045efd7',
+        'https://images.unsplash.com/photo-1567016432779-094069958ea5',
+        'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6',
+      ],
+    },
+    {
+      name: 'Bộ Bàn Ăn Gỗ Sồi 6 Ghế',
+      images: [
+        'https://images.unsplash.com/photo-1617806118233-18e1de247200',
+        'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf',
+        'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4',
+        'https://images.unsplash.com/photo-1604578762246-41134e37f9cc',
+        'https://images.unsplash.com/photo-1595428774223-ef52624120d2',
+      ],
+    },
+  ]
 
   useEffect(() => {
     if (isOpen && productItem) {
@@ -40,16 +72,27 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
         weight_kg: productItem.weight_kg !== null && productItem.weight_kg !== undefined ? productItem.weight_kg : '',
         warranty_months: productItem.warranty_months !== undefined && productItem.warranty_months !== null ? productItem.warranty_months : 12,
         warranty_terms: productItem.warranty_terms || '',
-        image_url: productItem.image_url || '',
         description: productItem.description || '',
         is_active: productItem.is_active !== undefined ? productItem.is_active : true,
       })
+
+      const existingImages = productItem.images && Array.isArray(productItem.images) && productItem.images.length > 0
+        ? productItem.images
+        : [productItem.image_url]
+
+      const slots = ['', '', '', '', '']
+      existingImages.forEach((img, idx) => {
+        if (idx < 5) slots[idx] = img || ''
+      })
+      setImageSlots(slots)
       setErrors({})
       setApiError(null)
 
       categoryService
         .getCategories()
-        .then((cats) => setCategories(cats))
+        .then((cats) => {
+          if (Array.isArray(cats)) setCategories(cats)
+        })
         .catch(() => {})
     }
   }, [isOpen, productItem])
@@ -63,6 +106,58 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
+  }
+
+  const handleSlotImageChange = (idx, value) => {
+    setImageSlots((prev) => {
+      const next = [...prev]
+      next[idx] = value
+      return next
+    })
+  }
+
+  const handleImageFileUpload = (e, slotIdx) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Kích thước file ảnh quá lớn (vượt quá 15MB). Vui lòng chọn file nhỏ hơn!')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const MAX_WIDTH = 800
+        const MAX_HEIGHT = 800
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width
+            width = MAX_WIDTH
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height
+            height = MAX_HEIGHT
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75)
+        handleSlotImageChange(slotIdx, compressedBase64)
+      }
+      img.src = event.target.result
+    }
+    reader.readAsDataURL(file)
   }
 
   const validate = () => {
@@ -89,13 +184,6 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
       errs.category = 'Vui lòng chọn danh mục sản phẩm'
     }
 
-    if (formData.warranty_months !== '') {
-      const wMonths = parseInt(formData.warranty_months, 10)
-      if (isNaN(wMonths) || wMonths < 0) {
-        errs.warranty_months = 'Thời gian bảo hành phải lớn hơn hoặc bằng 0'
-      }
-    }
-
     return errs
   }
 
@@ -111,6 +199,9 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
 
     setSubmitting(true)
     try {
+      const validImages = imageSlots.map((s) => s.trim()).filter(Boolean)
+      const mainImageUrl = validImages.length > 0 ? validImages[0] : (productItem.image_url || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc')
+
       const payload = {
         name: formData.name.trim(),
         category: formData.category,
@@ -123,7 +214,7 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
         weight_kg: formData.weight_kg !== '' ? parseFloat(formData.weight_kg) : null,
         warranty_months: formData.warranty_months !== '' ? parseInt(formData.warranty_months, 10) : 12,
         warranty_terms: formData.warranty_terms.trim() || null,
-        image_url: formData.image_url.trim() || null,
+        image_url: mainImageUrl,
         description: formData.description.trim() || null,
         is_active: formData.is_active,
       }
@@ -132,7 +223,7 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
       if (onSuccess) onSuccess()
       onClose()
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Không thể cập nhật sản phẩm.'
+      const msg = err.response?.data?.message || err.message || 'Không thể cập nhật thông tin sản phẩm.'
       setApiError(msg)
     } finally {
       setSubmitting(false)
@@ -140,79 +231,80 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-slide-up max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in font-sans">
+      <div className="relative w-full max-w-3xl bg-white rounded-none shadow-2xl border border-stone-200/80 overflow-hidden max-h-[90vh] flex flex-col">
         
-        {/* Header */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between shrink-0">
-          <h2 className="text-lg font-display font-bold text-gray-900 flex items-center gap-2">
-            <span>✏️</span> Chỉnh sửa sản phẩm #{productItem.id}
-          </h2>
+        {/* Header Bar */}
+        <div className="px-6 py-4 bg-stone-900 text-white flex items-center justify-between shrink-0 border-b border-amber-800">
+          <div>
+            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Phân hệ Quản trị</span>
+            <h2 className="text-base font-heading font-bold uppercase tracking-wider">
+              CHỈNH SỬA SẢN PHẨM #{productItem.id} — {productItem.name}
+            </h2>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-200/60 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-colors font-bold text-sm cursor-pointer"
+            className="text-stone-400 hover:text-white transition-colors p-1 cursor-pointer font-bold text-sm"
           >
             ✕
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1 text-xs">
           {apiError && <FormAlert type="error" message={apiError} />}
 
-          {/* Tên sản phẩm & Danh mục */}
+          {/* Tên & Danh mục */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Tên sản phẩm <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Tên sản phẩm <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Ví dụ: Bộ Sofa Gỗ Óc Chó..."
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
               />
-              {errors.name && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.name}</p>}
+              {errors.name && <p className="text-[11px] text-red-600 font-bold mt-1">{errors.name}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Danh mục sản phẩm <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Danh mục sản phẩm <span className="text-red-600">*</span>
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors cursor-pointer"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-bold uppercase tracking-wider cursor-pointer"
               >
                 {categories.length > 0 ? (
                   categories.map((c) => (
                     <option key={c.id || c.slug} value={c.slug || c.name}>
-                      {c.icon || '📁'} {c.name}
+                      {c.name}
                     </option>
                   ))
                 ) : (
                   <>
-                    <option value="ban">🪑 Bàn</option>
-                    <option value="ghe">🛋️ Ghế / Sofa</option>
-                    <option value="ke">📚 Kệ</option>
-                    <option value="tu">🚪 Tủ</option>
-                    <option value="trang-tri">💡 Trang trí</option>
+                    <option value="ban">BÀN & BÀN LÀM VIỆC</option>
+                    <option value="ghe">GHẾ & SOFA</option>
+                    <option value="ke">KỆ SÁCH & TIVI</option>
+                    <option value="tu">TỦ QUẦN ÁO & TRANG TRÍ</option>
+                    <option value="trang-tri">TRANG TRÍ & ĐÈN</option>
                   </>
                 )}
               </select>
-              {errors.category && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.category}</p>}
             </div>
           </div>
 
-          {/* Giá gốc, Giá KM, Tồn kho */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Giá & Tồn kho */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Giá niêm yết (VNĐ) <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Giá niêm yết (VNĐ) <span className="text-red-600">*</span>
               </label>
               <input
                 type="number"
@@ -220,14 +312,13 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
                 step="10000"
                 value={formData.price}
                 onChange={handleChange}
-                placeholder="VD: 15000000"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono font-bold"
               />
-              {errors.price && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.price}</p>}
+              {errors.price && <p className="text-[11px] text-red-600 font-bold mt-1">{errors.price}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                 Giá khuyến mãi (VNĐ)
               </label>
               <input
@@ -236,14 +327,12 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
                 step="10000"
                 value={formData.discount_price}
                 onChange={handleChange}
-                placeholder="VD: 12900000"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono font-bold"
               />
-              {errors.discount_price && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.discount_price}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                 Số lượng tồn kho
               </label>
               <input
@@ -252,13 +341,13 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
                 min="0"
                 value={formData.stock}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono font-bold text-center"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Ngưỡng tồn kho tối thiểu (QTN-08)
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Ngưỡng tồn tối thiểu
               </label>
               <input
                 type="number"
@@ -266,8 +355,7 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
                 min="0"
                 value={formData.min_stock_threshold}
                 onChange={handleChange}
-                placeholder="Mặc định: 10"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono font-bold text-center"
               />
             </div>
           </div>
@@ -275,7 +363,7 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
           {/* Kích thước, Trọng lượng, Chất liệu */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                 Kích thước (cm)
               </label>
               <input
@@ -284,12 +372,12 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
                 value={formData.dimensions}
                 onChange={handleChange}
                 placeholder="VD: 180x80x75 cm"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                 Trọng lượng (kg)
               </label>
               <input
@@ -298,13 +386,12 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
                 step="0.1"
                 value={formData.weight_kg}
                 onChange={handleChange}
-                placeholder="VD: 25.5"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                 Chất liệu chính
               </label>
               <input
@@ -312,17 +399,17 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
                 name="material"
                 value={formData.material}
                 onChange={handleChange}
-                placeholder="VD: Gỗ Óc Chó..."
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                placeholder="VD: Gỗ Óc Chó, Da Bò..."
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
               />
             </div>
           </div>
 
-          {/* Bảo hành (NT-08-CN-005) */}
+          {/* Bảo hành & Trạng thái */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Thời gian bảo hành (Tháng)
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Bảo hành (Tháng)
               </label>
               <input
                 type="number"
@@ -330,45 +417,117 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
                 min="0"
                 value={formData.warranty_months}
                 onChange={handleChange}
-                placeholder="VD: 12 hoặc 24"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900 font-mono"
               />
-              {errors.warranty_months && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.warranty_months}</p>}
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Điều kiện bảo hành áp dụng
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Điều kiện bảo hành
               </label>
               <input
                 type="text"
                 name="warranty_terms"
                 value={formData.warranty_terms}
                 onChange={handleChange}
-                placeholder="VD: Bảo hành 1 đổi 1 nếu lỗi mối mọt, cong vênh do nhà sản xuất..."
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none focus:outline-none focus:border-amber-800 bg-white text-stone-900"
               />
             </div>
           </div>
 
-          {/* Image URL */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              URL Hình ảnh đại diện
-            </label>
-            <input
-              type="text"
-              name="image_url"
-              value={formData.image_url}
-              onChange={handleChange}
-              placeholder="https://images.unsplash.com/photo-..."
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
-            />
+          {/* 5 Slot Image Gallery */}
+          <div className="bg-stone-50 p-4 border border-stone-200 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider">
+                BỘ SƯU TẬP HÌNH ẢNH SẢN PHẨM (5 GÓC CHỤP STUDIO)
+              </label>
+              <span className="text-[10px] text-stone-500 font-medium">
+                Slot 1 là Ảnh Đại Diện Chính. Slots 2 - 5 là các góc chụp chi tiết bộ sưu tập.
+              </span>
+            </div>
+
+            {/* 5 Slot Thumbnail Strip */}
+            <div className="grid grid-cols-5 gap-2">
+              {[0, 1, 2, 3, 4].map((slotIdx) => {
+                const imgUrl = imageSlots[slotIdx]
+                const isActive = activeSlotIdx === slotIdx
+                const isMain = slotIdx === 0
+                return (
+                  <div
+                    key={slotIdx}
+                    onClick={() => setActiveSlotIdx(slotIdx)}
+                    className={`relative aspect-[4/5] bg-white border-2 cursor-pointer transition-all overflow-hidden flex flex-col items-center justify-center ${
+                      isActive ? 'border-amber-800 ring-1 ring-amber-800' : 'border-stone-200 hover:border-stone-400'
+                    }`}
+                  >
+                    {imgUrl ? (
+                      <img
+                        src={imgUrl}
+                        alt={`Slot ${slotIdx + 1}`}
+                        className="w-full h-full object-contain p-1 mix-blend-multiply"
+                      />
+                    ) : (
+                      <div className="text-center p-1 text-stone-400">
+                        <span className="text-[10px] font-bold block">+ TẢI ẢNH</span>
+                      </div>
+                    )}
+
+                    <span
+                      className={`absolute top-1 left-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none ${
+                        isMain ? 'bg-amber-800 text-white' : 'bg-stone-900/80 text-white'
+                      }`}
+                    >
+                      {isMain ? 'ẢNH CHÍNH' : `GÓC ${slotIdx + 1}`}
+                    </span>
+
+                    {imgUrl && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleSlotImageChange(slotIdx, '')
+                        }}
+                        className="absolute bottom-1 right-1 bg-red-600 text-white w-4 h-4 text-[10px] font-bold flex items-center justify-center rounded-none hover:bg-red-700"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Active Slot Controls */}
+            <div className="bg-white p-3 border border-stone-200 space-y-2">
+              <span className="text-[11px] font-bold text-stone-900 uppercase tracking-wider block">
+                ĐANG CHỈNH SỬA: {activeSlotIdx === 0 ? 'SLOT 1 — ẢNH ĐẠI DIỆN CHÍNH' : `SLOT ${activeSlotIdx + 1} — ẢNH CHI TIẾT ${activeSlotIdx + 1}`}
+              </span>
+
+              <div className="flex flex-col sm:flex-row items-stretch gap-2">
+                <label className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-300 rounded-none text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center shrink-0">
+                  Chọn ảnh từ máy tính
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageFileUpload(e, activeSlotIdx)}
+                    className="hidden"
+                  />
+                </label>
+
+                <input
+                  type="text"
+                  value={imageSlots[activeSlotIdx]}
+                  onChange={(e) => handleSlotImageChange(activeSlotIdx, e.target.value)}
+                  placeholder={`Dán URL ảnh cho Slot ${activeSlotIdx + 1} (https://...)`}
+                  className="flex-1 px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 bg-white text-stone-900"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Mô tả sản phẩm */}
+          {/* Mô tả chi tiết */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
               Mô tả chi tiết sản phẩm
             </label>
             <textarea
@@ -376,46 +535,39 @@ const EditProductModal = ({ isOpen, onClose, productItem, onSuccess }) => {
               rows={3}
               value={formData.description}
               onChange={handleChange}
-              placeholder="Mô tả công năng và chi tiết sản phẩm..."
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white resize-none"
+              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 bg-white text-stone-900 resize-none"
             />
           </div>
 
-          {/* Trạng thái kinh doanh */}
-          <div className="p-3 bg-amber-50 rounded-2xl border border-amber-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          {/* Checkbox Trạng thái kinh doanh */}
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer font-bold text-stone-700 uppercase tracking-wider">
               <input
                 type="checkbox"
-                id="is_active"
                 name="is_active"
                 checked={formData.is_active}
                 onChange={handleChange}
-                className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500 cursor-pointer"
+                className="w-4 h-4 text-amber-800 rounded-none border-stone-300"
               />
-              <label htmlFor="is_active" className="text-xs font-bold text-gray-800 cursor-pointer">
-                Đang mở bán trên website (Active)
-              </label>
-            </div>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${formData.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'}`}>
-              {formData.is_active ? 'Đang bán' : 'Ngừng bán'}
-            </span>
+              <span>Đang kinh doanh (Hiển thị sản phẩm trên cửa hàng)</span>
+            </label>
           </div>
 
-          {/* Action buttons */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-gray-100 shrink-0">
+          {/* Action Buttons */}
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-stone-200/80 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-none font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
             >
-              Hủy
+              HỦY BỎ
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 bg-stone-900 hover:bg-amber-800 text-white rounded-none font-bold text-xs uppercase tracking-wider transition-colors shadow-2xs disabled:opacity-50 cursor-pointer"
             >
-              {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+              {submitting ? 'ĐANG LƯU...' : 'CẬP NHẬT SẢN PHẨM'}
             </button>
           </div>
         </form>

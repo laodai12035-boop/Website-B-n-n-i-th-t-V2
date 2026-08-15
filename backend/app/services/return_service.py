@@ -58,7 +58,7 @@ class ReturnService:
             raise ValueError("ORDER_NOT_DELIVERED")
 
         # 4. Kiểm tra điều kiện thời hạn 30 ngày (QTN-05)
-        delivery_time = order.updated_at or order.created_at
+        delivery_time = getattr(order, "updated_at", None) or order.created_at
         if delivery_time:
             time_elapsed = datetime.utcnow() - delivery_time
             if time_elapsed > timedelta(days=MAX_RETURN_DAYS):
@@ -152,6 +152,12 @@ class ReturnService:
         req.status = status
         if admin_note and admin_note.strip():
             req.admin_note = admin_note.strip()
+
+        if status == "approved" and req.order:
+            if req.request_type == "return":
+                req.order.status = "returned"
+            elif req.request_type == "exchange":
+                req.order.status = "exchanged"
 
         db.session.commit()
         return req.to_dict()

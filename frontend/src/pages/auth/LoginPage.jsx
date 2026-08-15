@@ -1,13 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import InputField from '@/components/ui/InputField'
-import Button from '@/components/ui/Button'
+import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
 import FormAlert from '@/components/ui/FormAlert'
 import { useAuth } from '@/contexts/AuthContext'
 
-// =============================================
-// Validation helper (client-side)
-// =============================================
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const validate = (fields) => {
@@ -26,22 +23,18 @@ const validate = (fields) => {
   return errors
 }
 
-// Icon toggle password
 const EyeIcon = ({ open }) =>
   open ? (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
     </svg>
   ) : (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
     </svg>
   )
 
-// =============================================
-// LoginPage Component
-// =============================================
 const LoginPage = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
@@ -78,107 +71,142 @@ const LoginPage = () => {
       await login(fields.email, fields.password)
       navigate('/')
     } catch (err) {
-      setApiError(err.message)
+      setApiError(err.message || 'Đăng nhập không thành công, vui lòng kiểm tra lại email/mật khẩu.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-wood-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-slide-up">
+    <div className="min-h-screen bg-stone-50 flex flex-col font-sans">
+      <Navbar />
 
-        {/* Brand header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-500 shadow-lg mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-display font-bold text-gray-900">Nội Thất Đẹp</h1>
-          <p className="text-gray-500 text-sm mt-1">Đăng nhập tài khoản của bạn</p>
-        </div>
-
-        {/* Card */}
-        <div className="card">
-          <div className="mb-6">
-            <h2 className="text-xl font-display font-semibold text-gray-900">Chào mừng quay trở lại</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Chưa có tài khoản?{' '}
-              <Link
-                to="/register"
-                className="text-primary-600 font-medium hover:text-primary-700 transition-colors"
-              >
-                Đăng ký ngay
-              </Link>
-            </p>
-          </div>
-
-          {/* API Error alert */}
-          {apiError && <div className="mb-4"><FormAlert type="error" message={apiError} /></div>}
-
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
-            {/* Email */}
-            <InputField
-              id="email"
-              name="email"
-              type="email"
-              label="Email"
-              placeholder="email@example.com"
-              value={fields.email}
-              onChange={handleChange}
-              error={errors.email}
-              required
-              autoComplete="email"
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex items-center justify-center my-auto py-12 animate-fade-in">
+        <div className="bg-white rounded-none border border-stone-200/80 shadow-md w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 overflow-hidden">
+          
+          {/* Left Column: High-end Studio Interior Showcase Image & Slogan */}
+          <div className="md:col-span-6 relative bg-stone-900 overflow-hidden flex flex-col justify-between p-8 text-white min-h-[360px] md:min-h-[460px]">
+            <img
+              src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80"
+              alt="Nhà Xinh Luxury Interior"
+              className="absolute inset-0 w-full h-full object-cover opacity-60 hover:scale-105 transition-transform duration-700"
             />
-
-            {/* Mật khẩu */}
-            <InputField
-              id="password"
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              label="Mật khẩu"
-              placeholder="Nhập mật khẩu"
-              value={fields.password}
-              onChange={handleChange}
-              error={errors.password}
-              required
-              autoComplete="current-password"
-              rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="cursor-pointer hover:text-gray-600 transition-colors"
-                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                >
-                  <EyeIcon open={showPassword} />
-                </button>
-              }
-            />
-
-            <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="rounded border-gray-300 text-primary-600 focus:ring-primary-400" />
-                <span>Ghi nhớ đăng nhập</span>
-              </label>
-              <Link to="/forgot-password" className="hover:text-primary-600 transition-colors">
-                Quên mật khẩu?
-              </Link>
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-900/95 via-stone-900/40 to-stone-900/30" />
+            
+            {/* Brand overlay header */}
+            <div className="relative z-10">
+              <span className="px-3 py-1 bg-amber-800 text-white text-[10px] font-bold uppercase tracking-widest rounded-none inline-block mb-3">
+                NỘI THẤT CAO CẤP
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-heading font-bold uppercase tracking-wider text-white leading-tight">
+                NHÀ XINH V2
+              </h2>
             </div>
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              loading={loading}
-              className="mt-2"
-            >
-              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-            </Button>
-          </form>
+            {/* Slogan & Quote */}
+            <div className="relative z-10 space-y-2 border-l-2 border-amber-800 pl-4 py-1">
+              <p className="text-xs sm:text-sm font-heading italic text-stone-200 leading-relaxed">
+                "Kiến tạo không gian sống thượng lưu & tinh tế cho ngôi nhà của bạn."
+              </p>
+              <span className="text-[10px] text-stone-400 uppercase tracking-widest font-mono font-bold block">
+                — BST NỘI THẤT CAO CẤP 2026
+              </span>
+            </div>
+          </div>
+
+          {/* Right Column: Clean Square-Cornered Login Form */}
+          <div className="md:col-span-6 p-6 sm:p-10 flex flex-col justify-center bg-white">
+            <div className="mb-6">
+              <span className="text-[10px] font-bold text-amber-800 uppercase tracking-widest bg-amber-100 px-2.5 py-0.5 rounded-none border border-amber-200 inline-block mb-2">
+                Tài Khoản Thành Viên
+              </span>
+              <h1 className="text-2xl font-heading font-bold text-stone-900 uppercase tracking-wider">
+                CHÀO MỪNG QUAY TRỞ LẠI
+              </h1>
+              <p className="text-xs text-stone-500 mt-1">
+                Chưa có tài khoản?{' '}
+                <Link
+                  to="/register"
+                  className="text-amber-800 font-bold uppercase tracking-wider hover:underline transition-colors ml-1"
+                >
+                  Đăng ký ngay
+                </Link>
+              </p>
+            </div>
+
+            {apiError && <div className="mb-4"><FormAlert type="error" message={apiError} /></div>}
+
+            <form onSubmit={handleSubmit} noValidate className="space-y-4 text-xs">
+              {/* Email */}
+              <div>
+                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Email <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={fields.email}
+                  onChange={handleChange}
+                  placeholder="admin@example.com"
+                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 bg-white text-stone-900"
+                  required
+                  autoComplete="email"
+                />
+                {errors.email && <p className="text-[11px] text-red-600 font-bold mt-1">{errors.email}</p>}
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Mật khẩu <span className="text-red-600">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={fields.password}
+                    onChange={handleChange}
+                    placeholder="Nhập mật khẩu"
+                    className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 bg-white text-stone-900 pr-10"
+                    required
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 cursor-pointer p-1"
+                  >
+                    <EyeIcon open={showPassword} />
+                  </button>
+                </div>
+                {errors.password && <p className="text-[11px] text-red-600 font-bold mt-1">{errors.password}</p>}
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-stone-600 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer font-medium uppercase tracking-wider text-[11px]">
+                  <input type="checkbox" className="rounded-none border-stone-300 text-amber-800 focus:ring-0 w-3.5 h-3.5" />
+                  <span>Ghi nhớ đăng nhập</span>
+                </label>
+                <Link to="/forgot-password" className="font-bold text-stone-500 hover:text-amber-800 transition-colors uppercase tracking-wider text-[11px]">
+                  Quên mật khẩu?
+                </Link>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 bg-stone-900 hover:bg-amber-800 text-white font-bold text-xs uppercase tracking-wider rounded-none transition-colors shadow-2xs disabled:opacity-50 cursor-pointer mt-2"
+              >
+                {loading ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP'}
+              </button>
+            </form>
+          </div>
+
         </div>
-      </div>
+      </main>
+
+      <Footer />
     </div>
   )
 }

@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react'
 import categoryService from '@/services/categoryService'
 import FormAlert from '@/components/ui/FormAlert'
 
-const EMOJI_PRESETS = ['🛏️', '🛋️', '🪑', '📚', '🚪', '💡', '🍽️', '🖼️', '🪴', '🪞']
-
+/**
+ * EditCategoryModal — Modal Chỉnh sửa danh mục sản phẩm (nhaxinh.com style).
+ * Góc cạnh vuông vức (rounded-none), chữ thuần tối giản (NO EMOJIS).
+ */
 const EditCategoryModal = ({ isOpen, onClose, categoryItem, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    icon: '🛏️',
   })
 
   const [errors, setErrors] = useState({})
@@ -20,7 +21,6 @@ const EditCategoryModal = ({ isOpen, onClose, categoryItem, onSuccess }) => {
       setFormData({
         name: categoryItem.name || '',
         description: categoryItem.description || '',
-        icon: categoryItem.icon || '📁',
       })
       setErrors({})
       setApiError(null)
@@ -62,7 +62,6 @@ const EditCategoryModal = ({ isOpen, onClose, categoryItem, onSuccess }) => {
       await categoryService.updateCategory(categoryItem.id, {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        icon: formData.icon || '📁',
       })
       if (onSuccess) onSuccess()
       onClose()
@@ -75,70 +74,50 @@ const EditCategoryModal = ({ isOpen, onClose, categoryItem, onSuccess }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-slide-up">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in font-sans">
+      <div className="relative w-full max-w-md bg-white rounded-none shadow-2xl border border-stone-200/80 overflow-hidden animate-slide-up">
         
-        {/* Header */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-lg font-display font-bold text-gray-900 flex items-center gap-2">
-            <span>✏️</span> Chỉnh sửa danh mục sản phẩm
-          </h2>
+        {/* Header Bar */}
+        <div className="px-6 py-4 bg-stone-900 text-white flex items-center justify-between border-b border-amber-800">
+          <div>
+            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Phân hệ Quản trị</span>
+            <h2 className="text-base font-heading font-bold uppercase tracking-wider">
+              CHỈNH SỬA DANH MỤC #{categoryItem.id}
+            </h2>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-200/60 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-colors font-bold text-sm cursor-pointer"
+            className="text-stone-400 hover:text-white transition-colors p-1 cursor-pointer font-bold text-sm"
           >
             ✕
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           {apiError && <FormAlert type="error" message={apiError} />}
-
-          {/* Chọn Icon Emoji */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">
-              Biểu tượng (Icon Emoji)
-            </label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {EMOJI_PRESETS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, icon: emoji }))}
-                  className={`w-9 h-9 text-lg rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-                    formData.icon === emoji
-                      ? 'bg-amber-100 border-2 border-amber-600 shadow-xs scale-105'
-                      : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Tên danh mục */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              Tên danh mục <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+              Tên danh mục sản phẩm <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Ví dụ: Phòng ngủ, Bàn làm việc..."
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+              placeholder="VD: Phòng ngủ, Bàn làm việc..."
+              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 bg-white text-stone-900"
             />
-            {errors.name && <p className="text-[11px] text-red-500 font-medium mt-1">{errors.name}</p>}
+            {errors.name && <p className="text-[11px] text-red-600 font-bold mt-1">{errors.name}</p>}
           </div>
 
           {/* Mô tả chi tiết */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              Mô tả danh mục (tùy chọn)
+            <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+              Mô tả danh mục (Tùy chọn)
             </label>
             <textarea
               name="description"
@@ -146,25 +125,25 @@ const EditCategoryModal = ({ isOpen, onClose, categoryItem, onSuccess }) => {
               value={formData.description}
               onChange={handleChange}
               placeholder="Mô tả nhóm sản phẩm..."
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-white resize-none"
+              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-amber-800 bg-white text-stone-900 resize-none"
             />
           </div>
 
-          {/* Buttons */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-gray-100">
+          {/* Action Buttons */}
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-stone-200/80">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-none text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
             >
-              Hủy
+              HỦY BỎ
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 bg-stone-900 hover:bg-amber-800 text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs disabled:opacity-50 cursor-pointer"
             >
-              {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+              {submitting ? 'ĐANG LƯU...' : 'LƯU THAY ĐỔI'}
             </button>
           </div>
         </form>

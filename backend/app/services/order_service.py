@@ -27,23 +27,10 @@ class OrderService:
         shipping_address: str,
         note: Optional[str] = None,
         coupon_code: Optional[str] = None,
+        buy_now_item: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Tạo đơn hàng Thanh toán khi nhận hàng (COD).
-
-        Args:
-            user_id: ID người dùng
-            recipient_name: Họ tên người nhận
-            recipient_phone: Số điện thoại người nhận
-            shipping_address: Địa chỉ nhận hàng
-            note: Ghi chú đơn hàng (tùy chọn)
-            coupon_code: Mã giảm giá (tùy chọn QTN-01)
-
-        Returns:
-            Dict chứa chi tiết đơn hàng vừa tạo.
-
-        Raises:
-            ValueError: Khi dữ liệu thiếu, giỏ rỗng, hoặc vượt tồn kho (QTN-02)
         """
         # 1. Kiểm tra thông tin nhận hàng
         if not recipient_name or not recipient_name.strip():
@@ -53,44 +40,67 @@ class OrderService:
         if not shipping_address or not shipping_address.strip():
             raise ValueError("MISSING_SHIPPING_ADDRESS")
 
-        # 2. Lấy danh sách sản phẩm trong giỏ hàng
-        cart_items = (
-            db.session.query(CartItem)
-            .filter(CartItem.user_id == user_id)
-            .all()
-        )
-
-        if not cart_items:
-            raise ValueError("CART_EMPTY")
-
-        # 3. Kiểm tra Tồn kho QTN-02 và Tính tạm tính
+        # 2. Lấy danh sách sản phẩm từ buy_now_item hoặc từ giỏ hàng
         subtotal = 0.0
         order_item_configs = []
+        is_buy_now = False
 
-        for item in cart_items:
-            product = (
-                db.session.query(Product)
-                .filter(Product.id == item.product_id, Product.is_active == True)
-                .first()
-            )
+        if buy_now_item and isinstance(buy_now_item, dict) and buy_now_item.get("product_id"):
+            p_id = int(buy_now_item["product_id"])
+            qty = int(buy_now_item.get("quantity", 1))
+            product = db.session.query(Product).filter(Product.id == p_id, Product.is_active == True).first()
             if not product:
-                raise ValueError(f"PRODUCT_NOT_AVAILABLE:{item.product_id}")
-
-            if item.quantity > product.stock:
+                raise ValueError(f"PRODUCT_NOT_AVAILABLE:{p_id}")
+            if qty > product.stock:
                 raise ValueError(f"EXCEED_STOCK:{product.name}:{product.stock}")
 
-            item_price = float(product.discount_price if product.discount_price and product.discount_price > 0 else product.price)
-            item_subtotal = round(item_price * item.quantity, 2)
-            subtotal += item_subtotal
+            item_price = float(product.discount_price if (product.discount_price and float(product.discount_price) > 0 and float(product.discount_price) < float(product.price)) else product.price)
+            item_subtotal = round(item_price * qty, 2)
+            subtotal = item_subtotal
 
             order_item_configs.append({
                 "product": product,
                 "product_id": product.id,
                 "product_name": product.name,
-                "quantity": item.quantity,
+                "quantity": qty,
                 "price": item_price,
                 "subtotal": item_subtotal,
             })
+            is_buy_now = True
+        else:
+            cart_items = (
+                db.session.query(CartItem)
+                .filter(CartItem.user_id == user_id)
+                .all()
+            )
+
+            if not cart_items:
+                raise ValueError("CART_EMPTY")
+
+            for item in cart_items:
+                product = (
+                    db.session.query(Product)
+                    .filter(Product.id == item.product_id, Product.is_active == True)
+                    .first()
+                )
+                if not product:
+                    raise ValueError(f"PRODUCT_NOT_AVAILABLE:{item.product_id}")
+
+                if item.quantity > product.stock:
+                    raise ValueError(f"EXCEED_STOCK:{product.name}:{product.stock}")
+
+                item_price = float(item.to_dict()["price"])
+                item_subtotal = round(item_price * item.quantity, 2)
+                subtotal += item_subtotal
+
+                order_item_configs.append({
+                    "product": product,
+                    "product_id": product.id,
+                    "product_name": product.name,
+                    "quantity": item.quantity,
+                    "price": item_price,
+                    "subtotal": item_subtotal,
+                })
 
         subtotal = round(subtotal, 2)
 
@@ -105,7 +115,6 @@ class OrderService:
             shipping_result = ShippingService.calculate_shipping_fee(user_id, shipping_address)
             shipping_fee = float(shipping_result["fee"])
         except Exception:
-            # An toàn: nếu lỗi thì không chặn tạo đơn
             shipping_fee = 0.0
 
         total_amount = max(0.0, round(subtotal - discount_amount + shipping_fee, 2))
@@ -130,9 +139,8 @@ class OrderService:
         )
 
         db.session.add(order)
-        db.session.flush()  # Phát sinh order.id
+        db.session.flush()
 
-        # Thêm order_items và trừ tồn kho stock
         for cfg in order_item_configs:
             order_item = OrderItem(
                 order_id=order.id,
@@ -144,12 +152,13 @@ class OrderService:
             )
             db.session.add(order_item)
 
-            # Trừ số lượng tồn kho sản phẩm
             cfg["product"].stock -= cfg["quantity"]
 
-        # Xóa sạch giỏ hàng người dùng
-        db.session.query(CartItem).filter(CartItem.user_id == user_id).delete()
+        if not is_buy_now:
+            db.session.query(CartItem).filter(CartItem.user_id == user_id).delete()
         db.session.commit()
+
+        return order.to_dict()
 
         return order.to_dict()
 
